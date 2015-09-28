@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>No Sleep Podcast on the Desktop</title>
+
+    <!--Import Google Icon Font-->
+    <link href="css/fonts.css" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <!--Import jQuery before materialize.js-->
+    <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="js/materialize/materialize.min.js"></script>
+
+    <!--The application entry point-->
+    <script type="text/javascript" src="js/app/main.js"></script>
+
+    <script>
+      $(document).ready(function(){
+        require('nw.gui').Window.get().showDevTools();
+        Application();
+      });
+    </script>
+
+  </head>
+  <body class="blue-grey darken-4">
+    <nav class="blue-grey lighten-3 blue-grey-text text-darken-1" role="navigation">
+      <div class="nav-wrapper container">
+	<font size="4em">The No Sleep Pod-App</font>
+      </div>
+    </nav>
+    <div class="container" id="cards"></div>
+  </body>
+</html>
