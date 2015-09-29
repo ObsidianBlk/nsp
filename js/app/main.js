@@ -1,14 +1,27 @@
 
-var Application = (function(){
+var Application = (function($){
 
   function EpisodeCard(title, description, imgurl){
-    console.log(title);
-    $("#cards").append($("div").class("card-panel").html(title));
+    var e = $("<div></div>");
+    e.addClass("card-panel hoverable");
+    if (imgurl !== ""){
+      e.append($("<img src=\"" + imgurl + "\" />").addClass("responsive-img"));
+    }
+    e.append(title);
+    $("#cards").append(e);
+    //$("#cards").append($("div").addClass("card-panel").text(title));
   }
 
 
+  var database = require("./js/app/database");
 
-  return function(){
+
+
+  function LoadFeed(db){
+    if (!(db instanceof database)){
+      return;
+    }
+    
     var FeedParser = require('feedparser');
     var request = require('request');
 
@@ -41,10 +54,33 @@ var Application = (function(){
       var meta = this.meta; // **NOTE** the "meta" is always available in the context of the feedparser instance
       var item = null;
 
-      while ((item = stream.read())) {
-	EpisodeCard(item.title, item.description, "");
-	//console.log(item);
+      while ((item = stream.read()) !== null) {
+        if (item !== null){
+          db.addEpisode(item);
+          //console.log(item);
+	  //EpisodeCard(item.title, item.description, (typeof(item.image) !== 'undefined' && typeof(item.image.url) !== 'undefined') ? item.image.url : "");
+          item = null;
+        }
       }
     });
   };
-})();
+
+
+
+  return function(){
+    var DB = new database();
+    DB.on("episode_added", function(err, ep){
+      if (!err){
+        EpisodeCard(ep.title, ep.description, "");
+      } else {
+        console.log(err);
+      }
+    });
+    
+    DB.on("opened", (function(err){
+      LoadFeed(DB);
+    }).bind(this));
+
+    DB.open("database.json");
+  };
+})($);
