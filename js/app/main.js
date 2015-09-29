@@ -9,10 +9,38 @@ var Application = (function($){
     //}
     e.append($("<p></p>").append(episode.title));
     if (episode.date !== null){
-      e.append($("<em></em>").append(episode.date.toString()));
+      e.append($("<p></p>").append(episode.date.toString()));
     }
     $("#cards").append(e);
     //$("#cards").append($("div").addClass("card-panel").text(title));
+  }
+
+  function EpisodeCard2(episode){
+    var e = $("<div></div>").addClass("z-depth-3").css({
+      "margin": "0.5rem 0.1rem 0",
+      "border-radius": "2px"
+    });
+    
+    var header = $("<div></div>").addClass("card-image blue-grey darken-2").css({"overflow": "auto"});
+    var img = $("<img src=\"images/nsp_logo.png\">").height("64px").css("width", "auto").css("valign", "center").addClass("right");
+    var tblock = $("<p></p>").css({
+      "margin-top":"0",
+      "margin-bottom":"0"
+    });
+    var title = $("<span></span>").css("font-size", "2em").append(episode.title);
+    tblock.append(title).append("<br>").append(episode.date.toString());
+    header.append($("<div></div>").addClass("card-title blue-grey-text text-lighten-5").css("display", "inline-block").append(tblock)).append(img);
+
+    var body = $("<div></div>").addClass("blue-grey lighten-1").css({
+      "padding": "20px",
+      "background-color":"#FFFFFF"
+    });
+    var desc = $("<p></p>").append(episode.description);
+    body.append(desc);
+
+    e.append(header).append(body);
+
+    $("#cards").append(e);
   }
 
 
@@ -26,7 +54,7 @@ var Application = (function($){
     var EpAdded = false;
     DB.on("episode_added", function(err, ep){
       if (!err){
-        EpisodeCard(ep);
+        EpisodeCard2(ep);
 	EpAdded = true;
       } else {
         console.log(err);
