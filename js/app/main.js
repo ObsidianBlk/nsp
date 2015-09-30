@@ -35,62 +35,82 @@ var Application = (function($){
       "padding": "20px",
       "background-color":"#FFFFFF"
     });
-    var desc = $("<p></p>").append(episode.description);
+    var desc = $("<p></p>").append("Hi there");
     body.append(desc);
 
     e.append(header).append(body);
 
-    $("#cards").append(e);
+    $(".cards").append(e);
   }
 
 
-  var database = require("./js/app/database");
+  var Database = require("./js/app/database");
+  var Config = require("./js/app/config");
   var Feeder = require("./js/app/feeder.js");
 
 
 
   return function(){
-    var DB = new database();
+    var conf = new Config();
+    var db = new Database();
     var EpAdded = false;
-    DB.on("episode_added", function(err, ep){
-      if (!err){
-        EpisodeCard2(ep);
-	EpAdded = true;
-      } else {
-        console.log(err);
-      }
+
+    db.on("episode_added", function(ep){
+      EpisodeCard2(ep);
+      EpAdded = true;
     });
 
-    DB.on("error", function(err){
+    db.on("error", function(err){
       console.log(err);
     });
     
-    DB.on("opened", (function(err){
-      var feed = new Feeder();
-      var itemcount = 0;
-      EpAdded = false; // Just reset it if it was triggered by the load from disc.
+    db.on("opened", (function(database_exists){
+      if (conf.downloadFeedAtStartup){
+	EpAdded = false; // Just reset it if it was triggered by the load from disc.
+	var feed = new Feeder();
+	var itemcount = 0;
 
-      feed.on("rss_item", function(item){
-	itemcount += 1;
-	try{
-	  DB.addEpisode(item);
-	} catch (e) {throw e;}
-	itemcount -= 1;
-      });
+	feed.on("rss_item", function(item){
+	  itemcount += 1;
+	  try{
+	    db.addEpisode(item);
+	  } catch (e) {throw e;}
+	  itemcount -= 1;
+	});
 
-      feed.on("rss_complete", function(){
-	while (itemcount > 0){
-	  console.log("Waiting on " + itemcount + " items");
-	} // Wait...
-	if (EpAdded){
-	  DB.save("database.json");
-	} else {
-	  console.log("No new episodes.");
-	}
-      });
-      feed.rss('http://nosleeppodcast.libsyn.com/rss');
+	feed.on("rss_complete", function(){
+	  while (itemcount > 0){
+	    console.log("Waiting on " + itemcount + " items");
+	  } // Wait...
+	  if (EpAdded || database_exists === false){
+	    db.save(conf.path.database);
+	  } else {
+	    console.log("No new episodes.");
+	  }
+	});
+
+	feed.rss('http://nosleeppodcast.libsyn.com/rss');
+      } else if (database_exists === false){
+	db.save(conf.path.database);
+      }
     }).bind(this));
 
-    DB.open("database.json");
+    conf.on("error", function(err){
+      console.log(err);
+
+      // Load DB anyway. Config should have default values.
+      // TODO: Change this to a question for the user.
+      db.open(conf.path.database, conf.skipInvalidEpisodes);
+    });
+
+    conf.on("opened", function(config_exists){
+      if (config_exists === false){
+	conf.save("config.json");
+      }
+      // Config loaded, now load the database file.
+      db.open(conf.path.database, conf.skipInvalidEpisodes);
+    });
+
+    conf.open("config.json");
   };
 })($);
