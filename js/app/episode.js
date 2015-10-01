@@ -4,6 +4,7 @@ module.exports = (function(){
 
   var Events = require("events");
   var story = require("./story");
+  var DescParser = require("./descParser");
   
 
   function VerifyEpisode(ep, item){
@@ -70,6 +71,9 @@ module.exports = (function(){
           if (typeof(obj.enclosures[0].url) !== 'string'){
             throw new Error("No audio information in object.");
           }
+
+          // TODO: Parse the description into a description object given my DescParser().
+          // Use that to populate the description and story info.
 
 	  console.log(typeof(obj.pubDate));
           var nobj = {

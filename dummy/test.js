@@ -11,7 +11,6 @@ function getTitle(line){
 
   var regTitle = (link !== null) ? new RegExp('"(<a href="(.*?)"(.*?)>)(.*?)(</a>)"') : new RegExp('(>)(.*?)(</)(.*?)(written)');
   var titleMatch = line.match(regTitle);
-  //console.log(titleMatch);
   var title = null;
   if (titleMatch !== null && ((link !== null && titleMatch.length >= 4) || titleMatch.length >= 2)){
     title = titleMatch[(link !== null) ? 4 : 2];
@@ -25,10 +24,15 @@ function getTitle(line){
 
 
 function getWriters(line){
-  var regWritters = new RegExp('(written by)(.*?)(and read)');
-  var writersMatch = line.match(regWritters);
+  var regWriters = new RegExp('(written by)(.*?)(and read)');
+  var writersMatch = line.match(regWriters);
   var writers = [];
-  if (writersMatch !== null && writersMatch.length >= 3){
+  if (writersMatch === null || writersMatch.length < 3){
+    regWriters = /(written and read by)(.*?)\./;
+    writersMatch = line.match(regWriters);
+  }
+
+  if (writersMatch !== null && writersMatch.length > 2){
     var res = writersMatch[2];
     res = res.split(",");
     if (res.length > 0){
@@ -52,7 +56,7 @@ function getWriters(line){
 	}
 
 	// Remove any conjunctive "and" from the writter's name.
-	var regAnd = new RegExp("([A|a][N|n][D|d])(.*?)");
+	var regAnd = new RegExp("([A|a][N|n][D|d]) (.*?)");
 	m = writer.match(regAnd);
 	if (m !== null && m.length > 2){
 	  writer = m[2];
@@ -67,7 +71,6 @@ function getWriters(line){
       }
     }
   }
-  // TODO: Write alternate search.
 
   return writers;
 }
@@ -75,10 +78,17 @@ function getWriters(line){
 
 function getNarrators(line){
   var narrators = [];
-  var pos = line.lastIndexOf("read by");
+  //var pos = line.lastIndexOf("read by");
+  //var res = null;
+  //if (pos > 0){
+  //  res = line.substr(pos+"read by".length);
+  //}
+
+  var regNar = /(read by)(.*?)(\.)/;
+  var narMatch = line.match(regNar);
   var res = null;
-  if (pos > 0){
-    res = line.substr(pos+"read by".length);
+  if (narMatch !== null && narMatch.length > 2){
+    res = narMatch[2];
   }
 
   if (res !== null){
@@ -102,6 +112,12 @@ function getNarrators(line){
 	  link = m[1]; // This should be a link to the narrator's information.
 	  nar = m[3]; // This should just be the narrator's name.
 	}
+
+        var regStripTime = /(.*?)\. \((.*?)\)/;
+        var timeMatch = nar.match(regStripTime);
+        if (timeMatch !== null && timeMatch.length > 2){
+          nar = timeMatch[1];
+        }
 
 	// Remove any conjunctive "and" from the writter's name.
 	var npos = nar.indexOf(" and ");
@@ -128,6 +144,13 @@ function getNarrators(line){
 }
 
 
+function getStoryBeginning(line){
+  var regBeginning = /\d\d:\d\d:\d\d/;
+  var beginningMatch = line.match(regBeginning);
+  return (beginningMatch !== null && beginningMatch.length >= 1) ? beginningMatch[0] : null;
+}
+
+
 
 function run(data){
   var regLines = new RegExp("<p>(.*?)</p>");
@@ -139,8 +162,9 @@ function run(data){
     if (lines[i].match(regStories) !== null || lines[i].match(regStoriesAlt) !== null){
       var title = getTitle(lines[i]);
       if (title !== null){
-	title.writters = getWriters(lines[i]);
+	title.writers = getWriters(lines[i]);
 	title.narrators = getNarrators(lines[i]);
+        title.beginning = getStoryBeginning(lines[i]);
       }
       console.log(title);
     }
@@ -150,7 +174,7 @@ function run(data){
 
 
 
-FS.readFile("./test.txt", function(err, data){
+FS.readFile("./test2.txt", function(err, data){
   if (err){
     console.log(err);
   } else {
