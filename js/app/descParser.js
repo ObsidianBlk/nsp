@@ -63,7 +63,7 @@ module.exports = (function(){
 
 	  if (writer !== null){
 	    writers.push({
-	      writer:writer.trim(),
+	      name:writer.trim(),
 	      link:link
 	    });
 	  }
@@ -131,7 +131,7 @@ module.exports = (function(){
 
 	  if (nar !== null){
 	    narrators.push({
-	      narrator:nar.trim(),
+	      name:nar.trim(),
 	      link:link
 	    });
 	  }
@@ -157,15 +157,15 @@ module.exports = (function(){
     var regStoriesAlt = new RegExp('<strong>(.*?)</strong> written');
     var regAuthors = new RegExp('written by (.*?) and read');
     var lines = data.split(regLines);
-    var desc = {shortdesc:(lines.length > 0) ? lines[0] : "", titles:[]};
+    var desc = {shortdesc:(lines.length > 1) ? lines[1] : "", story:[]};
     for (var i=0; i < lines.length; i++){
       if (lines[i].match(regStories) !== null || lines[i].match(regStoriesAlt) !== null){
         var title = getTitle(lines[i]);
         if (title !== null){
-	  title.writers = getWriters(lines[i]);
-	  title.narrators = getNarrators(lines[i]);
+	  title.writer = getWriters(lines[i]);
+	  title.narrator = getNarrators(lines[i]);
           title.beginning = getStoryBeginning(lines[i]);
-          desc.titles.push(title);
+          desc.story.push(title);
         }
       }
     }

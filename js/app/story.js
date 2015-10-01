@@ -31,30 +31,26 @@ module.exports = (function(){
       }
     }
 
-    if (typeof(obj.author) !== 'undefined'){
-      if (!(obj.author instanceof Array)){
-	throw new Error("Story property 'author' expected to be an Array.");
+    if (typeof(obj.writer) !== 'undefined'){
+      if (!(obj.writer instanceof Array)){
+	throw new Error("Story property 'writer' expected to be an Array.");
       }
 
-      s._author = [];
-      for (i=0; i < obj.author.length; i++){
-	if (typeof(obj.author[i]) !== typeof({})){
-	  throw new Error("Author expected to be an Object.");
+      s._writer = [];
+      for (i=0; i < obj.writer.length; i++){
+	if (typeof(obj.writer[i]) !== typeof({})){
+	  throw new Error("Writer expected to be an Object.");
 	}
-	if (typeof(obj.author[i].name) !== 'string'){
-	  throw new Error("Author object missing property 'name'.");
+	if (typeof(obj.writer[i].name) !== 'string'){
+	  throw new Error("Writer object missing property 'name'.");
 	}
 
-	var a = {
-	  name: obj.author[i].name,
-	  link: null
+	var w = {
+	  name: obj.writer[i].name,
+	  link: (typeof(obj.writer[i].link) === 'string') ? obj.writer[i].link : null
 	};
 
-	if (typeof(obj.author[i].link) === 'string'){
-	  a.link = obj.author[i].link;
-	}
-
-	s._author.push(a);
+	s._writer.push(w);
       }
     }
 
@@ -74,12 +70,8 @@ module.exports = (function(){
 
 	var n = {
 	  name: obj.narrator[i].name,
-	  link: null
+	  link: (typeof(obj.narrator[i].link) === 'string') ? obj.narrator[i].link : null
 	};
-
-	if (typeof(obj.narrator[i].link) === 'string'){
-	  n.link = obj.narrator[i].link;
-	}
 
 	s._narrator.push(n);
       }
@@ -95,7 +87,7 @@ module.exports = (function(){
     this._ending = "";
 
     this._tag = [];
-    this._author = [];
+    this._writer = [];
     this._narrator = [];
 
     if (typeof(title_or_object) === typeof({})){
@@ -138,8 +130,8 @@ module.exports = (function(){
       data.tag = this._tag;
     }
 
-    if (this._author.length > 0){
-      data.author = this._author;
+    if (this._writer.length > 0){
+      data.writer = this._writer;
     }
 
     if (this._narrator.length > 0){
@@ -180,29 +172,29 @@ module.exports = (function(){
     return false;
   };
 
-  story.prototype.addAuthor = function(author_name, author_link){
-    this._author.push({
-      name: author_name,
-      link: (typeof(author_link) === 'string') ? author_link : null
+  story.prototype.addWriter = function(writer_name, link){
+    this._writer.push({
+      name: writer_name,
+      link: (typeof(link) === 'string') ? link : null
     });
-    this.emit("author_added");
+    this.emit("writer_added");
     this.emit("changed");
   };
 
-  story.prototype.removeAuthor = function(author_name_or_index){
-    var index = this._ArrayIndex(this._author, author_name_or_index);
+  story.prototype.removeWriter = function(writer_name_or_index){
+    var index = this._ArrayIndex(this._writer, writer_name_or_index);
     if (index >= 0){
-      this._author.splice(index, 1);
-      this.emit("author_removed");
+      this._writer.splice(index, 1);
+      this.emit("writer_removed");
       this.emit("changed");
     }
   };
 
-  story.prototype.author = function(index){
-    if (index >= 0 && index < this._author.length){
+  story.prototype.writer = function(index){
+    if (index >= 0 && index < this._writer.length){
       return {
-	name: this._author[index].name,
-	link: this._author[index].link
+	name: this._writer[index].name,
+	link: this._writer[index].link
       };
     }
     return null;
@@ -288,8 +280,8 @@ module.exports = (function(){
       }
     },
 
-    "authorCount":{
-      get:function(){return this._author.length;}
+    "writerCount":{
+      get:function(){return this._writer.length;}
     },
 
     "narratorCount":{

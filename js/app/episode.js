@@ -57,6 +57,7 @@ module.exports = (function(){
     ep._audio_type = (typeof(item.audio_type) === 'string') ? item.audio_type : "audio/mpeg";
     ep._audio_length = (typeof(item.audio_length) === 'string') ? item.audio_length : "0";
     ep._description = (typeof(item.description) === 'string') ? item.description : "";
+    ep._shortDescription = (typeof(item.short_description) === 'string') ? item.short_description : "";
     ep._link = (typeof(item.link) === 'string') ? item.link : "";
     ep._date = (typeof(item.date) === 'string') ? item.date : "";
     ep._img_src = (typeof(item.img_src) === 'string') ? item.img_src : "";
@@ -72,19 +73,20 @@ module.exports = (function(){
             throw new Error("No audio information in object.");
           }
 
-          // TODO: Parse the description into a description object given my DescParser().
-          // Use that to populate the description and story info.
+	  var descObj = (typeof(obj.description) === 'string') ? DescParser(obj.description) : 
+	    {shortdesc:"An episode of the No Sleep Podcast", story:[]};
 
-	  console.log(typeof(obj.pubDate));
           var nobj = {
             title:obj.title,
-            description:obj.description,
+            short_description:descObj.shortdesc,
+	    description:obj.description,
             author:obj.author,
             date:(obj.pubDate instanceof Date) ? obj.pubDate.toString() : "",
             guid:obj.guid,
             audio_src:obj.enclosures[0].url,
             audio_type:obj.enclosures[0].type,
-            audio_length: obj.enclosures[0].length
+            audio_length: obj.enclosures[0].length,
+	    story:descObj.story
           };
           if (typeof(obj.image) === typeof({}) && typeof(obj.image.url) === 'string'){
             nobj.img_src = obj.image.url;
@@ -119,6 +121,7 @@ module.exports = (function(){
     this._audio_type = "audio/mpeg";
     this._audio_length = "0";
     this._description = "";
+    this._shortDescription = "";
     this._link = "";
     this._date = "";
     this._img_src = "";
@@ -163,6 +166,9 @@ module.exports = (function(){
 
     if (this._description !== ""){
       data.description = this._description;
+    }
+    if (this._shortDescription !== ""){
+      data.short_description = this._shortDescription;
     }
     if (this._link !== ""){
       data.link = this._link;
@@ -249,7 +255,7 @@ module.exports = (function(){
       get:function(){return this._title;},
       set:function(title){
         this._title = title;
-        this.emit("changed", null);
+        this.emit("changed");
       }
     },
 
@@ -257,7 +263,15 @@ module.exports = (function(){
       get:function(){return this._description;},
       set:function(desc){
         this._description = desc;
-        this.emit("changed", null);
+        this.emit("changed");
+      }
+    },
+
+    "shortDescription":{
+      get:function(){return this._shortDescription;},
+      set:function(desc){
+	this._shortDescription = desc;
+	this.emit("changed");
       }
     },
 
@@ -309,7 +323,7 @@ module.exports = (function(){
       get:function(){return this._img_src;},
       set:function(src){
         this._img_src = src;
-        this.emit("changed", null);
+        this.emit("changed");
       }
     }
   });

@@ -35,6 +35,7 @@ module.exports = (function(){
 
   function database(){
     this._episode = [];
+    this._dirty = false;
   }
   database.prototype.__proto__ = Events.EventEmitter.prototype;
   database.prototype.constructor = database;
@@ -42,6 +43,7 @@ module.exports = (function(){
   database.prototype.fromString = function(str){
     try {
       VerifyDB(this, JSON.parse(str), false);
+      this._dirty = true;
       this.emit("changed", null);
     } catch (e) {throw e;}
   };
@@ -70,6 +72,7 @@ module.exports = (function(){
           } else {
             try {
               VerifyDB(this, JSON.parse(data.toString()), skipInvalidEpisodes);
+	      this._dirty = false; // Because if we're loading from a source, that data hasn't changed yet.
               this.emit("opened", true);
               this.emit("changed");
             } catch (e) {
@@ -92,6 +95,7 @@ module.exports = (function(){
 	  if (err){
 	    this.emit("error", err);
 	  } else {
+	    this._dirty = false;
 	    this.emit("saved");
 	  }
 	}).bind(this));
@@ -107,6 +111,7 @@ module.exports = (function(){
 	var ep = new episode(edata);
 	if (this._GetEpisodeIndex(ep.guid) < 0){
 	  this._episode.push(ep);
+	  this._dirty = true;
 	  this.emit("episode_added", ep);
 	  this.emit("changed");
 	}
@@ -116,6 +121,7 @@ module.exports = (function(){
     } else if (edata instanceof episode){
       if (this._GetEpisodeIndex(ep.guid) < 0){
 	this._episode.push(ep);
+	this._dirty = true;
 	this.emit("episode_added", ep);
 	this.emit("changed");
       }
@@ -158,8 +164,12 @@ module.exports = (function(){
       }
     },
 
-    "count":{
+    "episodeCount":{
       get:function(){return this._episode.length;}
+    },
+
+    "dirty":{
+      get:function(){return this._dirty;}
     }
   });
 

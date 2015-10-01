@@ -158,17 +158,20 @@ function run(data){
   var regStoriesAlt = new RegExp('<strong>(.*?)</strong> written');
   var regAuthors = new RegExp('written by (.*?) and read');
   var lines = data.split(regLines);
+  var desc = (lines.length > 1) ? lines[1] : "";
+  var info = {shortdesc:desc, story:[]};
   for (var i=0; i < lines.length; i++){
     if (lines[i].match(regStories) !== null || lines[i].match(regStoriesAlt) !== null){
       var title = getTitle(lines[i]);
       if (title !== null){
-	title.writers = getWriters(lines[i]);
-	title.narrators = getNarrators(lines[i]);
+	title.writer = getWriters(lines[i]);
+	title.narrator = getNarrators(lines[i]);
         title.beginning = getStoryBeginning(lines[i]);
       }
-      console.log(title);
+      info.story.push(title);
     }
   }
+  console.log(info);
 }
 
 
