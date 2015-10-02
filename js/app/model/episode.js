@@ -4,7 +4,7 @@ module.exports = (function(){
 
   var Events = require("events");
   var story = require("./story");
-  var DescParser = require("./descParser");
+  var DescParser = require("../util/descParser");
   
 
   function VerifyEpisode(ep, item){
@@ -53,6 +53,32 @@ module.exports = (function(){
     } else {
       throw new Error("Episode property 'story' expected to be an Array. Given " + typeof(item.story) + ".");
     }
+
+    // Now... using the title... let's see if we can guess the season/episode!
+    var episode = 0;
+    var match = ep._title.match(/NoSleep Podcast (S\d{1,2})(E\d{1,2}[a-zA-Z]{0,1})/);
+    if (match !== null && match.length > 2){
+      var season = parseInt(match[1].substr(1));
+      episode = parseInt(match[2].substr(1));
+      ep.addTag("season " + season);
+      ep.addTag("episode " + episode);
+    } else {
+      // Special case for Season 1 titles!
+      match = ep._title.match(/NoSleep Podcast (#\d{1,2})/);
+      if (match !== null && match.length > 1){
+	episode = parseInt(match[1].substr(1));
+	ep.addTag("season 1");
+	ep.addTag("episode " + episode);
+      }
+    }
+    // Could it be a "bonus" episode?
+    match = ep._title.match(/NoSleep Podcast(.*?)([B|b][O\o][N|n][U|u][S|s])(.*?)/);
+    if (match !== null){
+      ep.addTag("bonus");
+    }
+    // Does the title have a subtitle?
+    match = ep._title.match(/(.*?) - (.*?)/);
+    ep._subTitle = (match !== null && match.length > 2) ? match[2] : "";
 
     ep._audio_type = (typeof(item.audio_type) === 'string') ? item.audio_type : "audio/mpeg";
     ep._audio_length = (typeof(item.audio_length) === 'string') ? item.audio_length : "0";
@@ -112,6 +138,7 @@ module.exports = (function(){
 
   function episode(edata){
     this._title = null;
+    this._subTitle = null;
     this._guid = null;
     this._audio_src = null;
 
@@ -164,6 +191,9 @@ module.exports = (function(){
       }
     }
 
+    if (this._subTitle !== ""){
+      data.sub_title = this._subTitle;
+    }
     if (this._description !== ""){
       data.description = this._description;
     }
@@ -211,6 +241,16 @@ module.exports = (function(){
     return false;
   };
 
+  episode.prototype.hasTagLike = function(tag){
+    var reg = new RegExp("(.*?)" + tag + "(.*)");
+    for (var i=0; i < this._tag.length; i++){
+      if (this._tag[i].match(reg) !== null){
+	return true;
+      }
+    }
+    return false;
+  };
+
   episode.prototype.addStory = function(sdata){
     if (typeof(sdata) === typeof({})){
       try {
@@ -243,6 +283,7 @@ module.exports = (function(){
     "json":{
       get:function(){return this.toString();},
       set:function(str){
+	if (typeof(str) !== 'string'){throw new TypeError();}
         try {
           this.fromString(str);
         } catch (e) {
@@ -254,14 +295,25 @@ module.exports = (function(){
     "title":{
       get:function(){return this._title;},
       set:function(title){
+	if (typeof(title) !== 'string'){throw new TypeError();}
         this._title = title;
         this.emit("changed");
+      }
+    },
+
+    "subTitle":{
+      get:function(){return this._subTitle;},
+      set:function(subTitle){
+	if (typeof(subTitle) !== 'string'){throw new TypeError();}
+	this._subTitle = subTitle;
+	this.emit("changed");
       }
     },
 
     "description":{
       get:function(){return this._description;},
       set:function(desc){
+	if (typeof(desc) !== 'string'){throw new TypeError();}
         this._description = desc;
         this.emit("changed");
       }
@@ -290,6 +342,7 @@ module.exports = (function(){
     "link":{
       get:function(){return this._link;},
       set:function(link){
+	if (typeof(link) !== 'string'){throw new TypeError();}
         this._link = link;
         this.emit("changed", null);
       }
@@ -322,6 +375,7 @@ module.exports = (function(){
     "img_src":{
       get:function(){return this._img_src;},
       set:function(src){
+	if (typeof(src) !== 'string'){throw new TypeError();}
         this._img_src = src;
         this.emit("changed");
       }

@@ -3,17 +3,21 @@
 $(document).ready(function(){
   require('nw.gui').Window.get().showDevTools();
 
-  var Feeder = require('./js/app/feeder');
+  var Feeder = require('./js/app/util/feeder');
 
+  var episodeView = new View.EpisodeView();
+  
   var app = new Application();
   app.on("database_created", function(){
     NSP.db.on("episode_added", function(ep){
-      EpisodeCard(ep);
+      episodeView.addEpisode(ep, true);
     });
   });
 
 
   app.on("application_ready", function(){
+    episodeView.connectToDB(NSP.db);
+
     var refreshing = false;
     $(".app_action_refresh").click(function(evt){
       var target = $(".app_action_refresh").find("i.material-icons");

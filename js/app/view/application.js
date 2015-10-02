@@ -1,54 +1,9 @@
 
-
-// TODO: This is put out in the global space for temporary simplicity.
-// Planning on reworking a bit of the application organization!
-function EpisodeCard (episode){
-  var e = $("<div></div>").addClass("z-depth-3").css({
-    "margin": "0.5rem 0.1rem 0",
-    "border-radius": "2px"
-  });
-  
-  var header = $("<div></div>").addClass("card-image blue-grey darken-2").css({"overflow": "auto"});
-  var img = $("<img src=\"images/nsp_logo.png\">").height("64px").css({
-    "width":"auto",
-    "valign":"center",
-    "margin":"0.1rem 0.5rem 0.5rem 0.2rem"}).addClass("left");
-  // This will search for an episode specific image and change the image source if one is found.
-  require("./js/app/epImageFinder")(episode, function(ep, src){
-    if (src !== ""){
-      img.attr("src", src);
-      //TODO: Maybe... save this locally? IDK.
-    }
-  }, function(err){console.log(err);});
-
-  // Now back to our regularly scheduled html building via JQuery... wheeee!
-  var tblock = $("<p></p>").css({
-    "margin-top":"0",
-    "margin-bottom":"0"
-  });
-  var dt = $("<span></span>").css({"font-size":"0.75rem"}).append(episode.date.toString());
-  tblock.append(episode.title).append("<br>").append(dt);
-  header.append($("<div></div>").addClass("card-title blue-grey-text text-lighten-5").css("display", "inline-block").append(tblock)).append(img);
-
-  var body = $("<div></div>").addClass("blue-grey lighten-1").css({
-    "padding": "20px",
-    "background-color":"#FFFFFF"
-  });
-  var desc = $("<p></p>").append(episode.shortDescription);
-  body.append(desc);
-
-  e.append(header).append(body);
-
-  $(".cards").append(e);
-}
-
-
-
 var Application = (function($){
   var Events = require("events");
-  var Database = require("./js/app/database");
-  var Config = require("./js/app/config");
-  var Feeder = require("./js/app/feeder.js");
+  var Database = require("./js/app/model/database");
+  var Config = require("./js/app/model/config");
+  var Feeder = require("./js/app/util/feeder");
 
 
   if (typeof(window.NSP) === 'undefined'){
@@ -123,8 +78,10 @@ var Application = (function($){
 
         this.feedUpdate(feed);
 
-      } else if (database_exists === false){
-	NSP.db.save(NSP.config.path.database);
+      } else {
+	if (database_exists === false){
+	  NSP.db.save(NSP.config.path.database);
+	}
 	this.emit("application_ready");
       }
     }).bind(this));

@@ -1,0 +1,50 @@
+
+
+body{
+    overflow:hidden;
+}
+
+.scroller{
+    overflow: auto;
+    height: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.scroller::-webkit-scrollbar {
+    display: none;
+}
+
+.row.scrollable{
+    display: flex;
+    overflow: hidden;
+    height: 100vh;
+    position: relative;
+    width: 100%;
+    backface-visibility: hidden;
+    will-change: overflow;
+}
+
+
+.nsp-grey {
+    background-color: #3A4A44 !important; }
+
+.nsp-grey.darken {
+    background-color: #1D2723 !important; }
+
+.nsp-grey.lighten {
+    background-color: #B6E3f1 !important; }
+
+.nsp-red {
+    background-color: #8B0000 !important; }
+
+.nsp-grey-text {
+    color: #3A4A44 !important; }
+
+.nsp-grey-text.text-darken {
+    color: #1D2723 !important; }
+
+.nsp-grey-text.text-lighten {
+    color: #B6E3f1 !important; }
+
+.nsp-red-text {
+    color: #8B0000 !important; }
