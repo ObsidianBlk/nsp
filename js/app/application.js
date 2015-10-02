@@ -9,13 +9,25 @@ function EpisodeCard (episode){
   });
   
   var header = $("<div></div>").addClass("card-image blue-grey darken-2").css({"overflow": "auto"});
-  var img = $("<img src=\"images/nsp_logo.png\">").height("64px").css("width", "auto").css("valign", "center").addClass("right");
+  var img = $("<img src=\"images/nsp_logo.png\">").height("64px").css({
+    "width":"auto",
+    "valign":"center",
+    "margin":"0.1rem 0.5rem 0.5rem 0.2rem"}).addClass("left");
+  // This will search for an episode specific image and change the image source if one is found.
+  require("./js/app/epImageFinder")(episode, function(ep, src){
+    if (src !== ""){
+      img.attr("src", src);
+      //TODO: Maybe... save this locally? IDK.
+    }
+  }, function(err){console.log(err);});
+
+  // Now back to our regularly scheduled html building via JQuery... wheeee!
   var tblock = $("<p></p>").css({
     "margin-top":"0",
     "margin-bottom":"0"
   });
-  var title = $("<span></span>").css("font-size", "2em").append(episode.title);
-  tblock.append(title).append("<br>").append(episode.date.toString());
+  var dt = $("<span></span>").css({"font-size":"0.75rem"}).append(episode.date.toString());
+  tblock.append(episode.title).append("<br>").append(dt);
   header.append($("<div></div>").addClass("card-title blue-grey-text text-lighten-5").css("display", "inline-block").append(tblock)).append(img);
 
   var body = $("<div></div>").addClass("blue-grey lighten-1").css({
@@ -47,17 +59,43 @@ var Application = (function($){
   }
 
 
-  var APPLICATION_RUNNING = false;
-  var App = function(){};
+  var App = function(){
+    this._application_running = false;
+  };
   App.prototype.__proto__ = Events.EventEmitter.prototype;
   App.prototype.constructor = App;
 
+
+  
+  App.prototype.feedUpdate = function(feed){
+    if (!(feed instanceof Feeder)){
+      throw new TypeError();
+    }
+
+    var itemcount = 0;
+    feed.on("rss_item", (function(item){
+      itemcount += 1;
+      try{
+	NSP.db.addEpisode(item);
+      } catch (e) {
+        this.emit("error", e);
+      }
+      itemcount -= 1;
+    }).bind(this));
+
+    // Ok... let's look at that feed!
+    feed.rss('http://nosleeppodcast.libsyn.com/rss');
+  };
+
+
+
+  
   App.prototype.run = function(){
     // Gate keeper. We only want to run this function... once!
-    if (APPLICATION_RUNNING){
+    if (this._application_running){
       throw new Error("Attempting to run the application twice");
     }
-    APPLICATION_RUNNING = true;
+    this._application_running = true;
 
     NSP.config = new Config();
     NSP.db = new Database();
@@ -72,31 +110,19 @@ var Application = (function($){
     NSP.db.on("opened", (function(database_exists){
       this.emit("database_loaded");
       if (NSP.config.downloadFeedAtStartup || database_exists === false){
-	EpAdded = false; // Just reset it if it was triggered by the load from disc.
 	var feed = new Feeder();
-	var itemcount = 0;
 
-	feed.on("rss_item", function(item){
-	  itemcount += 1;
-	  try{
-	    NSP.db.addEpisode(item);
-	  } catch (e) {throw e;}
-	  itemcount -= 1;
-	});
-
-	feed.on("rss_complete", (function(){
-	  while (itemcount > 0){
-	    console.log("Waiting on " + itemcount + " items");
-	  } // Wait...
-	  if (NSP.db.dirty || database_exists === false){
+        feed.on("rss_complete", (function(){
+          if (NSP.db.dirty || !database_exists){
 	    NSP.db.save(NSP.config.path.database);
-	    this.emit("application_ready");
-	  } else {
+          } else {
 	    console.log("No new episodes.");
-	  }
-	}).bind(this));
+          }
+          this.emit("application_ready");
+        }).bind(this));
 
-	feed.rss('http://nosleeppodcast.libsyn.com/rss');
+        this.feedUpdate(feed);
+
       } else if (database_exists === false){
 	NSP.db.save(NSP.config.path.database);
 	this.emit("application_ready");
@@ -122,6 +148,12 @@ var Application = (function($){
 
     NSP.config.open("config.json");
   };
+
+  Object.defineProperties(App.prototype, {
+    "running":{
+      get:function(){return this._application_running;}
+    }
+  });
 
   return App;
 })($);

@@ -17,7 +17,7 @@
     <script type="text/javascript" src="js/materialize/materialize.min.js"></script>
 
     <!-- The Application class and everything needed to initialize the application-->
-    <script type="text/javascript" src="js/app/init.js"></script>
+    <script type="text/javascript" src="js/app/application.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -28,10 +28,13 @@
         <div class="nav-wrapper">
 	  <a href="#!" class="brand-logo left blue-grey-text text-lighten-2">The NoSleep Pod-App</a>
 	  <ul class="right">
-            <li><a href="javascript: void(0);" class="app_action_search"><i class="material-icons">search</i></a></li>
-            <li><a href="javascript: void(0);" class="app_action_refresh"><i class="material-icons">refresh</i></a></li>
-            <li><a href="javascript: void(0);" class="app_action_menu"><i class="material-icons">more_vert</i></a></li>
+            <li><a href="javascript: void(0);" class="app_action_search"><i class="material-icons md-light">search</i></a></li>
+            <li><a href="javascript: void(0);" class="app_action_refresh"><i class="material-icons md-light">refresh</i></a></li>
+            <li><a href="javascript: void(0);" class="app_action_menu"><i class="material-icons md-light">more_vert</i></a></li>
 	  </ul>
+        </div>
+        <div class="progress" style="display: none;">
+          <div class="indeterminate"></div>
         </div>
       </nav>
     </div>
