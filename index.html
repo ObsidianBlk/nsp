@@ -21,34 +21,69 @@
     <!-- The Application class and everything needed to initialize the application-->
     <script type="text/javascript" src="js/app/view/application.js"></script>
     <script type="text/javascript" src="js/app/view/episodeViewer.js"></script>
+    <script type="text/javascript" src="js/app/view/audioPlayer.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
   </head>
   <body class="nsp-grey darken">
+    <audio id="Audio_System">
+      <source id="Audio_Source" src=""></source>
+    </audio>
+
+    
+    <!-- ------------ HEADER ------------ -->
     <div class="navbar-fixed">
       <nav class="nsp-grey z-depth-6">
         <div class="nav-wrapper">
+
+          <!-- Logo -->
 	  <a href="#!" class="brand-logo left nsp-grey-text text-lighten">The NoSleep Pod-App</a>
-	  <ul class="right">
+
+          <!-- Nav Controls -->
+          <ul class="right">
             <li><a href="javascript: void(0);" class="app_action_search"><i class="material-icons md-light">search</i></a></li>
             <li><a href="javascript: void(0);" class="app_action_refresh"><i class="material-icons md-light">refresh</i></a></li>
             <li><a href="javascript: void(0);" class="app_action_menu"><i class="material-icons md-light">more_vert</i></a></li>
 	  </ul>
-	  <div class="progress" style="display:none;">
+          
+          <!-- Progress bar! -->
+          <div class="progress" style="display:none;">
             <div class="indeterminate"></div>
           </div>
         </div>
       </nav>
     </div>
-    
-    <div class="row scrollable">
-      <div class="col s12 m6 l3 cards scroller">
 
+    <!-- ------------ BODY/IES ------------ -->
+    <!-- Screen TABs -->
+    <div class="row">
+      <div class="col s12">
+        <ul class="nsp-tabs">
+          <li class="tab col s3"><a class="active" href="#episodes">Episodes</a></li>
+          <li class="tab col s3"><a href="#now_playing">Now Playing</a></li>
+        </ul>
       </div>
-      <div class="col scroller">
 
+      <div class="col s12" id="episodes">
+        <div class="row scrollable">
+          <div class="col s12 m6 l3 cards scroller">
+
+          </div>
+          <div class="col scroller">
+
+          </div>
+        </div>
       </div>
+
+
+      <div class="col s12" id="now_playing">
+        <div class="card-panel">
+          I'll get to this!
+        </div>
+      </div>
+
+      
     </div>
   </body>
 </html>

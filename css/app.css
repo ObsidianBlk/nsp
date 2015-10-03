@@ -48,3 +48,54 @@ body{
 
 .nsp-red-text {
     color: #8B0000 !important; }
+
+
+
+.nsp-tabs {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  position: relative;
+  height: 48px;
+  background-color: #808474;
+  margin: 0 auto;
+  width: 100%;
+  white-space: nowrap; }
+  .nsp-tabs .tab {
+    -webkit-box-flex: 1;
+    -webkit-flex-grow: 1;
+    -ms-flex-positive: 1;
+    flex-grow: 1;
+    display: block;
+    float: left;
+    text-align: center;
+    line-height: 48px;
+    height: 48px;
+    padding: 0 20px;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    width: 15%; }
+    .nsp-tabs .tab a {
+      color: #8B0000;
+      display: block;
+      width: 100%;
+      height: 100%;
+      -webkit-transition: color .28s ease;
+      -moz-transition: color .28s ease;
+      -o-transition: color .28s ease;
+      -ms-transition: color .28s ease;
+      transition: color .28s ease; }
+      .nsp-tabs .tab a:hover {
+        color: #cf0000; }
+    .nsp-tabs .tab.disabled a {
+      color: #8b6262;
+      cursor: default; }
+  .nsp-tabs .indicator {
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+    background-color: #8B0000;
+    will-change: left, right; }

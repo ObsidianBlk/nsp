@@ -46,6 +46,13 @@ window.View.EpisodeView = (function(){
     e.append(header).append(body);
     return e;
   };
+
+
+
+  // -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+
   
   function episodeView(){
     this._search = "";
@@ -64,9 +71,9 @@ window.View.EpisodeView = (function(){
     // We'll assume newest goes first unless explicitly stated
     append = (typeof(append) === 'boolean') ? append : false;
     if (append){
-      $(".cards").append(episode);
+      $(".cards").append(episodeCard(episode));
     } else {
-      $(".cards").prepend(episode);
+      $(".cards").prepend(episodeCard(episode));
     }
   };
 

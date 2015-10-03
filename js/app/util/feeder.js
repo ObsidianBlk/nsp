@@ -5,10 +5,27 @@ module.exports = (function(){
   var Events = require('events');
   var FeedParser = require('feedparser');
   var Request = require('request');
+  var HTTP = require('http');
+  var FS = require('fs');
 
   function feeder(){};
   feeder.prototype.__proto__ = Events.EventEmitter.prototype;
   feeder.prototype.constructor = feeder;
+
+  feeder.prototype.downloadFile = function(url, path){
+    var file = FS.createWriteStream(path);
+    var request = HTTP.get(url, (function(resp){
+      resp.pipe(file);
+      file.on('finish', function(){
+        file.close((function(){
+          this.emit("file_downloaded");
+        }).bind(this));
+      });
+    }).bind(this)).on('error', (function(err){
+      fs.unlink(path);
+      this.emit('error', err);
+    }).bind(this));
+  };
 
   feeder.prototype.rss = function(address){
     var req = Request(address);
