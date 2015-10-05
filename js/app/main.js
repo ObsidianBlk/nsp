@@ -7,8 +7,8 @@ $(document).ready(function(){
   var Feeder = require('./js/app/util/feeder');
 
   var episodeView = new View.EpisodeView();
-  var audioPlayer = new View.AudioPlayer();
-  audioPlayer.play("audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3");
+  //var audioPlayer = new View.AudioPlayer();
+  //audioPlayer.play("audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3");
   
   var app = new Application();
   app.on("database_created", function(){
