@@ -7,8 +7,7 @@ $(document).ready(function(){
   var Feeder = require('./js/app/util/feeder');
 
   var episodeView = new View.EpisodeView();
-  //var audioPlayer = new View.AudioPlayer();
-  //audioPlayer.play("audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3");
+  var audioPlayer = new View.AudioPlayer();
   
   var app = new Application();
   app.on("database_created", function(){
@@ -55,6 +54,17 @@ $(document).ready(function(){
         evt.preventDefault();
       }
     });
+
+
+    if (NSP.config.playIntroAtStartup){
+      audioPlayer.volume = 0.5;
+      audioPlayer.play("audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3", {
+	starttime:0,
+	endtime:12.5,
+	fadeIn:1.0,
+	fadeOut:1.0
+      });
+    }
   });
   
   app.run();

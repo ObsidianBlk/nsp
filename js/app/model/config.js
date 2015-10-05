@@ -15,6 +15,7 @@ module.exports = (function(){
     }
     conf.skipInvalidEpisodes = obj.skip_invalid_episodes;
     conf.downloadFeedAtStartup = obj.download_feed_at_startup;
+    conf.playIntroAtStartup = obj.play_intro_at_startup;
   }
 
   function config(){
@@ -24,6 +25,7 @@ module.exports = (function(){
     };
     this._skipInvalidEpisodes = false;
     this._downloadFeedAtStartup = true;
+    this._playIntroAtStartup = true;
   }
   config.prototype.__proto__ = Events.EventEmitter.prototype;
   config.prototype.constructor = config;
@@ -127,6 +129,14 @@ module.exports = (function(){
       get:function(){return this._downloadFeedAtStartup;},
       set:function(enable){
 	this._downloadFeedAtStartup = (typeof(enable) === 'boolean') ? enable : this._downloadFeedAtStartup;
+	this.emit("changed");
+      }
+    },
+
+    "playIntroAtStartup":{
+      get:function(){return this._playIntroAtStartup;},
+      set:function(enable){
+	this._playIntroAtStartup = (typeof(enable) === 'boolean') ? enable : this._playIntroAtStartup;
 	this.emit("changed");
       }
     }
