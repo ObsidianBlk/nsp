@@ -48,6 +48,7 @@ module.exports = (function(){
 	try{
 	  var s = new story(item.story[i]);
 	} catch (e) {throw e;}
+	s.on("changed", function(){ep.emit("changed");});
 	ep._story.push(s);
       }
     } else {
@@ -232,6 +233,13 @@ module.exports = (function(){
     }
   };
 
+  episode.prototype.tag = function(index){
+    if (index >= 0 && index < this._tag.length){
+      return this._tag[index];
+    }
+    throw new RangeError();
+  };
+
   episode.prototype.hasTag = function(tag){
     for (var i=0; i < this._tag.length; i++){
       if (tag === this._tag[i]){
@@ -329,6 +337,10 @@ module.exports = (function(){
 
     "guid":{
       get:function(){return this._guid;}
+    },
+
+    "tagCount":{
+      get:function(){return this._tag.length;}
     },
 
     "tags":{

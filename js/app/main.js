@@ -6,7 +6,7 @@ $(document).ready(function(){
 
   var Feeder = require('./js/app/util/feeder');
 
-  var episodeView = new View.EpisodeView();
+  var episodeView = new View.EpisodeView(".cards", ".sheet");
   var audioPlayer = new View.AudioPlayer();
   
   var app = new Application();

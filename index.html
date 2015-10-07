@@ -20,8 +20,7 @@
 
     <!-- The Application class and everything needed to initialize the application-->
     <script type="text/javascript" src="js/app/view/application.js"></script>
-    <script type="text/javascript" src="js/app/view/episodeCard.js"></script>
-    <script type="text/javascript" src="js/app/view/episodeViewer.js"></script>
+    <script type="text/javascript" src="js/app/view/episodeView.js"></script>
     <script type="text/javascript" src="js/app/view/audioPlayer.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
@@ -45,7 +44,18 @@
           <ul class="right">
             <li><a href="javascript: void(0);" class="app_action_search"><i class="material-icons md-light">search</i></a></li>
             <li><a href="javascript: void(0);" class="app_action_refresh"><i class="material-icons md-light">refresh</i></a></li>
-            <li><a href="javascript: void(0);" class="app_action_menu"><i class="material-icons md-light">more_vert</i></a></li>
+            <li>
+	      <a href="javascript: void(0);" class="dropdown-button app_action_menu" data-beloworigin="true" data-activates="system_menu">
+		<i class="material-icons md-light">more_vert</i>
+	      </a>
+	    </li>
+	  </ul>
+
+	  <!-- System Menu Dropdown Structure -->
+	  <ul id='system_menu' class='dropdown-content'>
+	    <li><a href="#!">Settings</a></li>
+	    <li class="divider"></li>
+	    <li><a class="waves-effect waves-light modal-trigger" href="javascript: $('#about-app').openModal();">About</a></li>
 	  </ul>
           
           <!-- Progress bar! -->
@@ -56,22 +66,34 @@
       </nav>
     </div>
 
+    <!-- ------------ MODAL DIALOGS ------------ -->
+
+    <!-- About App -->
+    <div id="about-app" class="modal">
+      <div class="modal-content">
+	<p>Cool stuff to say about the app.</p>
+      </div>
+      <div class="modal-footer">
+	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+      </div>
+    </div>
+
     <!-- ------------ BODY/IES ------------ -->
     <!-- Screen TABs -->
     <div class="row">
       <div class="col s12">
         <ul class="nsp-tabs">
-          <li class="tab col s3"><a class="active" href="#episodes">Episodes</a></li>
-          <li class="tab col s3"><a href="#now_playing">Now Playing</a></li>
+          <li class="tab col s6"><a class="active" href="#episodes">Episodes</a></li>
+          <li class="tab col s6"><a href="#now_playing">Now Playing</a></li>
         </ul>
       </div>
 
       <div class="col s12" id="episodes">
         <div class="row scrollable">
-          <div class="col s12 m6 l3 cards scroller">
+          <div class="col s12 m6 cards scroller">
 
           </div>
-          <div class="col scroller">
+          <div class="col m6 hide-on-small-only sheet scroller" style="background-color:#FFFFFF">
 
           </div>
         </div>
