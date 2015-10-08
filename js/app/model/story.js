@@ -272,11 +272,75 @@ module.exports = (function(){
       }
     },
 
+    "beginningSec":{
+      get:function(){
+	var seconds = 0;
+	if (this._beginning !== ""){
+	  var t = this._beginning.split(":");
+	  if (t.length <= 3){
+	    t.reverse();
+	    for (var i=0; i < t.length; i++){
+	      seconds += parseInt(t[i])*Math.pow(60, i);
+	    }
+	  }
+	}
+	return seconds;
+      }
+    },
+
     "ending":{
       get:function(){return this._ending;},
       set:function(ending){
 	this._ending = ending;
 	this.emit("changed");
+      }
+    },
+
+    "endingSec":{
+      get:function(){
+	var seconds = 0;
+	if (this._ending !== ""){
+	  var t = this._ending.split(":");
+	  if (t.length <= 3){
+	    t.reverse();
+	    for (var i=0; i < t.length; i++){
+	      seconds += parseInt(t[i])*Math.pow(60, i);
+	    }
+	  }
+	}
+	return seconds;
+      }
+    },
+
+    "duration":{
+      get:function(){
+	return (this._beginning !== "" && this._ending !== "") ? this.endingSec - this.beginningSec : 0;
+      }
+    },
+
+    "durationString":{
+      get:function(){
+	var dur = "";
+	if (this.duration > 0){
+	  var hour = 60*60;
+	  var minute = 60;
+	  var time = this.duration;
+
+	  var h = Math.floor(time/hour);
+	  if (h > 0){
+	    dur += h.toString() + ":";
+	  }
+	  time -= h*hour;
+	  
+	  var m = Math.floor(time/minute);
+	  if (m > 0){
+	    dur += ((m < 10) ? "0" + m.toString() : m.toString()) + ":";
+	  }
+	  time -= m*minute;
+
+	  dur += (time < 10) ? "0" + time.toString() : time.toString();
+	}
+	return dur;
       }
     },
 

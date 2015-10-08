@@ -7,6 +7,22 @@ if (typeof(window.View) === 'undefined'){
 window.View.EpisodeView = (function(){
 
   var Events = require('events');
+  var FS = require('fs');
+  var Path = require('path');
+
+  function AudioPath(episode){
+    var path = Path.join(NSP.config.path.audio, episode.audio_filename);
+    if (FS.lstatSync(path).isFile()){
+      return {
+	path: path,
+	type: "local"
+      };
+    }
+    return {
+      path: episode.audio_src,
+      type: "remote"
+    };
+  }
 
 
   function ListEntity(episode){
@@ -43,18 +59,57 @@ window.View.EpisodeView = (function(){
 
 
   function EpisodeDetails(entity, episode){
-    var img = $("<img src=\"images/nsp_logo.png\">").addClass("center-align");
+    var body = $("<div></div>").addClass("flow-text").css("background-color", "#FFFFFF");
+    var img = $("<img src=\"images/nsp_logo.png\">");
     if (episode.img_src !== ""){
       img.attr("src", episode.img_src).css({
 	"width":"20rem",
 	"height":"auto"
       });;
     }
-    entity.append($("<p></p>").append(episode.title));
+    body.append($("<div></div>").addClass("center-align").append(img))
+      .append($("<h5></h5>").addClass("truncate").append(episode.title))
+      .append($("<hr>"));
 
     for (var i=0; i < this.tagCount; i++){
-      entity.append($("<div></div>").addClass("tags chip").append(episode.tag(i)).append("<i class=\"material-icons\">close</i>"));
+      body.append($("<div></div>").addClass("tags chip").append(episode.tag(i)).append("<i class=\"material-icons\">close</i>"));
     }
+    if (this.tagCount > 0){
+      body.append($("<hr>"));
+    }
+
+    body.append($("<p></p>").append(episode.shortDescription));
+
+    body.append($("<hr>"));
+
+    for (var i=0; i < episode.storyCount; i++){
+      var story = episode.story(i);
+      var card = $("<div></div>").addClass("card nsp-grey");
+      var titleBlock = $("<div></div>").addClass("title-block");
+      titleBlock.append($("<span></span>").addClass("card-title nsp-grey-text text-lighten").append(story.title));
+      if (story.beginning !== ""){
+	var time = $("<time></time>").addClass("grey-text text-lighten-1").append("<i>Starting:</i> " + story.beginning);
+	if (story.duration > 0){
+	  time.append(" (dur: " + story.durationString + ")");
+	}
+	titleBlock.append("<br>").append(time);
+      }
+      card.append(titleBlock);
+      body.append(card);
+    }
+
+    entity.append(body)
+    // Yeah... this is a rather cheap trick, but, otherwise the whole area doesn't seem to scroll. This just makes sure it does.
+      .append("<br>")
+      .append("<br>")
+      .append("<br>")
+      .append("<br>")
+      .append("<br>")
+      .append("<br>")
+      .append("<br>")
+      .append("<br>")
+      .append("<br>")
+      .append("<br>");
   }
 
   // -----------------------------------------------------------------------

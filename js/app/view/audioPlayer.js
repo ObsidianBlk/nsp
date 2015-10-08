@@ -97,6 +97,31 @@ window.View.AudioPlayer = (function(){
     this._currentTrack = -1;
   };
 
+  audioPlayer.prototype.addEpisodeTrack = function(episode, story){
+    var url = (episode.audio_path !== "") ? episode.audio_path : episode.audio_src;
+    var eindex = NSP.db.getEpisodeIndex(episode.guid);
+    if (eindex >= 0){
+      var title = episode.title;
+      var es_index = "E" + ((eindex < 10) ? "0"+eindex : eindex);
+      if (typeof(story) !== 'undefined'){
+	var sindex = episode.getStoryIndexByTitle(story.title);
+	if (sindex >= 0){
+	  title = story.title;
+	  es_index += "S" + ((sindex < 10) ? "0"+sindex : sindex);
+	} else {
+	  console.log("Story not found in Episode.");
+	}
+      }
+
+      this.addTrack(url, {
+	name: title,
+	es_index: es_index
+      });
+    } else {
+      throw new Error("Episode invalid or not in database.");
+    }
+  };
+
   audioPlayer.prototype.addTrack = function(url, options){
     if (this._GetTrackIndex(url) === -1){
       options = options || {};
@@ -104,12 +129,15 @@ window.View.AudioPlayer = (function(){
       options.fadeOut = (typeof(options.fadeOut) === 'number') ? options.fadeOut : 0;
 
       this._playlist.push({
-	url:url,
-	starttime:(typeof(options.starttime) !== 'undefined') ? options.starttime : null,
-	endtime:(typeof(options.endtime) !== 'undefined') ? options.endtime : null,
+	url: url,
+	name: options.name,
+	es_index: (typeof(options.es_index) === 'string') ? options.es_index : null,
+	starttime: (typeof(options.starttime) !== 'undefined') ? options.starttime : null,
+	endtime: (typeof(options.endtime) !== 'undefined') ? options.endtime : null,
 	fadeIn: options.fadeIn,
 	fadeOut: options.fadeOut
       });
+      this.emit("track_added");
     }
   };
 
@@ -162,6 +190,7 @@ window.View.AudioPlayer = (function(){
 	  this._player[0].volume = this._volume;
 	}
 	this._player[0].play();
+	this.emit("playing");
 
 	if (fadingIn || fadingOut){
 	  this._fadeWatch = setInterval((function(){
@@ -225,12 +254,14 @@ window.View.AudioPlayer = (function(){
       } catch (e) {throw e;}
     } else if (this._player[0].paused && this._player.find("source").length > 0){
       this._player[0].play();
+      this.emit("playing");
     }
   };
 
   audioPlayer.prototype.pause = function(){
     if (!this._player[0].paused && this._player[0].duration > 0){
       this._player[0].pause();
+      this.emit("paused");
     }
   };
 
@@ -280,6 +311,60 @@ window.View.AudioPlayer = (function(){
 
     "currentTrackIndex":{
       get:function(){return this._currentTrack;}
+    },
+
+    "currentTrackEpisode":{
+      get:function(){
+	if (this._currentTrack >= 0){
+	  if (this._playlist[this._currentTrack].es_index !== null){
+	    var pos = this._playlist[this._currentTrack].es_index.lastIndexOf("S");
+	    var eindex = -1;
+	    if (pos > 0){
+	      eindex = parseInt(this._playlist[this._currentTrack].es_index.substr(1, pos-1));
+	    } else {
+	      eindex = parseInt(this._playlist[this._currentTrack].es_index.substr(1));
+	    }
+	    if (eindex >= 0){
+	      return NSP.db.episode(eindex);
+	    }
+	  }
+	}
+	return null;
+      }
+    },
+
+    "currentTrackStory":{
+      get:function(){
+	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].es_index !== null){
+	  var pos = this._playlist[this._currentTrack].es_index.lastIndexOf("S");
+	  var sindex = (pos > 0) ? parseInt(this._playlist[this._currentTrack].es_index.substr(pos+1)) : -1;
+	  if (sindex >= 0){
+	    return this.currentTrackEpisode.story(sindex);
+	  } else {
+	    return this.currentTrackEpisode.storyByTime(this._player[0].currentTime);
+	  }
+	}
+	return null;
+      }
+    },
+
+    "currentTrackTitle":{
+      get:function(){
+	var title = "";
+	if (this._currentTrack >= 0){
+	  title = this._playlist[this._currentTrack].title;
+	  var ep = this.currentTrackEpisode;
+	  if (ep !== null){
+	    title = ep.title;
+	    var story = this.currentTrackStory;
+	    story = (story !== null) ? story : ep.storyByTime(this._player[0].currentTime);
+	    if (story !== null){
+	      title += " - " + story.title;
+	    }
+	  }
+	}
+	return title;
+      }
     }
   });
 

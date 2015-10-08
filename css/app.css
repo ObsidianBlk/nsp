@@ -99,3 +99,13 @@ body{
     height: 2px;
     background-color: #8B0000;
     will-change: left, right; }
+
+
+time {
+    font-size: small;
+}
+
+.title-block{
+    line-height: 80%;
+    padding: 0.25em;
+}

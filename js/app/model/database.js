@@ -138,6 +138,10 @@ module.exports = (function(){
     return null;
   };
 
+  database.prototype.getEpisodeIndex = function(guid){
+    return this._GetEpisodeIndex(guid);
+  };
+
   database.prototype.episodeList = function(filter){
     if (typeof(filter) === 'function'){
       return this._episode.filter(filter);

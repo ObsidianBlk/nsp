@@ -81,6 +81,7 @@ module.exports = (function(){
     match = ep._title.match(/(.*?) - (.*?)/);
     ep._subTitle = (match !== null && match.length > 2) ? match[2] : "";
 
+    ep._audio_path = (typeof(item.audio_path) === 'string') ? item.audio_path : "";
     ep._audio_type = (typeof(item.audio_type) === 'string') ? item.audio_type : "audio/mpeg";
     ep._audio_length = (typeof(item.audio_length) === 'string') ? item.audio_length : "0";
     ep._description = (typeof(item.description) === 'string') ? item.description : "";
@@ -142,6 +143,7 @@ module.exports = (function(){
     this._subTitle = null;
     this._guid = null;
     this._audio_src = null;
+    this._audio_path = null;
 
     this._tag = [];
     this._story = [];
@@ -281,11 +283,61 @@ module.exports = (function(){
 
   episode.prototype.story = function(index){
     if (index >= 0 && index < this._story.length){
-      return this._story[i];
+      return this._story[index];
     }
     return null;
   };
 
+  episode.prototype.storyByTime = function(time){
+    if (typeof(time) === 'string'){
+      var t = time.split(":");
+      if (t.length > 0 && t.length <= 3){
+	t.reverse();
+	time = 0;
+	for (var i=0; i < t.length; i++){
+	  time += parseInt(t[i])*Math.pow(60, i);
+	}
+      } else {
+	throw new TypeError();
+      }
+    } else if (typeof(time) !== 'number' || time%1 === 0){
+      throw new TypeError();
+    }
+
+    if (time >= 0 && time < this.audio_length && this._story.length > 0){
+      var storyBT = this._story.filter(function(s){
+	if (s.beginningSec <= 0 || s.beginningSec > time){
+	  return false;
+	}
+	return true;
+      });
+
+      if (storyBT.length > 0){
+	var story = null;
+	var timeIn = 0;
+	for (var i=0; i < storyBT.length; i++){
+	  var tin = storyBT[i].beginningSec - time;
+	  if (story === null || timeIn > tin){
+	    story = storyBT;
+	    timeIn = tin;
+	  }
+	}
+
+	return story;
+      }
+    }
+    return null;
+  };
+
+
+  episode.prototype.getStoryIndexByTitle = function(title){
+    for (var i=0; i < this._story.length; i++){
+      if (this._story[i].title === title){
+	return i;
+      }
+    }
+    return -1;
+  };
 
   Object.defineProperties(episode.prototype, {
     "json":{
@@ -356,7 +408,7 @@ module.exports = (function(){
       set:function(link){
 	if (typeof(link) !== 'string'){throw new TypeError();}
         this._link = link;
-        this.emit("changed", null);
+        this.emit("changed");
       }
     },
 
@@ -372,8 +424,21 @@ module.exports = (function(){
       }
     },
 
+    "audio_path":{
+      get:function(){return this._audio_path;},
+      set:function(path){
+	if (typeof(path) !== 'string'){throw new TypeError();}
+	this._audio_path = path;
+	this.emit("changed");
+      }
+    },
+
     "audio_src":{
       get:function(){return this._audio_src;}
+    },
+
+    "audio_filename":{
+      get:function(){return (this._audio_src.match(/[^.]+(\.[^?#]+)?/) || [])[0];}
     },
 
     "audio_length":{
