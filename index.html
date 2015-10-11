@@ -93,16 +93,39 @@
           <div class="col s12 m6 cards scroller">
 
           </div>
-          <div class="col m6 hide-on-small-only sheet scroller" style="background-color:#FFFFFF">
-
+          <div class="col m6 hide-on-small-only sheet scroller" style="background-color:#FFFFFF;">
+            <div id="sheet_content" style="margin_left:0"></div>
           </div>
         </div>
       </div>
 
 
       <div class="col s12" id="now_playing">
-        <div class="card-panel">
-          I'll get to this!
+        <div class="row scrollable">
+          <div class="col s12 m6 playlist, scroller"></div>
+          <div class="col m6 hide-on-small-only scroller" style="background-color:#FFFFFF">
+            <div class="flow-text player-title">No Track Selected</div>
+            <div class="progress" style="">
+              <div class="determinate player-progress" width="0%"></div>
+            </div>
+            <div class="center-align hide-on-med-and-down">
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevtrack"><i class="material-icons">skip_previous</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevstory"><i class="material-icons">fast_rewind</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_playpause"><i class="material-icons">play_circle_filled</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nextstory"><i class="material-icons">fast_forward</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nexttrack"><i class="material-icons">skip_next</i></a>
+            </div>
+
+            <div class="center-align hide-on-large-only">
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_playpause"><i class="material-icons">play_circle_filled</i></a>
+            </div>
+            <div class="center-align hide-on-large-only">
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevtrack"><i class="material-icons">skip_previous</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevstory"><i class="material-icons">fast_rewind</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nextstory"><i class="material-icons">fast_forward</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nexttrack"><i class="material-icons">skip_next</i></a>
+            </div>
+          </div>
         </div>
       </div>
 

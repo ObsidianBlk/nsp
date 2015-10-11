@@ -50,6 +50,15 @@ body{
     color: #8B0000 !important; }
 
 
+.waves-effect.waves-nsp-red .waves-ripple {
+    background-color: rgba(139, 0, 0, 0.45); }
+
+.waves-effect.waves-nsp-dark .waves-ripple {
+    background-color: rgba(29, 39, 35, 0.45); }
+
+.waves-effect.waves-nsp-light .waves-ripple {
+    background-color: rgba(182, 227, 241, 0.45); }
+
 
 .nsp-tabs {
   display: -webkit-box;

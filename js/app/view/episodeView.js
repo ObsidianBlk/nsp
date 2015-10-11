@@ -30,9 +30,10 @@ window.View.EpisodeView = (function(){
     var header = $("<div></div>").addClass("collapsible-header blue-grey darken-2").css({"overflow": "auto"});
 
     var img = $("<img src=\"\">").height("64px").css({
-	"width":"auto",
-	"valign":"center",
-	"margin":"0.1rem 0.5rem 0.5rem 0.2rem"}).addClass("left");
+      "width":"auto",
+      "valign":"center",
+      "margin":"0.1rem 0.5rem 0.5rem 0.2rem"
+    }).addClass("left");
 
     if (episode.img_src !== ""){
       img.attr("src", episode.img_src);
@@ -59,8 +60,10 @@ window.View.EpisodeView = (function(){
 
 
   function EpisodeDetails(entity, episode){
-    var body = $("<div></div>").addClass("flow-text").css("background-color", "#FFFFFF");
-    var img = $("<img src=\"images/nsp_logo.png\">");
+    entity.empty();
+    
+    var body = entity;//$("<div></div>").addClass("flow-text").css("background-color", "#FFFFFF");
+    var img = $("<img src=\"images/nsp_logo.png\">").css("opacity","inherit");
     if (episode.img_src !== ""){
       img.attr("src", episode.img_src).css({
 	"width":"20rem",
@@ -132,9 +135,9 @@ window.View.EpisodeView = (function(){
 
     this._listDirty = false;
 
-    this._activeCard = null;
-    this._sheetTransitionSpeed = 0.5; // In Seconds.
-    this._transitionState = 0;
+    this._activeCard = [null, null];
+    this._slideActive = false;
+    this._slideBuffer = 200; // px
 
     this._episodeCard = [];
     this._search = "";
@@ -147,6 +150,8 @@ window.View.EpisodeView = (function(){
 	this._listDirty = false;
       }
     }).bind(this), 200);
+
+    this._sheetview.find("#sheet_content").animate({"margin-left":this._sheetview.width()+this._slideBuffer}, 400);
   };
   episodeView.prototype.__proto__ = Events.EventEmitter.prototype;
   episodeView.prototype.constructor = episodeView;
@@ -163,25 +168,7 @@ window.View.EpisodeView = (function(){
     
     var le = ListEntity(episode);
     le.on("click", (function(){
-      if (le.hasClass("active")){
-	console.log("Item active!");
-	if (this._activeCard !== episode){
-	  this._activeCard = episode;
-	  if (this._transitionState !== 0 && this._activeCard !== null){
-	    this._transitionState += 1;
-	  } else {
-	    console.log("Transitioning");
-	    EpisodeDetails(this._sheetview, this._activeCard);
-	    this._sheetview.fadeIn(400, this._OnFadedIn.bind(this));
-	  }
-	}
-      } else {
-	this._activeCard = null;
-	if (this._transitionState === 0){
-	  this._transitionState = 1;
-	  this._sheetview.fadeOut(400, this._OnFadedOut.bind(this));
-	}
-      }
+      this._SlideToContent(le, episode);
     }).bind(this));
 
     if (append){
@@ -210,24 +197,58 @@ window.View.EpisodeView = (function(){
     }
   };
 
-  episodeView.prototype._OnFadedIn = function(){
-    if (this._transitionState > 1){
-      this._transitionState -= 1;
-      this._sheetview.fadedOut(400, this._OnFadeOut.bind(this));
+
+  episodeView.prototype._SlideToContent = function(entity, episode){
+    if (entity.hasClass("active")){
+      if (this._activeCard[0] !== episode){
+        this._activeCard[1] = episode;
+      }
     } else {
-      this._transitionState = 0;
+      this._activeCard[0] = null;
+    }
+    var content = this._sheetview.find("#sheet_content");
+
+    if (!this._slideActive){
+      this._slideActive = true;
+      if (content.css("margin-left") === "0px"){
+        content.animate({"margin-left":this._sheetview.width()+this._slideBuffer}, 400, this._OnSlideOut.bind(this));
+      } else {
+        if (this._activeCard[1] !== null){
+          this._activeCard[0] = this._activeCard[1];
+          this._activeCard[1] = null;
+          EpisodeDetails(content, this._activeCard[0]);
+        }
+        content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
+      }
     }
   };
 
-  episodeView.prototype._OnFadedOut = function(){
-    this._sheetview.empty();
-    if (this._transitionState > 1 && this._activeCard !== null){
-      EpisodeDetails(this._sheetview, this._activeCard);
-      this._sheetview.fadeIn(400, this._OnFadedIn.bind(this));
+
+
+  episodeView.prototype._OnSlideOut = function(){
+    if (this._activeCard[1] !== null || this._activeCard[0] === null){
+      var content = this._sheetview.find("#sheet_content");
+      this._slideActive = true;
+      content.animate({"margin-left":this._sheetview.width()+this._slideBuffer}, 400, this._OnSlideIn.bind(this));
     } else {
-      this._transitionState = 0;
+      this._slideActive = false;
     }
   };
+
+
+  episodeView.prototype._OnSlideIn = function(){
+    if (this._activeCard[1] !== null){
+      var content = this._sheetview.find("#sheet_content");
+      this._activeCard[0] = this._activeCard[1];
+      this._activeCard[1] = null;
+      EpisodeDetails(this._sheetview.find("#sheet_content"), this._activeCard[0]);
+      this._slideActive = true;
+      content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
+    } else {
+      this._slideActive = false;
+    }
+  };
+
 
 
   return episodeView;
