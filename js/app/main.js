@@ -6,8 +6,14 @@ $(document).ready(function(){
 
   var Feeder = require('./js/app/util/feeder');
 
-  var episodeView = new View.EpisodeView(".cards", ".sheet");
-  var audioPlayer = new View.AudioPlayer();
+  var audioPlayer = new View.AudioPlayer(null, {
+    playpause:".player_action_playpause",
+    previousTrack:".player_action_prevtrack",
+    nextTrack:".player_action_nexttrack",
+    previousStory:".player_action_prevstory",
+    nextStory:".player_action_nextstory"
+  });
+  var episodeView = new View.EpisodeView(".cards", ".sheet", audioPlayer);
   
   var app = new Application();
   app.on("database_created", function(){

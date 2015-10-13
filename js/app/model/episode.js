@@ -329,6 +329,36 @@ module.exports = (function(){
     return null;
   };
 
+  episode.prototype.estimateStoryEndTime = function(story_or_index){
+    var index = story_or_index;
+    if (story_or_index instanceof story){
+      index = this.getStoryIndexByTitle(story_or_index.title);
+    }
+    if (index >= 0 && index < this._story.length){
+      var nsi = -1;
+      var nst = 0;
+      var st = this._story[index].beginningSec;
+      if (st > 0){
+	if (this._story[index].endingSec > 0){
+	  return this._story[index].endingSec;
+	}
+	for (var i=0; i < this._story.length; i++){
+	  if (i !== index){
+	    if (this._story.beginningSec > st && (nsi === -1 || this._story.beginningSec < nst)){
+	      nsi = i;
+	      nst = this._story.beginningSec - 2; // Buffer two seconds.
+	    }
+	  }
+	}
+
+	if (nsi < 0){
+	  // This may be the last episode, so... assume it ends when the episode itself ends.
+	  return this.audio_length;
+	}
+      }
+    }
+    return 0;
+  };
 
   episode.prototype.getStoryIndexByTitle = function(title){
     for (var i=0; i < this._story.length; i++){
@@ -438,7 +468,16 @@ module.exports = (function(){
     },
 
     "audio_filename":{
-      get:function(){return (this._audio_src.match(/[^.]+(\.[^?#]+)?/) || [])[0];}
+      get:function(){
+	var url = this._audio_src;
+	//this removes the anchor at the end, if there is one
+	url = url.substring(0, (url.indexOf("#") == -1) ? url.length : url.indexOf("#"));
+	//this removes the query after the file name, if there is one
+	url = url.substring(0, (url.indexOf("?") == -1) ? url.length : url.indexOf("?"));
+	//this removes everything before the last slash in the path
+	url = url.substring(url.lastIndexOf("/") + 1, url.length);
+	return url;
+      }
     },
 
     "audio_length":{

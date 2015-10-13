@@ -9,10 +9,30 @@ window.View.EpisodeView = (function(){
   var Events = require('events');
   var FS = require('fs');
   var Path = require('path');
+  var Feeder = require('./js/app/util/feeder');
+
+  var templates = {
+    episodeDetails: FS.readFileSync("templates/episodeDetails.html").toString(),
+    episodeDetailsStory: FS.readFileSync("templates/episodeDetailsStory.html").toString()
+  };
+
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
+
 
   function AudioPath(episode){
     var path = Path.join(NSP.config.path.audio, episode.audio_filename);
-    if (FS.lstatSync(path).isFile()){
+    var lstat = null;
+    try {
+      var lstat = FS.lstatSync(path);
+    } catch (e) {
+      // Do nothing
+    }
+
+    if (lstat !== null && lstat.isFile()){
       return {
 	path: path,
 	type: "local"
@@ -23,6 +43,31 @@ window.View.EpisodeView = (function(){
       type: "remote"
     };
   }
+
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
+
+  function DeleteAudioFile(episode){
+    var path = Path.join(NSP.config.path.audio, episode.audio_filename);
+    var lstat = null;
+    try {
+      var lstat = FS.lstatSync(path);
+    } catch (e) {
+      // Do nothing
+    }
+
+    if (lstat !== null && lstat.isFile()){
+      FS.unlink(path);
+    }
+  }
+
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
 
 
   function ListEntity(episode){
@@ -59,67 +104,114 @@ window.View.EpisodeView = (function(){
   }
 
 
-  function EpisodeDetails(entity, episode){
+
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
+
+
+
+  function EpisodeDetails(entity, episode, audioPlayer){
     entity.empty();
-    
-    var body = entity;//$("<div></div>").addClass("flow-text").css("background-color", "#FFFFFF");
-    var img = $("<img src=\"images/nsp_logo.png\">").css("opacity","inherit");
+    entity.html(templates.episodeDetails);
+
     if (episode.img_src !== ""){
-      img.attr("src", episode.img_src).css({
+      entity.find(".episode-detail-image").attr("src", episode.img_src).css({
 	"width":"20rem",
 	"height":"auto"
       });;
     }
-    body.append($("<div></div>").addClass("center-align").append(img))
-      .append($("<h5></h5>").addClass("truncate").append(episode.title))
-      .append($("<hr>"));
 
-    for (var i=0; i < this.tagCount; i++){
-      body.append($("<div></div>").addClass("tags chip").append(episode.tag(i)).append("<i class=\"material-icons\">close</i>"));
+    entity.find(".episode-detail-title").append(episode.title);
+    entity.find(".episode-detail-description").append(episode.shortDescription);
+
+    var i = 0;
+    for (i=0; i < this.tagCount; i++){
+      entity.find(".chip-tags").append(
+	$("<div></div>").addClass("tags chip").append(episode.tag(i)).append("<i class=\"material-icons\">close</i>")
+      );
     }
-    if (this.tagCount > 0){
-      body.append($("<hr>"));
-    }
 
-    body.append($("<p></p>").append(episode.shortDescription));
-
-    body.append($("<hr>"));
-
-    for (var i=0; i < episode.storyCount; i++){
-      var story = episode.story(i);
-      var card = $("<div></div>").addClass("card nsp-grey");
-      var titleBlock = $("<div></div>").addClass("title-block");
-      titleBlock.append($("<span></span>").addClass("card-title nsp-grey-text text-lighten").append(story.title));
-      if (story.beginning !== ""){
-	var time = $("<time></time>").addClass("grey-text text-lighten-1").append("<i>Starting:</i> " + story.beginning);
-	if (story.duration > 0){
-	  time.append(" (dur: " + story.durationString + ")");
+    for (i=0; i < episode.storyCount; i++){
+      var story = $(templates.episodeDetailsStory);
+      var estory = episode.story(i);
+      story.find(".episode-detail-card-story-title").append(estory.title);
+      if (estory.beginning !== ""){
+	var time = $("<time></time>").addClass("grey-text text-lighten-1").append("<i>Starting:</i> " + estory.beginning);
+	if (estory.duration > 0){
+	  time.append(" (dur: " + estory.durationString + ")");
 	}
-	titleBlock.append("<br>").append(time);
+	story.find(".title-block").append("<br>").append(time);
       }
-      card.append(titleBlock);
-      body.append(card);
+      entity.append(story);
     }
 
-    entity.append(body)
-    // Yeah... this is a rather cheap trick, but, otherwise the whole area doesn't seem to scroll. This just makes sure it does.
-      .append("<br>")
-      .append("<br>")
-      .append("<br>")
-      .append("<br>")
-      .append("<br>")
-      .append("<br>")
-      .append("<br>")
-      .append("<br>")
-      .append("<br>")
-      .append("<br>");
+    for (i=0; i < 8; i++){
+      entity.append("<br>");
+    }
+
+    var audioPath = AudioPath(episode);
+
+    var op_download = entity.find(".episode-download");
+    if (op_download.length > 0){
+      if (audioPath.type === "local"){
+	op_download.find("option-delete").removeAttr("style");
+	op_download.find("option-download").css("display", "none");
+      }
+
+      op_download.on("click", function(){
+	if (op_download.find("option-download").css("display") === "none"){
+	  DeleteAudioFile(episode);
+	  op_download.find("option-download").removeAttr("style");
+	  op_download.find("option-delete").css("display", "none");
+	  Materialize.toast("Episode removed from hard drive.", 4000);
+	} else {
+	  console.log(episode.audio_src);
+	  var feed = new Feeder();
+	  Materialize.toast("Downloading episode...", 4000);
+	  op_download.addClass("disabled");
+	  feed.downloadFile(episode.audio_src, Path.join(NSP.config.path.audio, episode.audio_filename), function(err){
+	    if (err !== null){
+	      Materialize.toast("Download failed: " + err.message, 4000);
+	      console.log(err.message);
+	    } else {
+	      Materialize.toast("Episode download complete.", 4000);
+	      op_download.find("option-delete").removeAttr("style");
+	      op_download.find("option-download").css("display", "none");
+	    }
+	    op_download.removeClass("disabled");
+	  });
+	}
+      });
+    }
+
+    var op_playlist = entity.find(".episode-addtoplaylist");
+    if (op_playlist.length > 0){
+      op_playlist.on("click", function(){
+	Materialize.toast("Placeholder Add To Playlist", 4000);
+      });
+    }
+
+    var op_playpause = entity.find(".episode-play");
+    if (op_playpause.length > 0){
+      op_playpause.on("click", function(){
+	Materialize.toast("Placeholder Play/Pause", 4000);
+      });
+    }
   }
 
-  // -----------------------------------------------------------------------
-  // -----------------------------------------------------------------------
-  // -----------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
+
   
-  function episodeView(listview_class, sheetview_class){
+  function episodeView(listview_class, sheetview_class, audioPlayer){
+    this._audioPlayer = audioPlayer;
     this._listview = $(listview_class);
     if (this._listview.length !== 1){
       throw new Error("Could not find list view entity.");
@@ -216,7 +308,7 @@ window.View.EpisodeView = (function(){
         if (this._activeCard[1] !== null){
           this._activeCard[0] = this._activeCard[1];
           this._activeCard[1] = null;
-          EpisodeDetails(content, this._activeCard[0]);
+          EpisodeDetails(content, this._activeCard[0], this._audioPlayer);
         }
         content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
       }
@@ -241,11 +333,12 @@ window.View.EpisodeView = (function(){
       var content = this._sheetview.find("#sheet_content");
       this._activeCard[0] = this._activeCard[1];
       this._activeCard[1] = null;
-      EpisodeDetails(this._sheetview.find("#sheet_content"), this._activeCard[0]);
+      EpisodeDetails(this._sheetview.find("#sheet_content"), this._activeCard[0], this._audioPlayer);
       this._slideActive = true;
       content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
     } else {
       this._slideActive = false;
+      this._sheetview.find("#sheet_content").empty();
     }
   };
 

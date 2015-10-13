@@ -36,11 +36,12 @@ window.View.AudioPlayer = (function(){
     return time;
   }
 
-  function audioPlayer(system_id){
+  function audioPlayer(system_id, player_controls){
     if (typeof(system_id) !== 'string'){system_id="#Audio_System";}
     
     this._playlist = [];
     this._currentTrack = -1;
+    this._currentStory = null;
     this._volume = 0; // This is not the actual volume, but the targeted maximum value.
     this._loop = false;
 
@@ -52,6 +53,9 @@ window.View.AudioPlayer = (function(){
     }
     // Store the initial volume level. This is what we assume the user wants their maximum volume to be.
     this._volume = this._player[0].volume;
+
+    player_controls = player_controls || {};
+    this._SetupPlayerControls(player_controls);
 
 
     this._player.on("ended", (function(){
@@ -80,6 +84,13 @@ window.View.AudioPlayer = (function(){
 	    this.emit("ended");
 	  }
 	} else {
+	  if (this._playlist[this._currentTrack].episode !== null && this._playlist[this._currentTrack].story === null){
+	    var curStory = this._playlist[this._currentTrack].episode.storyByTime(this._player[0].currentTime);
+	    if (curStory !== this._currentStory){
+	      this._currentStory = curStory;
+	      this.emit("story_changed", this._currentStory);
+	    }
+	  }
 	  this.emit("timeupdate");
 	}
       }
@@ -97,26 +108,48 @@ window.View.AudioPlayer = (function(){
     this._currentTrack = -1;
   };
 
-  audioPlayer.prototype.addEpisodeTrack = function(episode, story){
+  audioPlayer.prototype.isEpisodeQueued = function(episode){
+    for (var i=0; i < this._playlist.length; i++){
+      if (this._playlist[i].episode !== null && this._playlist[i].story === null && this._playlist[i].episode === episode){
+	return true;
+      }
+    }
+    return false;
+  };
+
+  audioPlayer.prototype.isStoryQueued = function(story){
+    for (var i=0; i < this._playlist.length; i++){
+      if (this._playlist[i].story !== null && this._playlist[i].story === story){
+	return true;
+      }
+    }
+    return false;
+  };
+
+  audioPlayer.prototype.queueEpisode = function(episode, story){
     var url = (episode.audio_path !== "") ? episode.audio_path : episode.audio_src;
     var eindex = NSP.db.getEpisodeIndex(episode.guid);
     if (eindex >= 0){
       var title = episode.title;
-      var es_index = "E" + ((eindex < 10) ? "0"+eindex : eindex);
       if (typeof(story) !== 'undefined'){
 	var sindex = episode.getStoryIndexByTitle(story.title);
-	if (sindex >= 0){
-	  title = story.title;
-	  es_index += "S" + ((sindex < 10) ? "0"+sindex : sindex);
-	} else {
+	if (sindex < 0){
 	  console.log("Story not found in Episode.");
+	  story = null;
 	}
+      } else {
+	story = null;
       }
 
-      this.addTrack(url, {
+      var track = {
 	name: title,
-	es_index: es_index
-      });
+	episode: episode
+      };
+      if (story !== null){
+	track.story = story;
+      }
+
+      this.addTrack(url, track);
     } else {
       throw new Error("Episode invalid or not in database.");
     }
@@ -131,7 +164,8 @@ window.View.AudioPlayer = (function(){
       this._playlist.push({
 	url: url,
 	name: options.name,
-	es_index: (typeof(options.es_index) === 'string') ? options.es_index : null,
+	episode: (typeof(options.episode) !== 'undefined') ? options.episode : null,
+	story: (typeof(options.story) !== 'undefined') ? options.story : null,
 	starttime: (typeof(options.starttime) !== 'undefined') ? options.starttime : null,
 	endtime: (typeof(options.endtime) !== 'undefined') ? options.endtime : null,
 	fadeIn: options.fadeIn,
@@ -166,6 +200,15 @@ window.View.AudioPlayer = (function(){
   audioPlayer.prototype.playTrack = function(index){
     if (index >= 0 && index < this._playlist.length){
       var url = this._playlist[index].url;
+
+      if (this._playlist[index].episode !== null && this._playlist[index].story !== null){
+	if (this._playlist[index].story.beginningSec > 0){
+	  this._playlist[index].starttime = this._playlist[index].story.beginningSec;
+	  this._playlist[index].endtime = (this._playlist[index].story.endingSec <= 0) ?
+	    this._playlist[index].episode.estimateStoryEndTime(this._playlist[index].story) : 
+	    this._playlist[index].story.endingSec;
+	}
+      }
       var time = TimeToTag(this._playlist[index].starttime, this._playlist[index].endtime);
 
       this._currentTrack = index;
@@ -188,6 +231,10 @@ window.View.AudioPlayer = (function(){
 	  this._player[0].volume = 0;
 	} else {
 	  this._player[0].volume = this._volume;
+	}
+	if (this._playlist[this._currentTrack].story !== this._currentStory){
+	  this._currentStory = this._playlist[this._currentTrack].story;
+	  this.emit("story_changed", this._currentStory);
 	}
 	this._player[0].play();
 	this.emit("playing");
@@ -272,6 +319,42 @@ window.View.AudioPlayer = (function(){
       }
     }
     return -1;
+  };
+
+  audioPlayer.prototype._SetupPlayerControls = function(controls){
+    if (typeof(controls.playpause) === 'string'){
+      $(controls.playpause).on("click", (function(){
+	if (this.playing && !this.paused){
+	  this.pause();
+	} else if (this.paused){
+	  this.play();
+	}
+      }).bind(this));
+    }
+
+    if (typeof(controls.nextTrack) === 'string'){
+      $(controls.nexttrack).on("click", (function(){
+	this.nextTrack();
+      }).bind(this));
+    }
+
+    if (typeof(controls.previousTrack) === 'string'){
+      $(controls.previousTrack).on("click", (function(){
+	this.previousTrack();
+      }).bind(this));
+    }
+
+    if (typeof(controls.nextStory) === 'string'){
+      $(controls.nextStory).on("click", (function(){
+	Materialize.toast("Operation not yet defined.", 4000);
+      }).bind(this));
+    }
+
+    if (typeof(controls.previousStory) === 'string'){
+      $(controls.previousStory).on("click", (function(){
+	Materialize.toast("Operation not yet defined.", 4000);
+      }).bind(this));
+    }
   };
 
 
