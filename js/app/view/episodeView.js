@@ -105,17 +105,50 @@ window.View.EpisodeView = (function(){
 
 
 
-
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 
+  var _activeDownloads = [];
 
+  function SetActiveDownload(episode, addEpisode){
+    addEpisode = (typeof(addEpisode) === 'boolean') ? addEpisode : true;
+    var remove = !addEpisode;
+    for (var i=0; i < _activeDownloads.length; i++){
+      if (_activeDownloads[i] === episode){
+	if (remove){
+	  _activeDownloads.splice(i, 1);
+	  return true;
+	} else {
+	  addEpisode = false;
+	}
+	break;
+      }
+    }
+
+    if (addEpisode){
+      _activeDownloads.push(episode);
+      return true;
+    }
+    return false;
+  };
+
+  function IsEpisodeDownloading(episode){
+    for (var i=0; i < _activeDownloads.length; i++){
+      if (_activeDownloads[i] === episode){
+	return true;
+      }
+    }
+    return false;
+  };
 
 
   function EpisodeDetails(entity, episode, audioPlayer){
     entity.empty();
     entity.html(templates.episodeDetails);
+
+    // Sets the episode ID. This is important when downloading episodes.
+    entity.find("#entity_id").attr("data-id", episode.guid);
 
     if (episode.img_src !== ""){
       entity.find(".episode-detail-image").attr("src", episode.img_src).css({
@@ -152,52 +185,79 @@ window.View.EpisodeView = (function(){
       entity.append("<br>");
     }
 
+    // -------------
+    // Defining the buttons and their functions!
+
     var audioPath = AudioPath(episode);
 
+    var options = entity.find(".episode-options"); // This grabs all episode option buttons!
     var op_download = entity.find(".episode-download");
+    var op_playlist = entity.find(".episode-addtoplaylist");
+    var op_playpause = entity.find(".episode-play");
+
     if (op_download.length > 0){
-      if (audioPath.type === "local"){
-	op_download.find("option-delete").removeAttr("style");
-	op_download.find("option-download").css("display", "none");
+      if (IsEpisodeDownloading(episode)){
+	// It could take a while to download an episode, and we don't want to do it more than once.
+	// This disables all of the buttons so that nothing can happen until download is complete.
+	options.addClass("disabled");
+      } else if (audioPath.type === "local"){
+	op_download.find(".option-delete").removeAttr("style");
+	op_download.find(".option-download").css("display", "none");
       }
 
       op_download.on("click", function(){
 	if (op_download.find("option-download").css("display") === "none"){
 	  DeleteAudioFile(episode);
-	  op_download.find("option-download").removeAttr("style");
-	  op_download.find("option-delete").css("display", "none");
+	  op_download.find(".option-download").removeAttr("style");
+	  op_download.find(".option-delete").css("display", "none");
 	  Materialize.toast("Episode removed from hard drive.", 4000);
 	} else {
-	  console.log(episode.audio_src);
-	  var feed = new Feeder();
-	  Materialize.toast("Downloading episode...", 4000);
-	  op_download.addClass("disabled");
-	  feed.downloadFile(episode.audio_src, Path.join(NSP.config.path.audio, episode.audio_filename), function(err){
-	    if (err !== null){
-	      Materialize.toast("Download failed: " + err.message, 4000);
-	      console.log(err.message);
-	    } else {
-	      Materialize.toast("Episode download complete.", 4000);
-	      op_download.find("option-delete").removeAttr("style");
-	      op_download.find("option-download").css("display", "none");
-	    }
-	    op_download.removeClass("disabled");
-	  });
+	  if (SetActiveDownload(episode)){
+	    var feed = new Feeder();
+
+	    Materialize.toast("Downloading episode...", 4000);
+	    options.addClass("disabled");
+	    feed.downloadFile(episode.audio_src, Path.join(NSP.config.path.audio, episode.audio_filename), function(err){
+	      var process = false;
+	      if (entity.find("#entity_id").length > 0 && entity.find("#entity_id").data("id") === episode.guid){
+		process = true;
+	      }
+
+	      if (err !== null){
+		Materialize.toast("Download failed: " + err.message, 4000);
+		console.log(err.message);
+	      } else {
+		Materialize.toast("Episode \"" + episode.title + "\" download complete.", 4000);
+		if (process){
+		  op_download.find(".option-delete").removeAttr("style");
+		  op_download.find(".option-download").css("display", "none");
+		}
+	      }
+	      if (process){ 
+		options.removeClass("disabled");
+	      }
+	      SetActiveDownload(episode, false);
+	    });
+	  }
 	}
       });
     }
 
-    var op_playlist = entity.find(".episode-addtoplaylist");
     if (op_playlist.length > 0){
       op_playlist.on("click", function(){
-	Materialize.toast("Placeholder Add To Playlist", 4000);
+	if (audioPlayer.isEpisodeQueued(episode) === false){
+	  audioPlayer.queueEpisode(episode);
+	} else {
+	  Materialize.toast("Episode \"" + episode.title + "\" already queued.", 4000);
+	}
       });
     }
 
-    var op_playpause = entity.find(".episode-play");
     if (op_playpause.length > 0){
       op_playpause.on("click", function(){
-	Materialize.toast("Placeholder Play/Pause", 4000);
+	audioPlayer.clearTracks();
+	audioPlayer.queueEpisode(episode);
+	audioPlayer.playTrack(0);
       });
     }
   }
@@ -235,6 +295,8 @@ window.View.EpisodeView = (function(){
     this._search = "";
     this._searchType = "tags";
     this._searchExact = false;
+
+    this._activeDownloads = [];
 
     this._updateInterval = setInterval((function(){
       if (this._listDirty){
@@ -333,15 +395,14 @@ window.View.EpisodeView = (function(){
       var content = this._sheetview.find("#sheet_content");
       this._activeCard[0] = this._activeCard[1];
       this._activeCard[1] = null;
-      EpisodeDetails(this._sheetview.find("#sheet_content"), this._activeCard[0], this._audioPlayer);
+      EpisodeDetails(content, this._activeCard[0], this._audioPlayer);
       this._slideActive = true;
       content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
     } else {
       this._slideActive = false;
-      this._sheetview.find("#sheet_content").empty();
+      content.empty();
     }
   };
-
 
 
   return episodeView;

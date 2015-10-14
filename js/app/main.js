@@ -14,6 +14,7 @@ $(document).ready(function(){
     nextStory:".player_action_nextstory"
   });
   var episodeView = new View.EpisodeView(".cards", ".sheet", audioPlayer);
+  var playerView = new View.AudioPlayerView(audioPlayer);
   
   var app = new Application();
   app.on("database_created", function(){

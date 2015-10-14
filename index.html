@@ -22,6 +22,7 @@
     <script type="text/javascript" src="js/app/view/application.js"></script>
     <script type="text/javascript" src="js/app/view/episodeView.js"></script>
     <script type="text/javascript" src="js/app/view/audioPlayer.js"></script>
+    <script type="text/javascript" src="js/app/view/audioPlayerView.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -81,7 +82,7 @@
     <!-- ------------ BODY/IES ------------ -->
     <!-- Screen TABs -->
     <div class="row">
-      <div class="col s12">
+      <div class="col s12 z-depth-5">
         <ul class="nsp-tabs">
           <li class="tab col s6"><a class="active" href="#episodes">Episodes</a></li>
           <li class="tab col s6"><a href="#now_playing">Now Playing</a></li>
@@ -109,23 +110,45 @@
               <div class="determinate player-progress" width="0%"></div>
             </div>
             <div class="center-align hide-on-med-and-down">
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevtrack"><i class="material-icons">skip_previous</i></a>
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevstory"><i class="material-icons">fast_rewind</i></a>
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_playpause"><i class="material-icons">play_circle_filled</i></a>
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nextstory"><i class="material-icons">fast_forward</i></a>
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nexttrack"><i class="material-icons">skip_next</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevtrack">
+		<i class="material-icons">skip_previous</i>
+	      </a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevstory">
+		<i class="material-icons">fast_rewind</i>
+	      </a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_playpause">
+		<i class="material-icons option-play">play_circle_filled</i>
+		<i class="material-icons option-pause" style="display:none;">pause_circle_filled</i>
+	      </a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nextstory">
+		<i class="material-icons">fast_forward</i>
+	      </a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nexttrack">
+		<i class="material-icons">skip_next</i>
+	      </a>
             </div>
 
             <div class="center-align hide-on-large-only">
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_playpause"><i class="material-icons">play_circle_filled</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_playpause">
+		<i class="material-icons option-play">play_circle_filled</i>
+		<i class="material-icons option-pause" style="display:none;">pause_circle_filled</i>
+	      </a>
             </div>
             <div class="center-align hide-on-large-only">
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevstory"><i class="material-icons">fast_rewind</i></a>
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nextstory"><i class="material-icons">fast_forward</i></a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevstory">
+		<i class="material-icons">fast_rewind</i>
+	      </a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nextstory">
+		<i class="material-icons">fast_forward</i>
+	      </a>
 	    </div>
 	    <div class="center-align hide-on-large-only">
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_prevtrack"><i class="material-icons">skip_previous</i></a>
-              <a href="#!" class="waves-effect waves-nsp-red btn-flat player_action_nexttrack"><i class="material-icons">skip_next</i></a>
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevtrack">
+		<i class="material-icons">skip_previous</i>
+	      </a>
+              <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nexttrack">
+		<i class="material-icons">skip_next</i>
+	      </a>
             </div>
           </div>
         </div>

@@ -81,6 +81,7 @@ window.View.AudioPlayer = (function(){
 	    this.emit("next_track");
 	  } else {
 	    this._player[0].pause();
+	    this.emit("timeupdate", 1.0);
 	    this.emit("ended");
 	  }
 	} else {
@@ -91,7 +92,7 @@ window.View.AudioPlayer = (function(){
 	      this.emit("story_changed", this._currentStory);
 	    }
 	  }
-	  this.emit("timeupdate");
+	  this.emit("timeupdate", this._player[0].currentTime/endtime);
 	}
       }
     }).bind(this));
@@ -106,6 +107,7 @@ window.View.AudioPlayer = (function(){
     }
     this._playlist = [];
     this._currentTrack = -1;
+    this.emit("tracks_cleared");
   };
 
   audioPlayer.prototype.isEpisodeQueued = function(episode){
@@ -150,9 +152,14 @@ window.View.AudioPlayer = (function(){
       }
 
       this.addTrack(url, track);
+      this.emit("episode_queued", episode, story);
     } else {
       throw new Error("Episode invalid or not in database.");
     }
+  };
+
+  audioPlayer.prototype.dequeueEpisode = function(episode, story){
+
   };
 
   audioPlayer.prototype.addTrack = function(url, options){
@@ -171,7 +178,16 @@ window.View.AudioPlayer = (function(){
 	fadeIn: options.fadeIn,
 	fadeOut: options.fadeOut
       });
-      this.emit("track_added");
+      if (this._currentTrack < 0){
+	this._currentTrack = 0;
+	this.emit("track_changed"); // Special case for this emit.
+      }
+      this.emit("track_added", {
+	name: options.name,
+	episode: (typeof(options.episode) !== 'undefined') ? options.episode : null,
+	story: (typeof(options.story) !== 'undefined') ? options.story : null,
+	trackIndex: this._playlist.length-1
+      });
     }
   };
 
@@ -226,6 +242,7 @@ window.View.AudioPlayer = (function(){
       this._player[0].load();
       var fadingIn = this._playlist[index].fadeIn > 0;
       var fadingOut = this._playlist[index].fadeOut > 0;
+      this.emit("track_changed");
       this._player.on("canplay", (function(){
 	if (fadingIn){
 	  this._player[0].volume = 0;

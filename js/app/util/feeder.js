@@ -13,26 +13,15 @@ module.exports = (function(){
   feeder.prototype.constructor = feeder;
 
   feeder.prototype.downloadFile = function(url, path, callback){
-    var file = FS.createWriteStream(path);
-    file.on('finish', (function(){
-      file.close((function(){
-        this.emit("file_downloaded");
-	if (callback){callback(null);}
-      }).bind(this));
-    }).bind(this));
-
-    file.on('error', (function(err){
-      FS.unlink(path);
-      this.emit('error', err);
-      if (callback){callback(err);}
-    }).bind(this));
-
     var request = HTTP.get(url, (function(resp){
+      console.log(resp);
+      if (resp.statusCode === 302){ // A redirect! Let's follow it!
+	this.downloadFile(resp.headers.location, path, callback);
+	return;
+      }
       if (resp.statusCode != 200){
-	// TODO: Handle a 302 redirect!
 	var err = new Error("File download status code (" + resp.statusCode + ") received.");
 	console.log(err.message);
-	file.unlink(path);
 	if (callback){
 	  callback(err);
 	}
@@ -40,8 +29,22 @@ module.exports = (function(){
 	return;
       }
 
+      var file = FS.createWriteStream(path);
+      file.on('finish', (function(){
+	file.close((function(){
+          this.emit("file_downloaded");
+	  if (callback){callback(null);}
+	}).bind(this));
+      }).bind(this));
+
+      file.on('error', (function(err){
+	FS.unlink(path);
+	this.emit('error', err);
+	if (callback){callback(err);}
+      }).bind(this));
+
       resp.pipe(file).on('error', (function(err){
-	file.unlink(path);
+	FS.unlink(path);
 	this.emit('error', err);
 	if (callback){callback(err);}
       }).bind(this));
