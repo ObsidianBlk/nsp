@@ -300,7 +300,9 @@ module.exports = (function(){
       } else {
 	throw new TypeError();
       }
-    } else if (typeof(time) !== 'number' || time%1 === 0){
+    } else if (typeof(time) === 'number'){
+      time = Math.floor(time);
+    } else {
       throw new TypeError();
     }
 

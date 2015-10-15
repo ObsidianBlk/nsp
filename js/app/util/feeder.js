@@ -7,6 +7,22 @@ module.exports = (function(){
   var Request = require('request');
   var HTTP = require('http');
   var FS = require('fs');
+  var Path = require('path');
+
+  function MakeDirIfNotExists(path){
+    var lstat = null;
+    try {
+      lstat = FS.lstatSync(path);
+    }catch (e){ /* Nothing for now */}
+
+    if (lstat === null){
+      FS.mkdirSync(path);
+      return true;
+    } else if (lstat.isDirectory()){
+      return true;
+    }
+    return false;
+  }
 
   function feeder(){};
   feeder.prototype.__proto__ = Events.EventEmitter.prototype;
@@ -29,43 +45,31 @@ module.exports = (function(){
 	return;
       }
 
-      var file = FS.createWriteStream(path);
-      file.on('finish', (function(){
-	file.close((function(){
-          this.emit("file_downloaded");
-	  if (callback){callback(null);}
-	}).bind(this));
-      }).bind(this));
-
-      file.on('error', (function(err){
-	FS.unlink(path);
-	this.emit('error', err);
-	if (callback){callback(err);}
-      }).bind(this));
-
-      resp.pipe(file).on('error', (function(err){
-	FS.unlink(path);
-	this.emit('error', err);
-	if (callback){callback(err);}
-      }).bind(this));
-    }).bind(this));
-
-
-    /*var file = FS.createWriteStream(path);
-    var request = HTTP.get(url, (function(resp){
-      console.log(resp);
-      resp.pipe(file);
-      file.on('finish', function(){
-        file.close((function(){
-          this.emit("file_downloaded");
-	  if (callback){callback(null);}
+      // We're going to create the file ONLY if the base path exists or is created.
+      if (MakeDirIfNotExists(Path.dirname(path))){
+        var file = FS.createWriteStream(path);
+        file.on('finish', (function(){
+	  file.close((function(){
+            this.emit("file_downloaded");
+	    if (callback){callback(null);}
+	  }).bind(this));
         }).bind(this));
-      });
-    }).bind(this)).on('error', (function(err){
-      fs.unlink(path);
-      this.emit('error', err);
-      if (callback){callback(err);}
-    }).bind(this));*/
+
+        file.on('error', (function(err){
+	  FS.unlink(path);
+	  this.emit('error', err);
+	  if (callback){callback(err);}
+        }).bind(this));
+
+        resp.pipe(file).on('error', (function(err){
+	  FS.unlink(path);
+	  this.emit('error', err);
+	  if (callback){callback(err);}
+        }).bind(this));
+      } else if (callback){
+        callback(new Error("Could not find or create path \"" + Path.dirname(path) + "\"."));
+      }
+    }).bind(this));
   };
 
   feeder.prototype.rss = function(address, callback){

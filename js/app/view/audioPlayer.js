@@ -64,44 +64,8 @@ window.View.AudioPlayer = (function(){
     // Store the initial volume level. This is what we assume the user wants their maximum volume to be.
     this._volume = this._player[0].volume;
 
-    this._player.on("ended", (function(){
-      if (this._currentTrack >= 0 && this._currentTrack < this._playlist.length){
-	this.playTrack(this._currentTrack + 1);
-	this.emit("next_track");
-      } else {
-	this.emit("ended");
-      }
-    }).bind(this));
-
-    this._player.on("timeupdate", (function(){
-      if (this._currentTrack >= 0){
-	var starttime = this._playlist[this._currentTrack].starttime;
-	starttime = (starttime !== null) ? TimeToSecond(starttime) : 0;
-	var endtime = this._playlist[this._currentTrack].endtime;
-	endtime = (endtime !== null) ? TimeToSecond(endtime) : this._player[0].duration;
-
-	// Now check to see if we've reached the endtime (incase we're playing a story and not an episode)...
-	if (this._player[0].currentTime > endtime){
-	  if (this._currentTrack < this._playlist.length-1){
-	    this.playTrack(this._currentTrack + 1);
-	    this.emit("next_track");
-	  } else {
-	    this._player[0].pause();
-	    this.emit("timeupdate", 1.0);
-	    this.emit("ended");
-	  }
-	} else {
-	  if (this._playlist[this._currentTrack].episode !== null && this._playlist[this._currentTrack].story === null){
-	    var curStory = this._playlist[this._currentTrack].episode.storyByTime(this._player[0].currentTime);
-	    if (curStory !== this._currentStory){
-	      this._currentStory = curStory;
-	      this.emit("story_changed", this._currentStory);
-	    }
-	  }
-	  this.emit("timeupdate", this._player[0].currentTime/endtime);
-	}
-      }
-    }).bind(this));
+    this._configured = false;
+    this._SetAudioPlayerEvents();
   }
   audioPlayer.prototype.__proto__ = Events.EventEmitter.prototype;
   audioPlayer.prototype.constructor = audioPlayer;
@@ -254,10 +218,99 @@ window.View.AudioPlayer = (function(){
 	"type":"audio/mp3"
       }));
       this._player[0].load();
-      var fadingIn = this._playlist[index].fadeIn > 0;
-      var fadingOut = this._playlist[index].fadeOut > 0;
       this.emit("track_changed");
+    } else {
+      throw new RangeError();
+    }
+  };
+
+  audioPlayer.prototype.play = function(url, options){
+    if (typeof(url) === 'string'){
+      if (this._playlist.length > 0){
+	this._playlist = [];
+      }
+      try {
+	this.addTrack(url, options);
+	this.playTrack(0);
+      } catch (e) {throw e;}
+    } else if (this._player[0].paused && this._player.find("source").length > 0){
+      this._player[0].play();
+      this.emit("playing");
+    }
+  };
+
+  audioPlayer.prototype.pause = function(){
+    if (!this._player[0].paused && this._player[0].duration > 0){
+      this._player[0].pause();
+      this.emit("paused");
+    }
+  };
+
+  audioPlayer.prototype._GetTrackIndex = function(url){
+    for (var i=0; i < this._playlist.length; i++){
+      if (this._playlist[i].url === url){
+	return i;
+      }
+    }
+    return -1;
+  };
+
+
+  
+  audioPlayer.prototype._SetAudioPlayerEvents = function(){
+    if (this._configured === false){
+      this._configured = true;
+
+      // -----------------------------
+      // EVENT ended
+      this._player.on("ended", (function(){
+        if (this._currentTrack >= 0 && this._currentTrack < this._playlist.length){
+	  this.playTrack(this._currentTrack + 1);
+	  this.emit("next_track");
+        } else {
+	  this.emit("ended");
+        }
+      }).bind(this));
+
+      // -----------------------------
+      // EVENT timeupdate
+      this._player.on("timeupdate", (function(){
+        if (this._currentTrack >= 0){
+	  var starttime = this._playlist[this._currentTrack].starttime;
+	  starttime = (starttime !== null) ? TimeToSecond(starttime) : 0;
+	  var endtime = this._playlist[this._currentTrack].endtime;
+	  endtime = (endtime !== null) ? TimeToSecond(endtime) : this._player[0].duration;
+
+	  // Now check to see if we've reached the endtime (incase we're playing a story and not an episode)...
+	  if (this._player[0].currentTime > endtime){
+	    if (this._currentTrack < this._playlist.length-1){
+	      this.playTrack(this._currentTrack + 1);
+	      this.emit("next_track");
+	    } else {
+	      this._player[0].pause();
+	      this.emit("timeupdate", 1.0);
+	      this.emit("ended");
+	    }
+	  } else {
+	    if (this._playlist[this._currentTrack].episode !== null && this._playlist[this._currentTrack].story === null){
+	      var curStory = this._playlist[this._currentTrack].episode.storyByTime(this._player[0].currentTime);
+	      if (curStory !== this._currentStory){
+	        this._currentStory = curStory;
+	        this.emit("story_changed", this._currentStory);
+	      }
+	    }
+	    this.emit("timeupdate", this._player[0].currentTime/endtime);
+	  }
+        }
+      }).bind(this));
+
+
+      // -----------------------------
+      // EVENT canplay
       this._player.on("canplay", (function(){
+        var fadingIn = (this._currentTrack >= 0) ? (this._playlist[this._currentTrack].fadeIn > 0) : false;
+        var fadingOut = (this._currentTrack >= 0) ? (this._playlist[this._currentTrack].fadeOut > 0) : false;
+        console.log("I can PLAY!");
 	if (fadingIn){
 	  this._player[0].volume = 0;
 	} else {
@@ -316,40 +369,7 @@ window.View.AudioPlayer = (function(){
 	  }).bind(this), 10);
 	}
       }).bind(this));
-    } else {
-      throw new RangeError();
     }
-  };
-
-  audioPlayer.prototype.play = function(url, options){
-    if (typeof(url) === 'string'){
-      if (this._playlist.length > 0){
-	this._playlist = [];
-      }
-      try {
-	this.addTrack(url, options);
-	this.playTrack(0);
-      } catch (e) {throw e;}
-    } else if (this._player[0].paused && this._player.find("source").length > 0){
-      this._player[0].play();
-      this.emit("playing");
-    }
-  };
-
-  audioPlayer.prototype.pause = function(){
-    if (!this._player[0].paused && this._player[0].duration > 0){
-      this._player[0].pause();
-      this.emit("paused");
-    }
-  };
-
-  audioPlayer.prototype._GetTrackIndex = function(url){
-    for (var i=0; i < this._playlist.length; i++){
-      if (this._playlist[i].url === url){
-	return i;
-      }
-    }
-    return -1;
   };
 
 

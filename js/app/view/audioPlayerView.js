@@ -25,6 +25,7 @@ window.View.AudioPlayerView = (function(){
   function AddTrackItem(entity, info, audioPlayer){
     var e = $(templates.playlistTrack);
     entity.append(e);
+    e.addClass("TrackID-" + info.trackIndex);
     e.find(".track-title").text(info.name);
     if (info.episode !== null){
       e.data({episodeid:info.episode.guid});
@@ -40,6 +41,51 @@ window.View.AudioPlayerView = (function(){
 	audioPlayer.playTrack(info.trackIndex);
       }
     });
+  }
+
+
+  function ActivateTrackItemIndex(index){
+    if (index >= 0){
+      var trackEntity = $(".player-track.darken-3");
+      var btn = null;
+      if (trackEntity.length > 0){
+        trackEntity.removeClass("darken-3").addClass("darken-1");
+        btn = trackEntity.find(".track-action-jumpto");
+        if (btn.length > 0){
+          btn.find(".option-jumpto").removeAttr("style");
+          btn.find(".option-play").css("display", "none");
+          btn.find(".option-pause").css("display", "none");
+        }
+      }
+      trackEntity = $(".TrackID-" + index);
+      if (trackEntity.length > 0){
+        if (trackEntity.hasClass("darken-3") === false){
+          trackEntity.removeClass("darken-1").addClass("darken-3");
+          btn = trackEntity.find(".track-action-jumpto");
+          if (btn.length > 0){
+            btn.find(".option-jumpto").css("display", "none");
+            btn.find(".option-play").removeAttr("style");
+          }
+        }
+      }
+    }
+  }
+
+  function SetActiveTrackItemPlayState(state){
+    var trackEntity = $(".player-track.darken-3");
+    var btn = null;
+    if (trackEntity.length > 0){
+      btn = trackEntity.find(".track-action-jumpto");
+      if (btn.length > 0){
+        if (state === "play"){
+          btn.find(".option-pause").css("display", "none");
+          btn.find(".option-play").removeAttr("style");
+        } else if (state === "pause"){
+          btn.find(".option-play").css("display", "none");
+          btn.find(".option-pause").removeAttr("style");
+        }
+      }
+    }
   }
 
 
@@ -82,15 +128,30 @@ window.View.AudioPlayerView = (function(){
       this._configured = true;
 
       this._audioPlayer.on("playing", (function(){
-	this._SetPlayPauseBTN("pause");
+        // NOTE: Using the ::play() method, audio can be played without it being identified as a track.
+        // to ignore trackless audio, check to see if a currentTrackIndex is defined.
+        if (this._audioPlayer.currentTrackIndex >= 0){
+	  this._SetPlayPauseBTN("pause");
+          SetActiveTrackItemPlayState("pause");
+        }
       }).bind(this));
 
       this._audioPlayer.on("ended", (function(){
-	this._SetPlayPauseBTN("play");
+        // NOTE: Using the ::play() method, audio can be played without it being identified as a track.
+        // to ignore trackless audio, check to see if a currentTrackIndex is defined.
+        if (this._audioPlayer.currentTrackIndex >= 0){
+	  this._SetPlayPauseBTN("play");
+          SetActiveTrackItemPlayState("play");
+        }
       }).bind(this));
 
       this._audioPlayer.on("paused", (function(){
-	this._SetPlayPauseBTN("play");
+        // NOTE: Using the ::play() method, audio can be played without it being identified as a track.
+        // to ignore trackless audio, check to see if a currentTrackIndex is defined.
+        if (this._audioPlayer.currentTrackIndex >= 0){
+	  this._SetPlayPauseBTN("play");
+          SetActiveTrackItemPlayState("play");
+        }
       }).bind(this));
 
       this._audioPlayer.on("timeupdate", (function(progress){
@@ -103,6 +164,7 @@ window.View.AudioPlayerView = (function(){
 
       this._audioPlayer.on("track_changed", (function(){
 	this._entity.title.text(this._audioPlayer.currentTrackTitle);
+        ActivateTrackItemIndex(this._audioPlayer.currentTrackIndex);
       }).bind(this));
 
       this._audioPlayer.on("tracks_cleared", (function(){
