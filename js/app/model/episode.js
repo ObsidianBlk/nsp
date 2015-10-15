@@ -213,7 +213,7 @@ module.exports = (function(){
       data.img_src = this._img_src;
     }
 
-    return JSON.stringify(data);
+    return JSON.stringify(data, null, '\t');
   };
 
   episode.prototype.addTag = function(tag){

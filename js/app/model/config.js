@@ -45,7 +45,7 @@ module.exports = (function(){
       },
       skip_invalid_episodes: this._skipInvalidEpisodes,
       download_feed_at_startup: this._downloadFeedAtStartup
-    });
+    }, null, '\t');
   };
 
   config.prototype.open = function(path){

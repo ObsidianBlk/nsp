@@ -6,6 +6,8 @@ if (typeof(window.View) === 'undefined'){
 window.View.AudioPlayer = (function(){
 
   var Events = require('events');
+  var FS = require('fs');
+  var Path = require('path');
 
   function TimeToTag(starttime, endtime){
     var tag = "#t=";
@@ -36,7 +38,15 @@ window.View.AudioPlayer = (function(){
     return time;
   }
 
-  function audioPlayer(system_id, player_controls){
+  function FileExists(path){
+    var lstat = null;
+    try{
+      lstat = FS.lstatSync(path);
+    } catch (e){/* do nothing */}
+    return (lstat !== null && lstat.isFile());
+  }
+
+  function audioPlayer(system_id){
     if (typeof(system_id) !== 'string'){system_id="#Audio_System";}
     
     this._playlist = [];
@@ -53,10 +63,6 @@ window.View.AudioPlayer = (function(){
     }
     // Store the initial volume level. This is what we assume the user wants their maximum volume to be.
     this._volume = this._player[0].volume;
-
-    player_controls = player_controls || {};
-    this._SetupPlayerControls(player_controls);
-
 
     this._player.on("ended", (function(){
       if (this._currentTrack >= 0 && this._currentTrack < this._playlist.length){
@@ -129,7 +135,15 @@ window.View.AudioPlayer = (function(){
   };
 
   audioPlayer.prototype.queueEpisode = function(episode, story){
-    var url = (episode.audio_path !== "") ? episode.audio_path : episode.audio_src;
+    var url = episode.audio_src;
+    if (episode.audio_path === ""){
+      var path = Path.join(NSP.config.path.audio, episode.audio_filename);
+      if (FileExists(path)){
+	url = path;
+      }
+    } else {
+      url = episode.audio_path;
+    }
     var eindex = NSP.db.getEpisodeIndex(episode.guid);
     if (eindex >= 0){
       var title = episode.title;
@@ -338,42 +352,6 @@ window.View.AudioPlayer = (function(){
     return -1;
   };
 
-  audioPlayer.prototype._SetupPlayerControls = function(controls){
-    if (typeof(controls.playpause) === 'string'){
-      $(controls.playpause).on("click", (function(){
-	if (this.playing && !this.paused){
-	  this.pause();
-	} else if (this.paused){
-	  this.play();
-	}
-      }).bind(this));
-    }
-
-    if (typeof(controls.nextTrack) === 'string'){
-      $(controls.nexttrack).on("click", (function(){
-	this.nextTrack();
-      }).bind(this));
-    }
-
-    if (typeof(controls.previousTrack) === 'string'){
-      $(controls.previousTrack).on("click", (function(){
-	this.previousTrack();
-      }).bind(this));
-    }
-
-    if (typeof(controls.nextStory) === 'string'){
-      $(controls.nextStory).on("click", (function(){
-	Materialize.toast("Operation not yet defined.", 4000);
-      }).bind(this));
-    }
-
-    if (typeof(controls.previousStory) === 'string'){
-      $(controls.previousStory).on("click", (function(){
-	Materialize.toast("Operation not yet defined.", 4000);
-      }).bind(this));
-    }
-  };
-
 
   Object.defineProperties(audioPlayer.prototype, {
     "volume":{
@@ -416,18 +394,7 @@ window.View.AudioPlayer = (function(){
     "currentTrackEpisode":{
       get:function(){
 	if (this._currentTrack >= 0){
-	  if (this._playlist[this._currentTrack].es_index !== null){
-	    var pos = this._playlist[this._currentTrack].es_index.lastIndexOf("S");
-	    var eindex = -1;
-	    if (pos > 0){
-	      eindex = parseInt(this._playlist[this._currentTrack].es_index.substr(1, pos-1));
-	    } else {
-	      eindex = parseInt(this._playlist[this._currentTrack].es_index.substr(1));
-	    }
-	    if (eindex >= 0){
-	      return NSP.db.episode(eindex);
-	    }
-	  }
+	  return this._playlist[this._currentTrack].episode;
 	}
 	return null;
       }
@@ -435,14 +402,8 @@ window.View.AudioPlayer = (function(){
 
     "currentTrackStory":{
       get:function(){
-	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].es_index !== null){
-	  var pos = this._playlist[this._currentTrack].es_index.lastIndexOf("S");
-	  var sindex = (pos > 0) ? parseInt(this._playlist[this._currentTrack].es_index.substr(pos+1)) : -1;
-	  if (sindex >= 0){
-	    return this.currentTrackEpisode.story(sindex);
-	  } else {
-	    return this.currentTrackEpisode.storyByTime(this._player[0].currentTime);
-	  }
+	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].episode !== null){
+	  return this._playlist[this._currentTrack].story;
 	}
 	return null;
       }
@@ -453,13 +414,10 @@ window.View.AudioPlayer = (function(){
 	var title = "";
 	if (this._currentTrack >= 0){
 	  title = this._playlist[this._currentTrack].title;
-	  var ep = this.currentTrackEpisode;
-	  if (ep !== null){
-	    title = ep.title;
-	    var story = this.currentTrackStory;
-	    story = (story !== null) ? story : ep.storyByTime(this._player[0].currentTime);
-	    if (story !== null){
-	      title += " - " + story.title;
+	  if (this._playlist[this._currentTrack].episode !== null){
+	    title = this._playlist[this._currentTrack].episode.title;
+	    if (this._playlist[this._currentTrack].story !== null){
+	      title += " - " + this._playlist[this._currentTrack].story.title;
 	    }
 	  }
 	}

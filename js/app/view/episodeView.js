@@ -391,8 +391,8 @@ window.View.EpisodeView = (function(){
 
 
   episodeView.prototype._OnSlideIn = function(){
+    var content = this._sheetview.find("#sheet_content");
     if (this._activeCard[1] !== null){
-      var content = this._sheetview.find("#sheet_content");
       this._activeCard[0] = this._activeCard[1];
       this._activeCard[1] = null;
       EpisodeDetails(content, this._activeCard[0], this._audioPlayer);

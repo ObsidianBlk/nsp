@@ -25,7 +25,7 @@ window.View.AudioPlayerView = (function(){
   function AddTrackItem(entity, info, audioPlayer){
     var e = $(templates.playlistTrack);
     entity.append(e);
-    e.find(".card-title").text(info.name);
+    e.find(".track-title").text(info.name);
     if (info.episode !== null){
       e.data({episodeid:info.episode.guid});
       if (info.story !== null){
@@ -50,15 +50,16 @@ window.View.AudioPlayerView = (function(){
 
   function audioPlayerView(audioPlayer){
     this._entity = {
-      playlist: $(".playlist"),
+      playlist: $(".player-playlist"),
       title: $(".player-title"),
       progress: $(".player-progress")
     };
     this._configured = false;
     this._audioPlayer = audioPlayer;
 
-    // This is the hook.
+    // These are the hooks.
     this._ConfigurePlayerCallbacks();
+    this._ConfigureControlButtons();
   }
   audioPlayerView.prototype.__proto__ = Events.EventEmitter.prototype;
   audioPlayerView.prototype.constructor = audioPlayerView;
@@ -93,7 +94,7 @@ window.View.AudioPlayerView = (function(){
       }).bind(this));
 
       this._audioPlayer.on("timeupdate", (function(progress){
-	this._entity.progress.attr("width", (100*progress).toString() + "%");
+	this._entity.progress.css("width", Math.floor(100*progress).toString() + "%");
       }).bind(this));
 
       this._audioPlayer.on("track_added", (function(info){

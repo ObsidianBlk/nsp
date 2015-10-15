@@ -24,6 +24,14 @@ body{
     will-change: overflow;
 }
 
+.collection-item.player-track{
+    padding: 4px 6px;
+}
+.collection-item.player-track .secondary-content {
+    position: relative;
+    right:0;
+}
+
 
 .nsp-grey {
     background-color: #3A4A44 !important; }
@@ -110,11 +118,42 @@ body{
     will-change: left, right; }
 
 
+  .btn-flat-nsp {
+    margin: 0;
+    margin-left: 0.5rem;
+    border: none;
+    border-radius: 2px;
+    display: inline-block;
+    outline: 0;
+    padding: 0 0.15rem;
+    text-transform: uppercase;
+    vertical-align: middle;
+    -webkit-tap-highlight-color: transparent; }
+
+  .btn-flat-nsp i {
+      font-size: 1rem;
+      line-height: inherit; }
+
+  .btn-flat-nsp {
+      box-shadow: none;
+      background-color: transparent;
+      color: #343434;
+      cursor: pointer; }
+  .btn-flat-nsp.disabled {
+      color: #b3b3b3;
+      cursor: default; }
+
+  .modal .modal-footer .btn-flat-nsp {
+      float: right;
+      margin: 6px 0;
+  }
+
+
 time {
     font-size: small;
 }
 
 .title-block{
-    line-height: 80%;
+    line-height: 90%;
     padding: 0.25em;
 }

@@ -56,7 +56,7 @@ module.exports = (function(){
 	data.episode.push(JSON.parse(this._episode[i].toString()));
       }
     }
-    return JSON.stringify(data);
+    return JSON.stringify(data, null, '\t');
   };
 
   database.prototype.open = function(path, skipInvalidEpisodes){
