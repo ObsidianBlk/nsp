@@ -5,6 +5,9 @@ module.exports = (function(){
   var Path = require("path");
   var Events = require("events");
 
+  var JSON_INDENTATION_STRING = "  ";
+
+
   function VerifyConfig(conf, obj){
     if (typeof(obj) !== typeof({})){
       throw new Error("Expected object.");
@@ -13,6 +16,7 @@ module.exports = (function(){
     if (typeof(obj.path) === typeof({})){
       conf.path = obj.path;
     }
+    conf.autoCacheImages = obj.auto_cache_images;
     conf.skipInvalidEpisodes = obj.skip_invalid_episodes;
     conf.downloadFeedAtStartup = obj.download_feed_at_startup;
     conf.playIntroAtStartup = obj.play_intro_at_startup;
@@ -21,8 +25,10 @@ module.exports = (function(){
   function config(){
     this._path = {
       database: Path.normalize("database.json"),
-      audio:    Path.normalize("audio")
+      audio:    Path.normalize("cache/audio/episodes"),
+      images:   Path.normalize("cache/images")
     };
+    this._autoCacheImages = true;
     this._skipInvalidEpisodes = false;
     this._downloadFeedAtStartup = true;
     this._playIntroAtStartup = true;
@@ -39,13 +45,12 @@ module.exports = (function(){
 
   config.prototype.toString = function(){
     return JSON.stringify({
-      path:{
-	database: this._path.database,
-	audio: this._path.audio
-      },
+      path: this._path,
+      auto_cache_images: this._autoCacheImages,
       skip_invalid_episodes: this._skipInvalidEpisodes,
-      download_feed_at_startup: this._downloadFeedAtStartup
-    }, null, '\t');
+      download_feed_at_startup: this._downloadFeedAtStartup,
+      play_intro_at_startup: this._playIntroAtStartup
+    }, null, JSON_INDENTATION_STRING);
   };
 
   config.prototype.open = function(path){
@@ -104,7 +109,8 @@ module.exports = (function(){
       get:function(){
 	return {
 	  database: this._path.database,
-	  audio: this._path.audio
+	  audio: this._path.audio,
+	  images: this._path.images
 	};
       },
       set:function(path){
@@ -113,6 +119,15 @@ module.exports = (function(){
 	}
 	this._path.database = (typeof(path.database) === 'string') ? Path.normalize(path.database) : this._path.database;
 	this._path.audio = (typeof(path.audio) === 'string') ? Path.normalize(path.audio) : this._path.audio;
+	this._path.images = (typeof(path.images) === 'string') ? Path.normalize(path.images) : this._path.images;
+	this.emit("changed");
+      }
+    },
+
+    "autoCacheImages":{
+      get:function(){return this._autoCacheImages;},
+      set:function(enable){
+	this._autoCacheImages = (typeof(enable) === 'boolean') ? enable : this._autoCacheImages;
 	this.emit("changed");
       }
     },

@@ -17,6 +17,39 @@ window.View.EpisodeView = (function(){
   };
 
 
+  var DETAIL = {
+    title: ".episode-detail-title",
+    description: ".episode-detail-description",
+    img: ".episode-detail-image",
+    tags: ".episode-detail-tags",
+    actions: ".episode-action",
+    action_queue: ".episode-action-queue",
+    action_play: ".episode-action-play",
+    action_download: ".episode-action-download"
+  };
+
+  var STORY = {
+    header: ".title-block",
+    title: ".story-detail-title",
+    actions: ".story-action",
+    action_queue: ".story-action-queue"
+  };
+
+
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
+
+  function FilePathExists(path){
+    var lstat = null;
+    try {
+      lstat = FS.lstatSync(path);
+    } catch (e) { /* Do nothing */}
+    return (lstat !== null) ? lstat.isFile() : false;
+  }
+
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
@@ -27,7 +60,7 @@ window.View.EpisodeView = (function(){
     var path = Path.join(NSP.config.path.audio, episode.audio_filename);
     var lstat = null;
     try {
-      var lstat = FS.lstatSync(path);
+      lstat = FS.lstatSync(path);
     } catch (e) {
       // Do nothing
     }
@@ -81,7 +114,24 @@ window.View.EpisodeView = (function(){
     }).addClass("left");
 
     if (episode.img_src !== ""){
-      img.attr("src", episode.img_src);
+      var localPath = Path.join(NSP.config.path.images, episode.img_filename);
+      if (FilePathExists(localPath)){
+	img.attr("src", localPath);
+      } else {
+	if (NSP.config.autoCacheImages){
+	  var feed = new Feeder();
+	  feed.downloadFile(episode.img_src, localPath, function(err){
+	    if (err){
+	      console.log(err.message);
+	      img.attr("src", episode.img_src);
+	    } else {
+	      img.attr("src", localPath);
+	    }
+	  });
+	} else {
+	  img.attr("src", episode.img_src);
+	}
+      }
     } else {
       img.attr("src", "images/nsp_logo.png");
       // This will search for an episode specific image and change the image source if one is found.
@@ -95,7 +145,8 @@ window.View.EpisodeView = (function(){
       }, function(err){console.log(err);});
     }
 
-    header.append(img).append($("<p></p>").addClass("truncate").text(episode.title));
+    var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
+    header.append(img).append($("<p></p>").addClass("truncate").text(title));
 
     var body = $("<div></div>").addClass("collapsible-body").css({"background-color":"#FFFFFF"});
     body.append($("<p></p>").text(episode.shortDescription));
@@ -143,6 +194,12 @@ window.View.EpisodeView = (function(){
   };
 
 
+  function ImageSource(episode){
+    var path = Path.join(NSP.config.path.images, episode.img_filename);
+    return (FilePathExists(path)) ? path : episode.img_src;
+  }
+
+
   function EpisodeDetails(entity, episode, audioPlayer){
     entity.empty();
     entity.html(templates.episodeDetails);
@@ -151,18 +208,19 @@ window.View.EpisodeView = (function(){
     entity.find("#entity_id").attr("data-id", episode.guid);
 
     if (episode.img_src !== ""){
-      entity.find(".episode-detail-image").attr("src", episode.img_src).css({
+      entity.find(DETAIL.img).attr("src", ImageSource(episode)).css({
 	"width":"20rem",
 	"height":"auto"
       });;
     }
 
-    entity.find(".episode-detail-title").append(episode.title);
-    entity.find(".episode-detail-description").append(episode.shortDescription);
+    var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
+    entity.find(DETAIL.title).append(title);
+    entity.find(DETAIL.description).append(episode.shortDescription);
 
     var i = 0;
-    for (i=0; i < this.tagCount; i++){
-      entity.find(".chip-tags").append(
+    for (i=0; i < episode.tagCount; i++){
+      entity.find(DETAIL.tags).append(
 	$("<div></div>").addClass("tags chip").append(episode.tag(i)).append("<i class=\"material-icons\">close</i>")
       );
     }
@@ -170,13 +228,13 @@ window.View.EpisodeView = (function(){
     for (i=0; i < episode.storyCount; i++){
       var story = $(templates.episodeDetailsStory);
       var estory = episode.story(i);
-      story.find(".episode-detail-card-story-title").append(estory.title);
+      story.find(STORY.title).append(estory.title);
       if (estory.beginning !== ""){
 	var time = $("<time></time>").addClass("grey-text text-lighten-1").append("<i>Starting:</i> " + estory.beginning);
 	if (estory.duration > 0){
 	  time.append(" (dur: " + estory.durationString + ")");
 	}
-	story.find(".title-block").append("<br>").append(time);
+	story.find(STORY.header).append(time);
       }
       entity.append(story);
     }
@@ -190,33 +248,31 @@ window.View.EpisodeView = (function(){
 
     var audioPath = AudioPath(episode);
 
-    var options = entity.find(".episode-options"); // This grabs all episode option buttons!
-    var op_download = entity.find(".episode-download");
-    var op_playlist = entity.find(".episode-addtoplaylist");
-    var op_playpause = entity.find(".episode-play");
+    var actions = entity.find(DETAIL.actions); // This grabs all episode option buttons!
+    var act_download = entity.find(DETAIL.action_download);
+    var act_queue = entity.find(DETAIL.action_queue);
+    var act_playpause = entity.find(DETAIL.action_play);
 
-    if (op_download.length > 0){
+    if (act_download.length > 0){
       if (IsEpisodeDownloading(episode)){
 	// It could take a while to download an episode, and we don't want to do it more than once.
 	// This disables all of the buttons so that nothing can happen until download is complete.
-	options.addClass("disabled");
+	actions.addClass("disabled");
       } else if (audioPath.type === "local"){
-	op_download.find(".option-delete").removeAttr("style");
-	op_download.find(".option-download").css("display", "none");
+	SetDownloadActionState(act_download, "delete");
       }
 
-      op_download.on("click", function(){
-	if (op_download.find("option-download").css("display") === "none"){
+      act_download.on("click", function(){
+	if (act_download.find("option-download").css("display") === "none"){
 	  DeleteAudioFile(episode);
-	  op_download.find(".option-download").removeAttr("style");
-	  op_download.find(".option-delete").css("display", "none");
+	  SetDownloadActionState(act_download, "download");
 	  Materialize.toast("Episode removed from hard drive.", 4000);
 	} else {
 	  if (SetActiveDownload(episode)){
 	    var feed = new Feeder();
 
 	    Materialize.toast("Downloading episode...", 4000);
-	    options.addClass("disabled");
+	    actions.addClass("disabled");
 	    feed.downloadFile(episode.audio_src, Path.join(NSP.config.path.audio, episode.audio_filename), function(err){
 	      var process = false;
 	      if (entity.find("#entity_id").length > 0 && entity.find("#entity_id").data("id") === episode.guid){
@@ -229,12 +285,11 @@ window.View.EpisodeView = (function(){
 	      } else {
 		Materialize.toast("Episode \"" + episode.title + "\" download complete.", 4000);
 		if (process){
-		  op_download.find(".option-delete").removeAttr("style");
-		  op_download.find(".option-download").css("display", "none");
+		  SetDownloadActionState(act_download, "delete");
 		}
 	      }
 	      if (process){ 
-		options.removeClass("disabled");
+		actions.removeClass("disabled");
 	      }
 	      SetActiveDownload(episode, false);
 	    });
@@ -243,8 +298,11 @@ window.View.EpisodeView = (function(){
       });
     }
 
-    if (op_playlist.length > 0){
-      op_playlist.on("click", function(){
+    if (act_queue.length > 0){
+      if (audioPlayer.isEpisodeQueued(episode)){
+	SetQueueActionState(act_queue, "remove");
+      }
+      act_queue.on("click", function(){
 	if (audioPlayer.isEpisodeQueued(episode) === false){
 	  audioPlayer.queueEpisode(episode);
 	} else {
@@ -253,8 +311,11 @@ window.View.EpisodeView = (function(){
       });
     }
 
-    if (op_playpause.length > 0){
-      op_playpause.on("click", function(){
+    if (act_playpause.length > 0){
+      if (audioPlayer.isEpisodeQueued(episode)){
+	act_playpause.addClass("disabled");
+      }
+      act_playpause.on("click", function(){
 	audioPlayer.clearTracks();
 	audioPlayer.queueEpisode(episode);
 	audioPlayer.playTrack(0);
@@ -262,6 +323,48 @@ window.View.EpisodeView = (function(){
     }
   }
 
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
+
+  function SetQueueActionState(btn, state){
+    if (btn.length > 0){
+      if (state === "add"){
+	btn.find(".option-add").removeAttr("style");
+	btn.find(".option-remove").css("display", "none");
+      } else if (state === "remove"){
+	btn.find(".option-remove").removeAttr("style");
+	btn.find(".option-add").css("display", "none");
+      }
+    }
+  }
+
+  function SetPlayPauseActionState(btn, state){
+    if (btn.length > 0){
+      if (state === "play"){
+	btn.find(".option-play").removeAttr("style");
+	btn.find(".option-pause").css("display", "none");
+      } else if (state === "pause"){
+	btn.find(".option-pause").removeAttr("style");
+	btn.find(".option-play").css("display", "none");
+      }
+    }
+  }
+
+  function SetDownloadActionState(btn, state){
+    if (btn.length > 0){
+      if (state === "download"){
+	btn.find(".option-download").removeAttr("style");
+	btn.find(".option-delete").css("display", "none");
+      } else if (state === "delete"){
+	btn.find(".option-delete").removeAttr("style");
+	btn.find(".option-download").css("display", "none");
+      }
+    }
+  }
+  
 
 
 // -----------------------------------------------------------------------
@@ -298,6 +401,8 @@ window.View.EpisodeView = (function(){
 
     this._activeDownloads = [];
 
+    this._configured = false;
+
     this._updateInterval = setInterval((function(){
       if (this._listDirty){
 	$('.collapsible').collapsible();
@@ -306,6 +411,7 @@ window.View.EpisodeView = (function(){
     }).bind(this), 200);
 
     this._sheetview.find("#sheet_content").animate({"margin-left":this._sheetview.width()+this._slideBuffer}, 400);
+    this._ConnectAudioPlayerEvents();
   };
   episodeView.prototype.__proto__ = Events.EventEmitter.prototype;
   episodeView.prototype.constructor = episodeView;
@@ -401,6 +507,23 @@ window.View.EpisodeView = (function(){
     } else {
       this._slideActive = false;
       content.empty();
+    }
+  };
+
+
+  episodeView.prototype._ConnectAudioPlayerEvents = function(){
+    if (this._configured === false){
+      this._configured = true;
+
+      var content = this._sheetview.find("#sheet_content");
+      this._audioPlayer.on("episode_queued", (function(ep, story){
+	if (content.find("#entity_id").attr("data-id") === ep.guid){
+	  var act_queue = content.find(DETAIL.action_queue);
+	  if (act_queue.length > 0){
+	    SetQueueActionState(act_queue, "remove");
+	  }
+	}
+      }).bind(this));
     }
   };
 

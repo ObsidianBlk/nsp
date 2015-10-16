@@ -1,4 +1,4 @@
 node_modules/*
-audio/episodes/*
-database.json
+cache/*
+database*.json
 config.json

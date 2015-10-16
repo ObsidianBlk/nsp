@@ -6,6 +6,8 @@ module.exports = (function(){
 
   var episode = require("./episode");
 
+  var JSON_INDENTATION_STRING = "  ";
+
 
   function VerifyDB(db, data, skipInvalidEpisodes){
     if (typeof(data) !== typeof({})){
@@ -56,7 +58,7 @@ module.exports = (function(){
 	data.episode.push(JSON.parse(this._episode[i].toString()));
       }
     }
-    return JSON.stringify(data, null, '\t');
+    return JSON.stringify(data, null, JSON_INDENTATION_STRING);
   };
 
   database.prototype.open = function(path, skipInvalidEpisodes){

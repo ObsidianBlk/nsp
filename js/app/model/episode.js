@@ -55,25 +55,35 @@ module.exports = (function(){
       throw new Error("Episode property 'story' expected to be an Array. Given " + typeof(item.story) + ".");
     }
 
-    // Now... using the title... let's see if we can guess the season/episode!
-    var episode = 0;
-    var match = ep._title.match(/NoSleep Podcast (S\d{1,2})(E\d{1,2}[a-zA-Z]{0,1})/);
-    if (match !== null && match.length > 2){
-      var season = parseInt(match[1].substr(1));
-      episode = parseInt(match[2].substr(1));
-      ep.addTag("season " + season);
-      ep.addTag("episode " + episode);
+    // Check for season/episode numbers
+    if (typeof(item.season) === 'number' && typeof(item.episode) === 'number'){
+      ep._season = item.season;
+      ep._episode = item.episode;
     } else {
-      // Special case for Season 1 titles!
-      match = ep._title.match(/NoSleep Podcast (#\d{1,2})/);
-      if (match !== null && match.length > 1){
-	episode = parseInt(match[1].substr(1));
-	ep.addTag("season 1");
+      // Now... using the title... let's see if we can guess the season/episode!
+      var episode = 0;
+      var match = ep._title.match(/Nosleep Podcast (S\d{1,2})(E\d{1,2}[a-zA-Z]{0,1})/);
+      if (match !== null && match.length > 2){
+	var season = parseInt(match[1].substr(1));
+	episode = parseInt(match[2].substr(1));
+	ep._season = season;
+	ep._episode = episode;
+	ep.addTag("season " + season);
 	ep.addTag("episode " + episode);
+      } else {
+	// Special case for Season 1 titles!
+	match = ep._title.match(/Nosleep Podcast (#\d{1,2})/);
+	if (match !== null && match.length > 1){
+	  episode = parseInt(match[1].substr(1));
+	  ep._season = 1;
+	  ep._episode = episode;
+	  ep.addTag("season 1");
+	  ep.addTag("episode " + episode);
+	}
       }
     }
     // Could it be a "bonus" episode?
-    match = ep._title.match(/NoSleep Podcast(.*?)([B|b][O\o][N|n][U|u][S|s])(.*?)/);
+    match = ep._title.match(/Nosleep Podcast(.*?)([B|b][O\o][N|n][U|u][S|s])(.*?)/);
     if (match !== null){
       ep.addTag("bonus");
     }
@@ -142,6 +152,10 @@ module.exports = (function(){
     this._title = null;
     this._subTitle = null;
     this._guid = null;
+
+    this._season = 0;
+    this._episode = 0;
+
     this._audio_src = null;
     this._audio_path = null;
 
@@ -202,6 +216,12 @@ module.exports = (function(){
     }
     if (this._shortDescription !== ""){
       data.short_description = this._shortDescription;
+    }
+    if (this._season > 0){
+      data.season = this._season;
+    }
+    if (this._episode > 0){
+      data.episode = this._episode;
     }
     if (this._link !== ""){
       data.link = this._link;
@@ -384,6 +404,15 @@ module.exports = (function(){
       }
     },
 
+    "seasonEpisodeTitle":{
+      get:function(){
+	if (this._season > 0 && this._episode > 0){
+	  return "Season " + this._season + " Episode " + ((this._episode < 10) ? "0" + this._episode : this._episode);
+	}
+	return "";
+      }
+    },
+
     "title":{
       get:function(){return this._title;},
       set:function(title){
@@ -421,6 +450,14 @@ module.exports = (function(){
 
     "guid":{
       get:function(){return this._guid;}
+    },
+
+    "season":{
+      get:function(){return this._season;}
+    },
+
+    "episode":{
+      get:function(){return this._episode;}
     },
 
     "tagCount":{
@@ -496,6 +533,19 @@ module.exports = (function(){
 	if (typeof(src) !== 'string'){throw new TypeError();}
         this._img_src = src;
         this.emit("changed");
+      }
+    },
+
+    "img_filename":{
+      get:function(){
+	var url = this._img_src;
+	//this removes the anchor at the end, if there is one
+	url = url.substring(0, (url.indexOf("#") == -1) ? url.length : url.indexOf("#"));
+	//this removes the query after the file name, if there is one
+	url = url.substring(0, (url.indexOf("?") == -1) ? url.length : url.indexOf("?"));
+	//this removes everything before the last slash in the path
+	url = url.substring(url.lastIndexOf("/") + 1, url.length);
+	return url;
       }
     }
   });

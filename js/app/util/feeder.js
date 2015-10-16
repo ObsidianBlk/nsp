@@ -9,6 +9,11 @@ module.exports = (function(){
   var FS = require('fs');
   var Path = require('path');
 
+  
+  var ActiveCallbacks = [];
+  var ActiveURIs = [];
+
+
   function MakeDirIfNotExists(path){
     var lstat = null;
     try {
@@ -24,23 +29,82 @@ module.exports = (function(){
     return false;
   }
 
+
+  function AddDLCallbackToPath(path, callback){
+    if (typeof(callback) === 'function'){
+      for (var i=0; i < ActiveCallbacks.length; i++){
+	if (ActiveCallbacks[i].path === path){
+	  for (var c=0; c < ActiveCallbacks[i].callback.length; c++){
+	    if (ActiveCallbacks[i].callback[c] === callback){
+	      return;
+	    }
+	  }
+	  ActiveCallbacks[i].callback.push(callback);
+	  return;
+	}
+      }
+      var index = ActiveCallbacks.length;
+      ActiveCallbacks.push({
+	path:path,
+	callback:[]
+      });
+      ActiveCallbacks[index].callback.push(callback);
+    }
+  }
+
+  function ProcessDownload(url, path, callback){
+    for (var i=0; i < ActiveURIs.length; i++){
+      if (ActiveURIs[i].url === url && ActiveURIs[i].path === path){
+	AddDLCallbackToPath(path, callback);
+	return false; // Don't continue processing DL. It's being processed.
+      }
+    }
+    ActiveURIs.push({
+      url:url,
+      path:path
+    });
+    AddDLCallbackToPath(path, callback);
+    return true; // This is a new URL... process it!
+  }
+
+  function DLCallbackAndClear(path, err){
+    var cbindex = -1;
+    for (var i=0; i < ActiveCallbacks.length; i++){
+      if (ActiveCallbacks[i].path === path){
+	for (var c=0; c < ActiveCallbacks[i].callback.length; c++){
+	  ActiveCallbacks[i].callback[c](err);
+	}
+	ActiveCallbacks.splice(i, 1);
+	break;
+      }
+    }
+    
+    ActiveURIs = ActiveURIs.filter(function(item){
+      return (item.path !== path);
+    });
+  }
+  
+
   function feeder(){};
   feeder.prototype.__proto__ = Events.EventEmitter.prototype;
   feeder.prototype.constructor = feeder;
 
   feeder.prototype.downloadFile = function(url, path, callback){
+    if (ProcessDownload(url, path, callback) === false){return;}
+
     var request = HTTP.get(url, (function(resp){
       console.log(resp);
       if (resp.statusCode === 302){ // A redirect! Let's follow it!
+	// NOTE: We don't pass the callback in the recursive call because, if there was one, it was already added to the ActiveDownloads
+	// list in the AddToActiveDownloads() call above.
 	this.downloadFile(resp.headers.location, path, callback);
 	return;
       }
+
       if (resp.statusCode != 200){
 	var err = new Error("File download status code (" + resp.statusCode + ") received.");
 	console.log(err.message);
-	if (callback){
-	  callback(err);
-	}
+	DLCallbackAndClear(path, err);
 	this.emit('error', err);
 	return;
       }
@@ -51,23 +115,23 @@ module.exports = (function(){
         file.on('finish', (function(){
 	  file.close((function(){
             this.emit("file_downloaded");
-	    if (callback){callback(null);}
+	    DLCallbackAndClear(path);
 	  }).bind(this));
         }).bind(this));
 
         file.on('error', (function(err){
 	  FS.unlink(path);
 	  this.emit('error', err);
-	  if (callback){callback(err);}
+	  DLCallbackAndClear(path, err);
         }).bind(this));
 
         resp.pipe(file).on('error', (function(err){
 	  FS.unlink(path);
 	  this.emit('error', err);
-	  if (callback){callback(err);}
+	  DLCallbackAndClear(path, err);
         }).bind(this));
-      } else if (callback){
-        callback(new Error("Could not find or create path \"" + Path.dirname(path) + "\"."));
+      } else {
+	DLCallbackAndClear(path, new Error("Could not find or create path \"" + Path.dirname(path) + "\"."));
       }
     }).bind(this));
   };
