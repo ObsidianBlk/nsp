@@ -79,7 +79,7 @@ module.exports = (function(){
   }
   
 
-  function story(title_or_object){
+  function story(title_or_object, episode){
     this._title = null;
     this._link = null;
 
@@ -89,6 +89,8 @@ module.exports = (function(){
     this._tag = [];
     this._writer = [];
     this._narrator = [];
+
+    this._episode = episode;
 
     if (typeof(title_or_object) === typeof({})){
       VerifyStoryObject(this, title_or_object);
@@ -354,6 +356,10 @@ module.exports = (function(){
 
     "tags":{
       get:function(){return this._tag.join(",");}
+    },
+
+    "episode":{
+      get:function(){return this._episode;}
     }
   });
 

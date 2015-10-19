@@ -6,6 +6,8 @@ $(document).ready(function(){
 
   var Feeder = require('./js/app/util/feeder');
 
+  var PATH_INTRO_AUDIO = "resources/audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3";
+
   var audioPlayer = new View.AudioPlayer();
   var episodeView = new View.EpisodeView(".cards", ".sheet", audioPlayer);
   var playerView = new View.AudioPlayerView(audioPlayer);
@@ -59,7 +61,7 @@ $(document).ready(function(){
 
     if (NSP.config.playIntroAtStartup){
       audioPlayer.volume = 0.5;
-      audioPlayer.play("audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3", {
+      audioPlayer.play(PATH_INTRO_AUDIO, {
 	starttime:0,
 	endtime:12.5,
 	fadeIn:1.0,

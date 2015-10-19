@@ -82,7 +82,7 @@ window.View.AudioPlayer = (function(){
 
   audioPlayer.prototype.isEpisodeQueued = function(episode){
     for (var i=0; i < this._playlist.length; i++){
-      if (this._playlist[i].episode !== null && this._playlist[i].story === null && this._playlist[i].episode === episode){
+      if (this._playlist[i].episode === episode && this._playlist[i].story === null){
 	return true;
       }
     }
@@ -110,13 +110,14 @@ window.View.AudioPlayer = (function(){
     }
     var eindex = NSP.db.getEpisodeIndex(episode.guid);
     if (eindex >= 0){
-      var title = episode.title;
+      var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
       if (typeof(story) !== 'undefined'){
 	var sindex = episode.getStoryIndexByTitle(story.title);
 	if (sindex < 0){
 	  console.log("Story not found in Episode.");
 	  story = null;
 	}
+	title += ": " + episode.story(sindex).title;
       } else {
 	story = null;
       }
@@ -233,9 +234,16 @@ window.View.AudioPlayer = (function(){
 	this.addTrack(url, options);
 	this.playTrack(0);
       } catch (e) {throw e;}
-    } else if (this._player[0].paused && this._player.find("source").length > 0){
-      this._player[0].play();
-      this.emit("playing");
+    } else {
+      var source = this._player.find("source");
+      if (source.length > 0){
+	if (source.attr("src") === "" && this.playing === false){
+	  this.playTrack(this._currentTrack);
+	} else if (this.playing === false){
+	  this._player[0].play();
+	  this.emit("playing");
+	}
+      }
     }
   };
 
@@ -392,7 +400,7 @@ window.View.AudioPlayer = (function(){
     },
 
     "playing":{
-      get:function(){return this._player[0].playing;}
+      get:function(){return this._player[0].duration > 0 && this._player[0].paused === false && this._player[0].ended === false;}
     },
 
     "paused":{

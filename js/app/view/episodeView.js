@@ -17,11 +17,14 @@ window.View.EpisodeView = (function(){
   };
 
 
+  var PATH_DEFAULT_LOGO = "resources/images/nsp_logo.png";
+
   var DETAIL = {
     title: ".episode-detail-title",
     description: ".episode-detail-description",
     img: ".episode-detail-image",
     tags: ".episode-detail-tags",
+    story_details: ".story-detail",
     actions: ".episode-action",
     action_queue: ".episode-action-queue",
     action_play: ".episode-action-play",
@@ -32,7 +35,8 @@ window.View.EpisodeView = (function(){
     header: ".title-block",
     title: ".story-detail-title",
     actions: ".story-action",
-    action_queue: ".story-action-queue"
+    action_queue: ".story-action-queue",
+    action_jumpto: ".story-action-jumpto"
   };
 
 
@@ -133,7 +137,7 @@ window.View.EpisodeView = (function(){
 	}
       }
     } else {
-      img.attr("src", "images/nsp_logo.png");
+      img.attr("src", PATH_DEFAULT_LOGO);
       // This will search for an episode specific image and change the image source if one is found.
       require("./js/app/util/epImageFinder")(episode, function(ep, src){
 	if (src !== ""){
@@ -228,15 +232,7 @@ window.View.EpisodeView = (function(){
     for (i=0; i < episode.storyCount; i++){
       var story = $(templates.episodeDetailsStory);
       var estory = episode.story(i);
-      story.find(STORY.title).append(estory.title);
-      if (estory.beginning !== ""){
-	var time = $("<time></time>").addClass("grey-text text-lighten-1").append("<i>Starting:</i> " + estory.beginning);
-	if (estory.duration > 0){
-	  time.append(" (dur: " + estory.durationString + ")");
-	}
-	story.find(STORY.header).append(time);
-      }
-      entity.append(story);
+      entity.append(StoryDetails(story, episode, estory, audioPlayer));
     }
 
     for (i=0; i < 8; i++){
@@ -327,6 +323,68 @@ window.View.EpisodeView = (function(){
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
+
+
+  function StoryDetails(entity, episode, story, audioPlayer){
+    entity.find(STORY.title).append(story.title);
+    entity.data("title", story.title);
+    if (story.beginning !== ""){
+      entity.find(".story-action-buttons").css("display", "inline");
+      var time = $("<time></time>").addClass("grey-text text-lighten-1").append("<i>Starting:</i> " + story.beginning);
+      if (story.duration > 0){
+	time.append(" (dur: " + story.durationString + ")");
+      }
+      entity.find(STORY.header).append(time);
+    }
+
+    var act_queue = entity.find(".story-action-queue");
+    var act_jumpto = entity.find(".story-action-jumpto");
+
+    if (audioPlayer.isStoryQueued(story)){
+      SetActionState(act_queue, ["remove", "add"], 0);
+    }
+    act_queue.on("click", function(){
+      if (act_queue.find(".option-add").css("display") === "none"){
+	Materialize.toast("Remove story from queue not implemented yet.");
+      } else {
+	audioPlayer.queueEpisode(episode, story);
+      }
+    });
+
+    if (audioPlayer.currentTrackStory === story){
+      SetActionState(act_jumpto, ["pause", "jumpto", "play"], 0);
+    }
+    act_jumpto.on("click", function(){
+      if (act_jumpto.find(".option-jumpto").css("display") !== "none"){
+	audioPlayer.clearTracks();
+	audioPlayer.queueEpisode(episode, story);
+	audioPlayer.playTrack(0);
+      } else if (act_jumpto.find(".option-pause").css("display") !== "none"){
+	audioPlayer.play();
+      } else {
+	audioPlayer.pause();
+      }
+    });
+
+    return entity;
+  }
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
+
+  function SetActionState(btn, opt, state){
+    if (btn.length > 0 && opt.length > 0){
+      for (var i=0; i < opt.length; i++){
+	if (i === state){
+	  btn.find(".option-" + opt[i]).removeAttr("style");
+	} else {
+	  btn.find(".option-" + opt[i]).css("display", "none");
+	}
+      }
+    }
+  }
 
 
   function SetQueueActionState(btn, state){
@@ -515,16 +573,94 @@ window.View.EpisodeView = (function(){
     if (this._configured === false){
       this._configured = true;
 
+      var audioPlayer = this._audioPlayer;
       var content = this._sheetview.find("#sheet_content");
-      this._audioPlayer.on("episode_queued", (function(ep, story){
+
+      this._audioPlayer.on("episode_queued", function(ep, story){
 	if (content.find("#entity_id").attr("data-id") === ep.guid){
-	  var act_queue = content.find(DETAIL.action_queue);
-	  if (act_queue.length > 0){
-	    SetQueueActionState(act_queue, "remove");
+	  if (audioPlayer.isEpisodeQueued(ep)){
+	    var act_queue = content.find(DETAIL.action_queue);
+	    if (act_queue.length > 0){
+	      SetActionState(act_queue, ["remove", "add"], 0);
+	    }
 	  }
+	} else if (audioPlayer.isStoryQueued(story)){
+	  content.find(DETAIL.story_details).each(function(item){
+	    if (item.data("title") === story.title){
+	      var act_queue = item.find(STORY.action_queue);
+	      SetActionState(act_queue, ["remove", "add"], 0);
+	    }
+	  });
 	}
-      }).bind(this));
+      });
+
+
+      this._audioPlayer.on("track_changed", function(){
+	var episode = audioPlayer.currentTrackEpisode;
+	if (episode !== null && content.find("#entity_id").attr("data-id") === episode.guid){
+	  SetActionState(content.find(DETAIL.action_play), ["pause", "play"], 1);
+	  content.find(DETAIL.story_details).each(function(){
+	    var item = $(this);
+	    var act_queue = item.find(STORY.action_jumpto);
+	    if (item.data("title") === audioPlayer.currentTrackStory.title){
+	      SetActionState(act_queue, ["play", "pause", "jumpto"], 0);
+	    } else {
+	      var story = episode.storyByTitle(item.data("title"));
+	      if (audioPlayer.isStoryQueued(story)){
+		SetActionState(act_queue, ["jumpto", "play", "pause"], 1);
+	      } else {
+		SetActionState(act_queue, ["jumpto", "play", "pause"], 0);
+	      }
+	    }
+	  });
+	}
+      });
+
+
+      this._audioPlayer.on("paused", function(){
+	var episode = audioPlayer.currentTrackEpisode;
+	if (episode !== null && content.find("#entity_id").attr("data-id") === episode.guid){
+	  SetActionState(content.find(DETAIL.action_play), ["play", "pause"], 0);
+	  content.find(DETAIL.story_details).each(function(){
+	    var item = $(this);
+	    var act_queue = item.find(STORY.action_jumpto);
+	    if (item.data("title") === audioPlayer.currentTrackStory.title){
+	      SetActionState(act_queue, ["play", "pause", "jumpto"], 0);
+	    }
+	  });
+	}
+      });
     }
+
+
+    this._audioPlayer.on("playing", function(){
+      var episode = audioPlayer.currentTrackEpisode;
+      if (episode !== null && content.find("#entity_id").attr("data-id") === episode.guid){
+	SetActionState(content.find(DETAIL.action_play), ["play", "pause"], 1);
+	content.find(DETAIL.story_details).each(function(){
+	  var item = $(this);
+	  var act_queue = item.find(STORY.action_jumpto);
+	  if (item.data("title") === audioPlayer.currentTrackStory.title){
+	    SetActionState(act_queue, ["play", "pause", "jumpto"], 1);
+	  }
+	});
+      }
+    });
+
+
+    this._audioPlayer.on("ended", function(){
+      var episode = audioPlayer.currentTrackEpisode;
+      if (episode !== null && content.find("#entity_id").attr("data-id") === episode.guid){
+	SetActionState(content.find(DETAIL.action_play), ["play", "pause"], 0);
+	content.find(DETAIL.story_details).each(function(){
+	  var item = $(this);
+	  var act_queue = item.find(STORY.action_jumpto);
+	  if (item.data("title") === audioPlayer.currentTrackStory.title){
+	    SetActionState(act_queue, ["play", "pause", "jumpto"], 0);
+	  }
+	});
+      } 
+    });
   };
 
 

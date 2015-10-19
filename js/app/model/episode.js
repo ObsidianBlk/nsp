@@ -46,7 +46,7 @@ module.exports = (function(){
       ep._story = [];
       for (i=0; i < item.story.length; i++){
 	try{
-	  var s = new story(item.story[i]);
+	  var s = new story(item.story[i], ep);
 	} catch (e) {throw e;}
 	s.on("changed", function(){ep.emit("changed");});
 	ep._story.push(s);
@@ -304,6 +304,14 @@ module.exports = (function(){
   episode.prototype.story = function(index){
     if (index >= 0 && index < this._story.length){
       return this._story[index];
+    }
+    return null;
+  };
+
+  episode.prototype.storyByTitle = function(title){
+    var sindex = this.getStoryIndexByTitle(title);
+    if (sindex >= 0){
+      return this._story[sindex];
     }
     return null;
   };
