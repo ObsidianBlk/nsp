@@ -5,6 +5,20 @@ module.exports = (function(){
   var Events = require("events");
   var story = require("./story");
   var DescParser = require("../util/descParser");
+
+
+  function SecondsToHMS(sec){
+    var h = Math.floor(sec/(60*60));
+    sec -= h;
+    var m = Math.floor(sec/60);
+    var s = sec - m;
+
+    h = ((h < 9) ? "0" : "") + parseInt(h);
+    m = ((m < 9) ? "0" : "") + parseInt(m);
+    s = ((s < 9) ? "0" : "") + parseInt(s);
+
+    return h + ":" + m + ":" + s;
+  };
   
 
   function VerifyEpisode(ep, item){
@@ -172,6 +186,7 @@ module.exports = (function(){
 
     try {
       ParseObjToEpisode(this, edata);
+      this._CalculateEstimatedStoryEndTimes();
     } catch (e){
       throw e;
     }
@@ -182,6 +197,7 @@ module.exports = (function(){
   episode.prototype.fromString = function(str){
     try {
       VerifyEpisode(this, JSON.parse(str));
+      this._CalculateEstimatedStoryEndTimes();
       this.emit("changed");
     } catch (e) {
       throw e;
@@ -274,7 +290,97 @@ module.exports = (function(){
   episode.prototype.hasTagLike = function(tag){
     var reg = new RegExp("(.*?)" + tag + "(.*)");
     for (var i=0; i < this._tag.length; i++){
-      if (this._tag[i].match(reg) !== null){
+      if (this._tag[i] === tag || reg.test(this._tag[i])){
+	return true;
+      }
+      for (var s=0; s < this._story.length; s++){
+	if (this._story[s].hasTagLike(tag)){
+	  return true;
+	}
+      }
+    }
+    return false;
+  };
+
+  episode.prototype.writers = function(){
+    var writer = [];
+    for (var i=0; i < this._story.length; i++){
+      for (var w=0; n < this._story[i].writerCount; w++){
+	var swriter = this._story[i].writer(w);
+	var key = swriter.name.toLowerCase();
+	for (var k=0; k < writer.length; k++){
+	  if (writer[k].key === key){
+	    writer[k].story.push({episode:this, story:this._story[i]});
+	    key = null;
+	    break;
+	  }
+	}
+	if (key !== null){
+	  var e = {
+	    key:key,
+	    name:swriter.name,
+	    link:swriter.link,
+	    story:[]
+	  };
+	  e.story.push({episode:this, story:this._story[i]});
+	  writer.push(e);
+	}
+      }
+    }
+  };
+
+
+  episode.prototype.narrators = function(){
+    var narrator = [];
+    for (var i=0; i < this._story.length; i++){
+      for (var n=0; n < this._story[i].narratorCount; n++){
+	var nar = this._story[i].narrator(n);
+	var key = nar.name.toLowerCase();
+
+	for (var k=0; k < narrator.length; k++){
+	  if (narrator[k].key === key){
+	    narrator[k].story.push({episode:this, story:this._story[i]});
+	    key = null;
+	    break;
+	  }
+	}
+
+	if (key !== null){
+	  var e = {
+	    key:key,
+	    name:nar.name,
+	    link:nar.link,
+	    story:[]
+	  };
+	  e.story.push({episode:this, story:this._story[i]});
+	  narrator.push(e);
+	}
+      }
+    }
+  };
+
+  episode.prototype.hasWriter = function(writer_name){
+    for (var i=0; i < this._story.length; i++){
+      if (this._story.hasWriter(writer_name)){
+	return true;
+      }
+    }
+    return false;
+  };
+
+  episode.prototype.hasNarrator = function(narrator_name){
+    for (var i=0; i < this._story.length; i++){
+      if (this._story.hasNarrator(narrator_name)){
+	return true;
+      }
+    }
+    return false;
+  };
+
+  episode.prototype.hasStoryTitleLike = function(title){
+    var rex = new RegExp("/(.*?)(" + title + ")(.*)/");
+    for (var i=0; i < this._story.length; i++){
+      if (this._story.title === title || rex.test(this._story.title)){
 	return true;
       }
     }
@@ -306,6 +412,26 @@ module.exports = (function(){
       return this._story[index];
     }
     return null;
+  };
+
+  episode.prototype.storiesByWriter = function(writer_name){
+    var s = [];
+    for (var i=0; i < this._story.length; i++){
+      if (this._story[i].hasWriter(writer_name)){
+	s.push(this._story[i]);
+      }
+    }
+    return s;
+  };
+
+  episode.prototype.storiesByNarrator = function(narrator_name){
+    var n = [];
+    for (var i=0; i < this._story.length; i++){
+      if (this._story[i].hasNarrator(narrator_name)){
+	n.push(this._story[i]);
+      }
+    }
+    return n;
   };
 
   episode.prototype.storyByTitle = function(title){
@@ -374,17 +500,19 @@ module.exports = (function(){
 	}
 	for (var i=0; i < this._story.length; i++){
 	  if (i !== index){
-	    if (this._story.beginningSec > st && (nsi === -1 || this._story.beginningSec < nst)){
+	    if (this._story[i].beginningSec > st && (nsi === -1 || this._story[i].beginningSec < nst)){
+	      console.log("Found a future episode starting at... " + this._story[i].beginningSec);
 	      nsi = i;
-	      nst = this._story.beginningSec - 2; // Buffer two seconds.
+	      nst = this._story[i].beginningSec - 2; // Buffer two seconds.
 	    }
 	  }
 	}
 
-	if (nsi < 0){
-	  // This may be the last episode, so... assume it ends when the episode itself ends.
-	  return this.audio_length;
+	if (nst > 0){
+	  return nst;
 	}
+	// This may be the last episode, so... assume it ends when the episode itself ends.
+	return this.audio_length;
       }
     }
     return 0;
@@ -397,6 +525,18 @@ module.exports = (function(){
       }
     }
     return -1;
+  };
+
+
+  episode.prototype._CalculateEstimatedStoryEndTimes = function(){
+    for (var i=0; i < this._story.length; i++){
+      if (this._story[i].endingSec <= 0){
+	var esec = this.estimateStoryEndTime(this._story[i]);
+	if (esec > 0){
+	  this._story[i].ending = SecondsToHMS(esec);
+	}
+      }
+    }
   };
 
   Object.defineProperties(episode.prototype, {
@@ -528,7 +668,7 @@ module.exports = (function(){
     },
 
     "audio_length":{
-      get:function(){return this._audio_length;}
+      get:function(){return parseInt(this._audio_length);}
     },
 
     "audio_type":{

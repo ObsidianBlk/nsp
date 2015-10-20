@@ -174,6 +174,16 @@ module.exports = (function(){
     return false;
   };
 
+  story.prototype.hasTagLike = function(tag){
+    var reg = new RegExp("(.*?)" + tag + "(.*)");
+    for (var i=0; i < this._tag.length; i++){
+      if (this._tag[i] === tag || reg.test(this._tag[i])){
+	return true;
+      }
+    }
+    return false;
+  };
+
   story.prototype.addWriter = function(writer_name, link){
     this._writer.push({
       name: writer_name,
@@ -202,6 +212,15 @@ module.exports = (function(){
     return null;
   };
 
+  story.prototype.hasWriter = function(writer_name){
+    for (var i=0; i < this._writer.length; i++){
+      if (this._writer[i].name.toLowerCase() === writer_name.toLowerCase()){
+	return true;
+      }
+    }
+    return false;
+  };
+
   story.prototype.addNarrator = function(narrator_name, narrator_link){
     this._narrator.push({
       name: narrator_name,
@@ -228,6 +247,15 @@ module.exports = (function(){
       };
     }
     return null;
+  };
+
+  story.prototype.hasNarrator = function(narrator_name){
+    for (var i=0; i < this._narrator.length; i++){
+      if (this._narrator[i].name.toLowerCase() === narrator_name.toLowerCase()){
+	return true;
+      }
+    }
+    return false;
   };
 
   story.prototype._ArrayIndex = function(arr, name_or_index){

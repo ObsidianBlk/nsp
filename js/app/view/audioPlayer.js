@@ -289,6 +289,8 @@ window.View.AudioPlayer = (function(){
 	  var endtime = this._playlist[this._currentTrack].endtime;
 	  endtime = (endtime !== null) ? TimeToSecond(endtime) : this._player[0].duration;
 
+	  var duration = endtime - starttime;
+
 	  // Now check to see if we've reached the endtime (incase we're playing a story and not an episode)...
 	  if (this._player[0].currentTime > endtime){
 	    if (this._currentTrack < this._playlist.length-1){
@@ -307,7 +309,7 @@ window.View.AudioPlayer = (function(){
 	        this.emit("story_changed", this._currentStory);
 	      }
 	    }
-	    this.emit("timeupdate", this._player[0].currentTime/endtime);
+	    this.emit("timeupdate", (this._player[0].currentTime-starttime)/duration);
 	  }
         }
       }).bind(this));

@@ -453,9 +453,7 @@ window.View.EpisodeView = (function(){
     this._slideBuffer = 200; // px
 
     this._episodeCard = [];
-    this._search = "";
-    this._searchType = "tags";
-    this._searchExact = false;
+    this._filter = [];
 
     this._activeDownloads = [];
 
@@ -497,22 +495,65 @@ window.View.EpisodeView = (function(){
     this._listDirty = true;
   };
 
-  episodeView.prototype.onEpisodeAdded = function(episode){
-    if (this._search !== ""){
-      if (this._searchType === "tags"){
-	if (this._searchExact){
-	  if (episode.hasTag(this._search)){
-	    this.addEpisode(episode);
-	  }
-	} else {
-	  if (episode.hasTagLike(this._search)){
-	    this.addEpisode(episode);
-	  }
-	}
+  episodeView.prototype.addSearchFilter = function(type, value){
+    var findex = -1;
+    for (var i=0; i < this._filter.length; i++){
+      if (this._filter.type === type && this._filter.value === value){
+	findex = i;
+	break;
       }
-    } else {
+    }
+
+    if (findex < 0){
+      findex = this._filter.length;
+      this._filter.push({
+	type:type,
+	value:value
+      });
+    }
+
+    this._list.remove();
+    var elist = this._episodeCard.filter((function(ep){
+      return this._EpisodeInFilter(ep);
+    }).bind(this));
+    this._episodeCard = [];
+    if (elist.length > 0){
+      for (i=0; i < elist.length; i++){
+	this.addEpisode(elist[i]);
+      }
+    }
+
+    return findex;
+  };
+
+  episodeView.prototype.onEpisodeAdded = function(episode){
+    if (this._EpisodeInFilter(episode)){
       this.addEpisode(episode);
     }
+  };
+
+  
+  episodeView.prototype._EpisodeInFilter = function(episode){
+    for (var i=0; i < this._filter.length; i++){
+      if (this._filter[i].type === "tag"){
+	  if (episode.hasTagLike(this._search) === false){
+	    return false;
+	  }
+      } else if (this._searchType === "writer"){
+	if (episode.hasWriter(this._search) === false){
+	  return false;
+	}
+      } else if (this._searchType === "narrator"){
+	if (episode.hasNarrator(this._search) === false){
+	  return false;
+	}
+      } else if (this._searchType === "story"){
+	if (episode.hasStoryTitleLike(this._search) === false){
+	  return false;
+	}
+      }
+    }
+    return true;
   };
 
 
