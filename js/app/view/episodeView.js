@@ -12,12 +12,19 @@ window.View.EpisodeView = (function(){
   var Feeder = require('./js/app/util/feeder');
 
   var templates = {
+    episodeListEntry: FS.readFileSync("templates/episodeListEntry.html").toString(),
     episodeDetails: FS.readFileSync("templates/episodeDetails.html").toString(),
     episodeDetailsStory: FS.readFileSync("templates/episodeDetailsStory.html").toString()
   };
 
 
   var PATH_DEFAULT_LOGO = "resources/images/nsp_logo.png";
+
+  var LISTENTRY = {
+    img:".episode-entry-image",
+    title:".episode-entry-title",
+    description:".episode-entry-description"
+  };
 
   var DETAIL = {
     title: ".episode-detail-title",
@@ -33,6 +40,7 @@ window.View.EpisodeView = (function(){
 
   var STORY = {
     header: ".title-block",
+    title_block: ".story-title-block",
     title: ".story-detail-title",
     actions: ".story-action",
     action_queue: ".story-action-queue",
@@ -108,6 +116,50 @@ window.View.EpisodeView = (function(){
 
 
   function ListEntity(episode){
+    var e = $(templates.episodeListEntry);
+    var img = e.find(LISTENTRY.img);
+
+    var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
+    e.find(LISTENTRY.title).append(title);
+    e.find(LISTENTRY.description).append(episode.shortDescription);
+
+    if (img.length > 0 && episode.img_src !== ""){
+      var localPath = Path.join(NSP.config.path.images, episode.img_filename);
+      if (FilePathExists(localPath)){
+	img.attr("src", localPath);
+      } else {
+	if (NSP.config.autoCacheImages){
+	  var feed = new Feeder();
+	  feed.downloadFile(episode.img_src, localPath, function(err){
+	    if (err){
+	      console.log(err.message);
+	      img.attr("src", episode.img_src);
+	    } else {
+	      img.attr("src", localPath);
+	    }
+	  });
+	} else {
+	  img.attr("src", episode.img_src);
+	}
+      }
+    } else if (img.length > 0){
+      img.attr("src", PATH_DEFAULT_LOGO);
+      // This will search for an episode specific image and change the image source if one is found.
+      require("./js/app/util/epImageFinder")(episode, function(ep, src){
+	if (src !== ""){
+	  img.attr("src", src);
+	  if (ep.img_src !== src){
+	    ep.img_src = src;
+	  }
+	}
+      }, function(err){console.log(err);});
+    }
+
+
+    return e;
+  }
+
+/*  function ListEntity(episode){
     var e = $("<li></li>");
     var header = $("<div></div>").addClass("collapsible-header blue-grey darken-2").css({"overflow": "auto"});
 
@@ -157,7 +209,7 @@ window.View.EpisodeView = (function(){
 
     return e.append(header).append(body);
   }
-
+*/
 
 
 // ----------------------------------------------------------------------
@@ -387,6 +439,8 @@ window.View.EpisodeView = (function(){
   }
 
 
+  // NOTE: The above functions does the work of the following three, but I don't want to bother refactoring the code at the moment, so
+  // these will stay for a while.
   function SetQueueActionState(btn, state){
     if (btn.length > 0){
       if (state === "add"){
@@ -445,8 +499,16 @@ window.View.EpisodeView = (function(){
     //class="collapsible" data-collapsible="accordion"
     this._list = $("<ul></ul>").addClass("collapsible popout").attr("data-collapsible","accordion");
     this._listview.append(this._list);
+    // These <BR>s fix a scroll bug
+    this._listview.append("<br>");
+    this._listview.append("<br>");
+    this._listview.append("<br>");
+    this._listview.append("<br>");
+    this._listview.append("<br>");
+    this._listview.append("<br>");
 
     this._listDirty = false;
+    this._sheetDirty = false;
 
     this._activeCard = [null, null];
     this._slideActive = false;
@@ -460,9 +522,13 @@ window.View.EpisodeView = (function(){
     this._configured = false;
 
     this._updateInterval = setInterval((function(){
-      if (this._listDirty){
-	$('.collapsible').collapsible();
-	this._listDirty = false;
+      if (this._listDirty || this._sheetDirty){
+	if (this._listDirty){
+	  $('.collapsible').collapsible();
+	  this._listDirty = false;
+	}
+	$('.tooltipped').tooltip();
+	this._sheetDirty = false;
       }
     }).bind(this), 200);
 
@@ -576,6 +642,7 @@ window.View.EpisodeView = (function(){
           this._activeCard[0] = this._activeCard[1];
           this._activeCard[1] = null;
           EpisodeDetails(content, this._activeCard[0], this._audioPlayer);
+	  this._sheetDirty = true;
         }
         content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
       }

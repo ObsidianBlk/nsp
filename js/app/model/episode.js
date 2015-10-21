@@ -5,20 +5,7 @@ module.exports = (function(){
   var Events = require("events");
   var story = require("./story");
   var DescParser = require("../util/descParser");
-
-
-  function SecondsToHMS(sec){
-    var h = Math.floor(sec/(60*60));
-    sec -= h;
-    var m = Math.floor(sec/60);
-    var s = sec - m;
-
-    h = ((h < 9) ? "0" : "") + parseInt(h);
-    m = ((m < 9) ? "0" : "") + parseInt(m);
-    s = ((s < 9) ? "0" : "") + parseInt(s);
-
-    return h + ":" + m + ":" + s;
-  };
+  var Time = require("../util/time");
   
 
   function VerifyEpisode(ep, item){
@@ -107,7 +94,7 @@ module.exports = (function(){
 
     ep._audio_path = (typeof(item.audio_path) === 'string') ? item.audio_path : "";
     ep._audio_type = (typeof(item.audio_type) === 'string') ? item.audio_type : "audio/mpeg";
-    ep._audio_length = (typeof(item.audio_length) === 'string') ? item.audio_length : "0";
+    ep._audio_duration = (typeof(item.audio_duration) === 'string') ? item.audio_duration : "00:00:00";
     ep._description = (typeof(item.description) === 'string') ? item.description : "";
     ep._shortDescription = (typeof(item.short_description) === 'string') ? item.short_description : "";
     ep._link = (typeof(item.link) === 'string') ? item.link : "";
@@ -137,7 +124,6 @@ module.exports = (function(){
             guid:obj.guid,
             audio_src:obj.enclosures[0].url,
             audio_type:obj.enclosures[0].type,
-            audio_length: obj.enclosures[0].length,
 	    story:descObj.story
           };
           if (typeof(obj.image) === typeof({}) && typeof(obj.image.url) === 'string'){
@@ -177,7 +163,7 @@ module.exports = (function(){
     this._story = [];
     
     this._audio_type = "audio/mpeg";
-    this._audio_length = "0";
+    this._audio_duration = "00:00:00";
     this._description = "";
     this._shortDescription = "";
     this._link = "";
@@ -501,7 +487,6 @@ module.exports = (function(){
 	for (var i=0; i < this._story.length; i++){
 	  if (i !== index){
 	    if (this._story[i].beginningSec > st && (nsi === -1 || this._story[i].beginningSec < nst)){
-	      console.log("Found a future episode starting at... " + this._story[i].beginningSec);
 	      nsi = i;
 	      nst = this._story[i].beginningSec - 2; // Buffer two seconds.
 	    }
@@ -511,10 +496,18 @@ module.exports = (function(){
 	if (nst > 0){
 	  return nst;
 	}
-	// This may be the last episode, so... assume it ends when the episode itself ends.
-	return this.audio_length;
+
+	// This may be the last episode... check to see if the audio duration value exceeds this story's beginning time.
+	// NOTE: For "free" audio, duration may not extend to this episode.
+	var edur = this.audio_durationSec;
+	var sbeg = this._story[index].beginningSec;
+	if (edur - sbeg > 5){ // Only count if there's more than 5 minutes left to the episode's audio from the beginning of this story.
+	  return edur;
+	}
       }
     }
+
+    // This value means... we don't know.
     return 0;
   };
 
@@ -533,7 +526,7 @@ module.exports = (function(){
       if (this._story[i].endingSec <= 0){
 	var esec = this.estimateStoryEndTime(this._story[i]);
 	if (esec > 0){
-	  this._story[i].ending = SecondsToHMS(esec);
+	  this._story[i].ending = Time.SecondsToHMS(esec);
 	}
       }
     }
@@ -667,8 +660,34 @@ module.exports = (function(){
       }
     },
 
-    "audio_length":{
-      get:function(){return parseInt(this._audio_length);}
+    "audio_duration":{
+      get:function(){
+	return this._audio_duration;
+      },
+      set:function(dur){
+	if (typeof(dur) === 'number'){
+	  Time.SecondsToHMS(Math.floor(dur));
+	} else if (typeof(dur) === 'string'){
+	  var seconds = Time.HMSToSeconds(dur);
+	  if (seconds < 0){
+	    throw new SyntaxError();
+	  }
+	  this._audio_duration = Time.SecondsToHMS(seconds);
+	}
+	this.emit("changed");
+      }
+    },
+
+    "audio_durationSec":{
+      get:function(){
+	var seconds = Time.HMSToSeconds(this._audio_duration);
+	return (seconds >= 0) ? seconds : 0;
+      },
+      set:function(dur){
+	try {
+	  this.audio_duration = dur;
+	} catch (e) {throw e;}
+      }
     },
 
     "audio_type":{
