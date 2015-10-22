@@ -16,6 +16,8 @@ var Application = (function($){
 
   var App = function(){
     this._application_running = false;
+    this._heartbeatID = null;
+    this._curHeartbeatRythm = 0;
   };
   App.prototype.__proto__ = Events.EventEmitter.prototype;
   App.prototype.constructor = App;
@@ -82,6 +84,12 @@ var Application = (function($){
 	if (database_exists === false){
 	  NSP.db.save(NSP.config.path.database);
 	}
+
+	// --------------------------
+	// This will kickoff the application heartbeat.
+	// --------------------------
+	this._HeartbeatRythm(NSP.config.heartbeatRythm);
+	// Announce application is ready to go!
 	this.emit("application_ready");
       }
     }).bind(this));
@@ -104,6 +112,23 @@ var Application = (function($){
     }).bind(this));
 
     NSP.config.open("config.json");
+  };
+
+  App.prototype._HeartbeatRythm = function(rythm){
+    if (rythm <= 0){return;}
+
+    if (this._heartbeatID !== null){
+      clearInterval(this._hearbeatID);
+      this._heartbeatID = null;
+    }
+
+    this._heartbeatID = setInterval((function(){
+      if (NSP.config.heartbeatRythm !== rythm){
+	this._HeartbeatRythm(NSP.config.heartbeatRythm);
+      } else {
+	this.emit("heartbeat");
+      }
+    }).bind(this), rythm);
   };
 
   Object.defineProperties(App.prototype, {

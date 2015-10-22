@@ -63,7 +63,7 @@ module.exports = (function(){
     } else {
       // Now... using the title... let's see if we can guess the season/episode!
       var episode = 0;
-      var match = ep._title.match(/Nosleep Podcast (S\d{1,2})(E\d{1,2}[a-zA-Z]{0,1})/);
+      var match = ep._title.match(/No[Ss]leep Podcast (S\d{1,2})(E\d{1,2}[a-zA-Z]{0,1})/);
       if (match !== null && match.length > 2){
 	var season = parseInt(match[1].substr(1));
 	episode = parseInt(match[2].substr(1));
@@ -84,7 +84,7 @@ module.exports = (function(){
       }
     }
     // Could it be a "bonus" episode?
-    match = ep._title.match(/Nosleep Podcast(.*?)([B|b][O\o][N|n][U|u][S|s])(.*?)/);
+    match = ep._title.match(/No[Ss]leep Podcast(.*?)([B|b][O\o][N|n][U|u][S|s])(.*?)/);
     if (match !== null){
       ep.addTag("bonus");
     }
@@ -288,61 +288,115 @@ module.exports = (function(){
     return false;
   };
 
-  episode.prototype.writers = function(){
-    var writer = [];
+  episode.prototype.writers = function(writers){
+    if (typeof(writers) === 'undefined' || writers === null){
+      writers = [];
+    }
+    if (!(writers instanceof Array)){
+      throw new TypeError();
+    }
+
     for (var i=0; i < this._story.length; i++){
       for (var w=0; n < this._story[i].writerCount; w++){
-	var swriter = this._story[i].writer(w);
-	var key = swriter.name.toLowerCase();
-	for (var k=0; k < writer.length; k++){
-	  if (writer[k].key === key){
-	    writer[k].story.push({episode:this, story:this._story[i]});
-	    key = null;
+	var writer = this._story[i].writer(w);
+	var key = writer.name.toLowerCase();
+	for (var k=0; k < writers.length; k++){
+	  if (writers[k].key === key){
+	    if (writer.link !== null && writers[k].link === null){
+	      writers[k].link = writer.link;
+	    }
+
+	    for (var e=0; e < writers[k].episode.length; e++){
+	      if (writers[k].episode[e].guid === this.guid){
+		writers[k].episode[e].story.push(this._story[i].title);
+		key = null;
+		break;
+	      }
+	    }
+	    if (key !== null){
+	      writers[k].episode.push({
+		guid: this.guid,
+		story:[]
+	      });
+	      writers[k].episode[writers[k].episode.length-1].story.push(this._story[i].title);
+	      key = null;
+	    }
 	    break;
 	  }
 	}
+
 	if (key !== null){
-	  var e = {
+	  var ent = {
 	    key:key,
-	    name:swriter.name,
-	    link:swriter.link,
-	    story:[]
+	    name:writer.name,
+	    link:writer.link,
+	    episode:[]
 	  };
-	  e.story.push({episode:this, story:this._story[i]});
-	  writer.push(e);
+	  ent.episode.push({guid:this.guid, story:[]});
+	  ent.episode[0].story.push(this._story[i].title);
+	  writers.push(ent);
 	}
       }
     }
+    return writers;
   };
 
 
-  episode.prototype.narrators = function(){
-    var narrator = [];
+  episode.prototype.narrators = function(narrators){
+    if (typeof(narrators) === 'undefined' || narrators === null){
+      narrators = [];
+    }
+    if (!(narrators instanceof Array)){
+      throw new TypeError();
+    }
+
     for (var i=0; i < this._story.length; i++){
       for (var n=0; n < this._story[i].narratorCount; n++){
 	var nar = this._story[i].narrator(n);
 	var key = nar.name.toLowerCase();
 
-	for (var k=0; k < narrator.length; k++){
-	  if (narrator[k].key === key){
-	    narrator[k].story.push({episode:this, story:this._story[i]});
-	    key = null;
+	for (var k=0; k < narrators.length; k++){
+	  if (narrators[k].key === key){
+	    if (nar.link !== null && narrators[k].link === null){
+	      narrators[k].link = nar.link;
+	    }
+	    for (var e=0; e < narrators[k].episode.length; e++){
+	      if (narrators[k].episode[e].guid === this.guid){
+		narrators[k].episode[e].story.push(this._story[i].title);
+		key = null;
+		break;
+	      }
+	    }
+	    if (key !== null){
+	      narrators[k].episode.push({
+		guid: this.guid,
+		story: []
+	      });
+	      narrators[k].episode[narrators[k].episode.length-1].story.push(this._story[i].title);
+	      key = null;
+	    }
 	    break;
 	  }
 	}
 
 	if (key !== null){
-	  var e = {
+	  var ent = {
 	    key:key,
 	    name:nar.name,
 	    link:nar.link,
-	    story:[]
+	    episode:[]
 	  };
-	  e.story.push({episode:this, story:this._story[i]});
-	  narrator.push(e);
+	  ent.episode.push({
+	    guid: this.guid,
+	    story: []
+	  });
+	  ent.episode[0].story.push(this._story[i].title);
+	  narrators.push(ent);
 	}
       }
     }
+
+    return narrators;
   };
 
   episode.prototype.hasWriter = function(writer_name){

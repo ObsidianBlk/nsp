@@ -31,7 +31,7 @@ window.View.EpisodeView = (function(){
     description: ".episode-detail-description",
     img: ".episode-detail-image",
     tags: ".episode-detail-tags",
-    story_details: ".story-detail",
+    story_list:".episode-detail-story-list",
     actions: ".episode-action",
     action_queue: ".episode-action-queue",
     action_play: ".episode-action-play",
@@ -44,7 +44,11 @@ window.View.EpisodeView = (function(){
     title: ".story-detail-title",
     actions: ".story-action",
     action_queue: ".story-action-queue",
-    action_jumpto: ".story-action-jumpto"
+    action_jumpto: ".story-action-jumpto",
+    writers: ".story-detail-writers",
+    narrators: ".story-detail-narrators",
+    action_writer: ".story-writer-action",
+    action_narrator: ".story-narrator-action"
   };
 
 
@@ -159,58 +163,6 @@ window.View.EpisodeView = (function(){
     return e;
   }
 
-/*  function ListEntity(episode){
-    var e = $("<li></li>");
-    var header = $("<div></div>").addClass("collapsible-header blue-grey darken-2").css({"overflow": "auto"});
-
-    var img = $("<img src=\"\">").height("64px").css({
-      "width":"auto",
-      "valign":"center",
-      "margin":"0.1rem 0.5rem 0.5rem 0.2rem"
-    }).addClass("left");
-
-    if (episode.img_src !== ""){
-      var localPath = Path.join(NSP.config.path.images, episode.img_filename);
-      if (FilePathExists(localPath)){
-	img.attr("src", localPath);
-      } else {
-	if (NSP.config.autoCacheImages){
-	  var feed = new Feeder();
-	  feed.downloadFile(episode.img_src, localPath, function(err){
-	    if (err){
-	      console.log(err.message);
-	      img.attr("src", episode.img_src);
-	    } else {
-	      img.attr("src", localPath);
-	    }
-	  });
-	} else {
-	  img.attr("src", episode.img_src);
-	}
-      }
-    } else {
-      img.attr("src", PATH_DEFAULT_LOGO);
-      // This will search for an episode specific image and change the image source if one is found.
-      require("./js/app/util/epImageFinder")(episode, function(ep, src){
-	if (src !== ""){
-	  img.attr("src", src);
-	  if (ep.img_src !== src){
-	    ep.img_src = src;
-	  }
-	}
-      }, function(err){console.log(err);});
-    }
-
-    var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
-    header.append(img).append($("<p></p>").addClass("truncate").text(title));
-
-    var body = $("<div></div>").addClass("collapsible-body").css({"background-color":"#FFFFFF"});
-    body.append($("<p></p>").text(episode.shortDescription));
-
-    return e.append(header).append(body);
-  }
-*/
-
 
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
@@ -281,10 +233,13 @@ window.View.EpisodeView = (function(){
       );
     }
 
-    for (i=0; i < episode.storyCount; i++){
-      var story = $(templates.episodeDetailsStory);
-      var estory = episode.story(i);
-      entity.append(StoryDetails(story, episode, estory, audioPlayer));
+    var storylist = entity.find(DETAIL.story_list);
+    if (storylist.length > 0){
+      for (i=0; i < episode.storyCount; i++){
+	var story = $(templates.episodeDetailsStory);
+	var estory = episode.story(i);
+	storylist.append(StoryDetails(story, episode, estory, audioPlayer));
+      }
     }
 
     for (i=0; i < 8; i++){
@@ -382,12 +337,43 @@ window.View.EpisodeView = (function(){
     entity.data("title", story.title);
     if (story.beginning !== ""){
       entity.find(".story-action-buttons").css("display", "inline");
-      var time = $("<time></time>").addClass("grey-text text-lighten-1").append("<i>Starting:</i> " + story.beginning);
+      var time = $("<time></time>").addClass("grey-text text-lighten-1").append("Starting: " + story.beginning);
       if (story.duration > 0){
 	time.append(" (dur: " + story.durationString + ")");
       }
       entity.find(STORY.header).append(time);
     }
+
+    var writers = entity.find(STORY.writers);
+    if (writers.length > 0 && story.writerCount > 0){
+      for (var w=0; w < story.writerCount; w++){
+	var writer = story.writer(w);
+	if (w > 0){
+	  writers.append(", ");
+	}
+	writers.append($("<a href=\"#!\"></a>")
+		       .addClass("waves-effect waves-nsp-red btn-flat-nsp")
+		       .addClass(STORY.action_writer.substr(1))
+		       .attr("data-writer", writer.name)
+		       .append(writer.name));
+      }
+    }
+
+    var narrators = entity.find(STORY.narrators);
+    if (narrators.length > 0 && story.narratorCount > 0){
+      for (var n=0; n < story.narratorCount; n++){
+	var narrator = story.narrator(n);
+	if (n > 0){
+	  narrators.append(", ");
+	}
+	narrators.append($("<a href=\"#!\"></a>")
+			 .addClass("waves-effect waves-nsp-red btn-flat-nsp")
+			 .addClass(STORY.action_narrator.substr(1))
+			 .attr("data-narrator", narrator.name)
+			 .append(narrator.name));
+      }
+    }
+
 
     var act_queue = entity.find(".story-action-queue");
     var act_jumpto = entity.find(".story-action-jumpto");
@@ -485,27 +471,24 @@ window.View.EpisodeView = (function(){
 
 
   
-  function episodeView(listview_class, sheetview_class, audioPlayer){
-    this._audioPlayer = audioPlayer;
-    this._listview = $(listview_class);
-    if (this._listview.length !== 1){
-      throw new Error("Could not find list view entity.");
+  function episodeView(app, audioPlayer, cls){
+    if (typeof(cls) !== typeof({})){
+      throw new TypeError();
     }
-    this._sheetview = $(sheetview_class);
-    if (this._sheetview.length !== 1){
-      throw new Error("Could not find sheet view entity.");
+    cls.sheet = (typeof(cls.sheet) === 'string') ? cls.sheet : "";
+    cls.list = (typeof(cls.list) === 'string') ? cls.list : "";
+
+    this._audioPlayer = audioPlayer;
+
+    this._sheetview = $(cls.sheet);
+    if (this._sheetview.length <= 0){
+      throw new Error("Failed to find class '" + cls.sheet + "' element.");
     }
 
-    //class="collapsible" data-collapsible="accordion"
-    this._list = $("<ul></ul>").addClass("collapsible popout").attr("data-collapsible","accordion");
-    this._listview.append(this._list);
-    // These <BR>s fix a scroll bug
-    this._listview.append("<br>");
-    this._listview.append("<br>");
-    this._listview.append("<br>");
-    this._listview.append("<br>");
-    this._listview.append("<br>");
-    this._listview.append("<br>");
+    this._list = $(cls.list);
+    if (this._list.length <= 0){
+      throw new Error("Failed to find class '" + cls.list + "' element.");
+    }
 
     this._listDirty = false;
     this._sheetDirty = false;
@@ -521,16 +504,14 @@ window.View.EpisodeView = (function(){
 
     this._configured = false;
 
-    this._updateInterval = setInterval((function(){
+    app.on("heartbeat", (function(){
       if (this._listDirty || this._sheetDirty){
-	if (this._listDirty){
-	  $('.collapsible').collapsible();
-	  this._listDirty = false;
-	}
+	$('.collapsible').collapsible();
 	$('.tooltipped').tooltip();
 	this._sheetDirty = false;
+	this._listDirty = false;
       }
-    }).bind(this), 200);
+    }).bind(this));
 
     this._sheetview.find("#sheet_content").animate({"margin-left":this._sheetview.width()+this._slideBuffer}, 400);
     this._ConnectAudioPlayerEvents();
@@ -642,7 +623,7 @@ window.View.EpisodeView = (function(){
           this._activeCard[0] = this._activeCard[1];
           this._activeCard[1] = null;
           EpisodeDetails(content, this._activeCard[0], this._audioPlayer);
-	  this._sheetDirty = true;
+	  this._SheetDirty(content);
         }
         content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
       }
@@ -668,11 +649,40 @@ window.View.EpisodeView = (function(){
       this._activeCard[0] = this._activeCard[1];
       this._activeCard[1] = null;
       EpisodeDetails(content, this._activeCard[0], this._audioPlayer);
+      this._SheetDirty(content);
       this._slideActive = true;
       content.animate({"margin-left":0}, 400, this._OnSlideOut.bind(this));
     } else {
       this._slideActive = false;
       content.empty();
+    }
+  };
+
+
+  episodeView.prototype._SheetDirty = function(entity){
+    this._sheetDirty = true;
+
+    // Setup event emission when a writer or narrator button is clicked... because :p
+    var act_writers = entity.find(STORY.action_writer);
+    if (act_writers.length > 0){
+      act_writers.on("click", (function(event){
+	var targ = $(event.target);
+	var writer = targ.attr("data-writer");
+	if (writer !== ""){
+	  this.emit("view_writer", writer);
+	}
+      }).bind(this));
+    }
+
+    var act_narrators = entity.find(STORY.action_narrator);
+    if (act_narrators.length > 0){
+      act_narrators.on("click", (function(event){
+	var targ = $(event.target);
+	var narrator = targ.attr("data-narrator");
+	if (narrator !== ""){
+	  this.emit("view_narrator", narrator);
+	}
+      }).bind(this));
     }
   };
 

@@ -1,18 +1,26 @@
 
-<div class="card nsp-grey story-detail">
-  <div class="title-block">
-    <div class="nsp-grey-text text-lighten story-detail-title truncate-inline"></div>
-    <div class="secondary-content story-action-buttons" style="display:none;">
-      <a href="#!" class="waves-effect waves-nsp-red btn-flat-nsp story-action story-action-queue tooltipped" data-tooltip="Add/Remove Story from playlist queue.">
-	<i class="small material-icons md-light option-add">queue_music</i>
-	<i class="small material-icons md-light option-remove" style="display:none;">clear_all</i>
-      </a>
-      <a href="#!" class="waves-effect waves-nsp-red btn-flat-nsp story-action story-action-jumpto tooltipped" data-tooltip="Play Story">
-	<i class="small material-icons md-light option-jumpto">play_circle_outline</i>
-	<i class="small material-icons md-light option-play" style="display:none;">play_circle_filled</i>
-	<i class="small material-icons md-light option-pause" style="display:none;">pause_circle_filled</i>
-      </a>
+<li>
+  <div class="collapsible-header nsp-grey" style="overflow:auto;">
+    <div class="title-block">
+      <div class="nsp-grey-text text-lighten story-detail-title truncate-inline" style="width:75%"></div>
+      <div class="secondary-content story-action-buttons" style="display:none;">
+	<a href="#!" class="waves-effect waves-nsp-red btn-small-nsp story-action story-action-queue tooltipped" data-tooltip="Add/Remove Story from playlist queue.">
+	  <i class="small material-icons md-light option-add">queue_music</i>
+	  <i class="small material-icons md-light option-remove" style="display:none;">clear_all</i>
+	</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn-small-nsp story-action story-action-jumpto tooltipped" data-tooltip="Play Story">
+	  <i class="small material-icons md-light option-jumpto">play_circle_outline</i>
+	  <i class="small material-icons md-light option-play" style="display:none;">play_circle_filled</i>
+	  <i class="small material-icons md-light option-pause" style="display:none;">pause_circle_filled</i>
+	</a>
+      </div>
+      <br>
     </div>
-    <br>
   </div>
-</div>
+  <div class="collapsible-body" style="padding: 1rem 2rem; background-color:#FFFFFF;">
+    <div class="writernarrator-heading">Written by:</div>
+    <div class="writernarrator-block story-detail-writers"></div>
+    <div class="writernarrator-heading">Read by:</div>
+    <div class="writernarrator-block story-detail-narrators"></div>
+  </div>
+</li>

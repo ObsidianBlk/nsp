@@ -20,6 +20,7 @@ module.exports = (function(){
     conf.skipInvalidEpisodes = obj.skip_invalid_episodes;
     conf.downloadFeedAtStartup = obj.download_feed_at_startup;
     conf.playIntroAtStartup = obj.play_intro_at_startup;
+    conf.heartbeatRythm = obj.heartbeat_rythm;
   }
 
   function config(){
@@ -32,6 +33,7 @@ module.exports = (function(){
     this._skipInvalidEpisodes = false;
     this._downloadFeedAtStartup = true;
     this._playIntroAtStartup = true;
+    this._heartbeatRythm = 200;
   }
   config.prototype.__proto__ = Events.EventEmitter.prototype;
   config.prototype.constructor = config;
@@ -49,7 +51,8 @@ module.exports = (function(){
       auto_cache_images: this._autoCacheImages,
       skip_invalid_episodes: this._skipInvalidEpisodes,
       download_feed_at_startup: this._downloadFeedAtStartup,
-      play_intro_at_startup: this._playIntroAtStartup
+      play_intro_at_startup: this._playIntroAtStartup,
+      heartbeat_rythm: this._heartbeatRythm
     }, null, JSON_INDENTATION_STRING);
   };
 
@@ -153,6 +156,19 @@ module.exports = (function(){
       set:function(enable){
 	this._playIntroAtStartup = (typeof(enable) === 'boolean') ? enable : this._playIntroAtStartup;
 	this.emit("changed");
+      }
+    },
+
+    "heartbeatRythm":{
+      get:function(){return this._heartbeatRythm;},
+      set:function(hb){
+	if (typeof(hb) === 'number'){
+	  var t = Math.floor(hb);
+	  if (t > 0){
+	    this._heartbeatRythm = t;
+	    this.emit("changed");
+	  }
+	}
       }
     }
   });

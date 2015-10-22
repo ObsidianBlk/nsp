@@ -80,6 +80,18 @@
       </div>
     </div>
 
+    <!-- "Person of Importance" Modal -->
+    <div id="person-of-import" class="modal">
+      <div class="modal-content">
+	<h5 class="poi-name"></h5>
+	<a href="#!" class="poi-link" style="display:none;">More Information</a>
+	<ul class="poi-episode-list collapsible popout" data-collapsible="accordion"></ul>
+      </div>
+      <div class="modal-footer">
+	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">OK</a>
+      </div>
+    </div>
+
     <!-- ------------ BODY/IES ------------ -->
     <!-- Screen TABs -->
     <div class="row">
@@ -90,10 +102,12 @@
         </ul>
       </div>
 
+      <!-- Episodes -->
       <div class="col s12" id="episodes">
         <div class="row scrollable">
           <div class="col s12 m6 cards scroller">
-
+	    <ul class="episode-card-list collapsible popout" data-collapsible="accordion"></ul>
+	    <br><br><br><br><br><br> <!-- These <br>s fix a scrolling bug -->
           </div>
           <div class="col m6 hide-on-small-only sheet scroller" style="background-color:#FFFFFF;">
             <div id="sheet_content" style="margin_left:0"></div>
@@ -102,6 +116,7 @@
       </div>
 
 
+      <!-- Now Playing -->
       <div class="col s12" id="now_playing">
         <div class="row scrollable">
           <div class="col s12 m6 hide-on-small-only playlist scroller">

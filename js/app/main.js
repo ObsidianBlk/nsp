@@ -8,11 +8,21 @@ $(document).ready(function(){
 
   var PATH_INTRO_AUDIO = "resources/audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3";
 
-  var audioPlayer = new View.AudioPlayer();
-  var episodeView = new View.EpisodeView(".cards", ".sheet", audioPlayer);
-  var playerView = new View.AudioPlayerView(audioPlayer);
-  
   var app = new Application();
+  var audioPlayer = new View.AudioPlayer();
+  var episodeView = new View.EpisodeView(app, audioPlayer, {
+    list:".episode-card-list", 
+    sheet:".sheet"});
+  var playerView = new View.AudioPlayerView(audioPlayer);
+
+  episodeView.on("view_writer", function(writer){
+    console.log("Attempting to view writer " + writer);
+  });
+
+  episodeView.on("view_narrator", function(narrator){
+    console.log("Attempting to view narrator " + narrator);
+  });
+  
   app.on("database_created", function(){
     NSP.db.on("episode_added", function(ep){
       episodeView.addEpisode(ep, true);
