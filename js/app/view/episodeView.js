@@ -126,6 +126,7 @@ window.View.EpisodeView = (function(){
     var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
     e.find(LISTENTRY.title).append(title);
     e.find(LISTENTRY.description).append(episode.shortDescription);
+    e.attr("data-guid", episode.guid);
 
     if (img.length > 0 && episode.img_src !== ""){
       var localPath = Path.join(NSP.config.path.images, episode.img_filename);
@@ -521,24 +522,49 @@ window.View.EpisodeView = (function(){
 
   episodeView.prototype.connectToDB = function(db){
     db.on("episode_added", this.onEpisodeAdded.bind(this));
+    // Add all of the database episodes...
+    for (var i=0; i < db.episodeCount; i++){
+      this.addEpisode(db.episode(i));
+    }
     // TODO: Add a "disconnect" option!
   };
 
-  episodeView.prototype.addEpisode = function(episode, append){
+  episodeView.prototype.addEpisode = function(episode){
     // We'll assume newest goes first unless explicitly stated
-    append = (typeof(append) === 'boolean') ? append : false;
     this._episodeCard.push(episode);
+    this._episodeCard.sort(function(a, b){
+      if (a.date > b.date){
+        return -1;
+      } else if (a.date < b.date){
+        return 1;
+      }
+      return 0;
+    });
+
+    var targetIndex = -1;
+    for (var i=0; i < this._episodeCard.length; i++){
+      if (this._episodeCard[i] === episode){
+        targetIndex = i;
+        break;
+      }
+    }
     
     var le = ListEntity(episode);
     le.on("click", (function(){
       this._SlideToContent(le, episode);
     }).bind(this));
 
-    if (append){
+    var items = this._list.find("li");
+    if (items.length > 0){
+      if (targetIndex === items.length){
+        this._list.append(le);
+      } else {
+        le.insertBefore($(items[targetIndex]));
+      }
+    } else{
       this._list.append(le);
-    } else {
-      this._list.prepend(le);
     }
+    
     this._listDirty = true;
   };
 

@@ -33,6 +33,14 @@ $(document).ready(function(){
   app.on("application_ready", function(){
     episodeView.connectToDB(NSP.db);
 
+    app.on("heartbeat", function(){
+      if (NSP.config.autoSaveDatabaseOnChange && NSP.db.dirty){
+        if (NSP.db.loading === false && NSP.db.saving === false){
+          NSP.db.save(NSP.db.path.database);
+        }
+      }
+    });
+
     var refreshing = false;
     $(".app_action_refresh").click(function(evt){
       var target = $(".app_action_refresh").find("i.material-icons");

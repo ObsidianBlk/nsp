@@ -54,6 +54,15 @@ var Application = (function($){
     }
     this._application_running = true;
 
+    var AnnounceApplicationReady = (function(){
+      // --------------------------
+      // This will kickoff the application heartbeat.
+      // --------------------------
+      this._HeartbeatRythm(NSP.config.heartbeatRythm);
+      // Announce application is ready to go!
+      this.emit("application_ready");
+    }).bind(this);
+
     NSP.config = new Config();
     NSP.db = new Database();
 
@@ -75,7 +84,7 @@ var Application = (function($){
           } else {
 	    console.log("No new episodes.");
           }
-          this.emit("application_ready");
+          AnnounceApplicationReady();
         }).bind(this));
 
         this.feedUpdate(feed);
@@ -85,12 +94,7 @@ var Application = (function($){
 	  NSP.db.save(NSP.config.path.database);
 	}
 
-	// --------------------------
-	// This will kickoff the application heartbeat.
-	// --------------------------
-	this._HeartbeatRythm(NSP.config.heartbeatRythm);
-	// Announce application is ready to go!
-	this.emit("application_ready");
+	AnnounceApplicationReady();
       }
     }).bind(this));
 

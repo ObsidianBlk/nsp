@@ -23,6 +23,7 @@ module.exports = (function(){
           db.addEpisode(data.episode[i]);
         } catch (e) {
           if (!skipInvalidEpisodes){
+            console.log(data);
             throw new Error("Invalid episode data at index " + i + ": " + e.message);
           } else {
             console.log("Invalid episode data at index " + i + ": " + e.message);
@@ -38,6 +39,8 @@ module.exports = (function(){
   function database(){
     this._episode = [];
     this._dirty = false;
+    this._loading = false;
+    this._saving = false;
   }
   database.prototype.__proto__ = Events.EventEmitter.prototype;
   database.prototype.constructor = database;
@@ -62,9 +65,11 @@ module.exports = (function(){
   };
 
   database.prototype.open = function(path, skipInvalidEpisodes){
+    if (this.loading || this.saving){return;}
     skipInvalidEpisodes = (typeof(skipInvalidEpisodes) === 'boolean') ? skipInvalidEpisodes : false;
 
     path = Path.normalize(path);
+    this._loading = true;
     FS.access(path, FS.R_OK | FS.W_OK, (function(err){
       if (!err){
         // Only both loading if there was no issue. This should mean the file exists.
@@ -74,6 +79,7 @@ module.exports = (function(){
           } else {
             try {
               VerifyDB(this, JSON.parse(data.toString()), skipInvalidEpisodes);
+              this._loading = false;
 	      this._dirty = false; // Because if we're loading from a source, that data hasn't changed yet.
               this.emit("opened", true);
               this.emit("changed");
@@ -83,17 +89,22 @@ module.exports = (function(){
           }
         }).bind(this));
       } else {
+        this._loading = false;
         this.emit("opened", false);
       }
     }).bind(this));
   };
 
   database.prototype.save = function(path){
+    if (this.loading || this.saving){return;}
+    
     path = Path.normalize(path);
     var base = Path.dirname(path);
+    this._saving = true;
     FS.access(base, FS.R_OK | FS.W_OK, (function(err){
       if (!err){
 	FS.writeFile(path, this.toString(), (function(err){
+          this._saving = false;
 	  if (err){
 	    this.emit("error", err);
 	  } else {
@@ -102,6 +113,7 @@ module.exports = (function(){
 	  }
 	}).bind(this));
       } else {
+        this._saving = false;
 	this.emit("error", err);
       }
     }).bind(this));
@@ -113,9 +125,11 @@ module.exports = (function(){
 	var ep = new episode(edata);
 	if (this._GetEpisodeIndex(ep.guid) < 0){
 	  this._episode.push(ep);
-	  this._dirty = true;
-	  this.emit("episode_added", ep);
-	  this.emit("changed");
+          if (this.loading === false){
+	    this._dirty = true;
+	    this.emit("episode_added", ep);
+	    this.emit("changed");
+          }
 	}
       } catch (e) {
 	throw e;
@@ -123,9 +137,11 @@ module.exports = (function(){
     } else if (edata instanceof episode){
       if (this._GetEpisodeIndex(ep.guid) < 0){
 	this._episode.push(ep);
-	this._dirty = true;
-	this.emit("episode_added", ep);
-	this.emit("changed");
+        if (this.loading === false){
+	  this._dirty = true;
+	  this.emit("episode_added", ep);
+	  this.emit("changed");
+        }
       }
     } else {
       throw new Error("Invalid type. Given " + typeof(edata));
@@ -183,6 +199,14 @@ module.exports = (function(){
 
     "dirty":{
       get:function(){return this._dirty;}
+    },
+
+    "loading":{
+      get:function(){return this._loading;}
+    },
+
+    "saving":{
+      get:function(){return this._saving;}
     }
   });
 
