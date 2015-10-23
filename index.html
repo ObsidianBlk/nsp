@@ -23,6 +23,7 @@
     <script type="text/javascript" src="js/app/view/episodeView.js"></script>
     <script type="text/javascript" src="js/app/view/audioPlayer.js"></script>
     <script type="text/javascript" src="js/app/view/audioPlayerView.js"></script>
+    <script type="text/javascript" src="js/app/view/poiView.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -71,7 +72,7 @@
     <!-- ------------ MODAL DIALOGS ------------ -->
 
     <!-- About App -->
-    <div id="about-app" class="modal">
+    <div id="about-app" class="modal" style="display:none;">
       <div class="modal-content">
 	<p>Cool stuff to say about the app.</p>
       </div>
@@ -81,7 +82,7 @@
     </div>
 
     <!-- "Person of Importance" Modal -->
-    <div id="person-of-import" class="modal">
+    <div id="person-of-import" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content">
 	<h5 class="poi-name"></h5>
 	<a href="#!" class="poi-link" style="display:none;">More Information</a>

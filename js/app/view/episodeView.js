@@ -529,6 +529,18 @@ window.View.EpisodeView = (function(){
     // TODO: Add a "disconnect" option!
   };
 
+  episodeView.prototype.openEpisode = function(guid, title){
+    // NOTE: title is a "story" title and may be omitted.
+    var item = this._list.find("[data-guid='" + guid + "']");
+    item.find(".collapsible-header").trigger("click");
+    var top = item.offset().top - $(".episode-card-list").offset().top + $(".episode-card-list").scrollTop();
+    console.log(top);
+    $(".episode-card-list").scrollTop(top);
+    //$('html, body').animate({
+                        //scrollTop: $("#div1").offset().top
+                    //}, 2000);
+  };
+
   episodeView.prototype.addEpisode = function(episode){
     // We'll assume newest goes first unless explicitly stated
     this._episodeCard.push(episode);

@@ -14,13 +14,18 @@ $(document).ready(function(){
     list:".episode-card-list", 
     sheet:".sheet"});
   var playerView = new View.AudioPlayerView(audioPlayer);
+  var poiView = new View.POIView("#person-of-import");
 
   episodeView.on("view_writer", function(writer){
-    console.log("Attempting to view writer " + writer);
+    poiView.writer(writer);
   });
 
   episodeView.on("view_narrator", function(narrator){
-    console.log("Attempting to view narrator " + narrator);
+    poiView.narrator(narrator);
+  });
+
+  poiView.on("view_episode", function(info){
+    episodeView.openEpisode(info.guid, info.title);
   });
   
   app.on("database_created", function(){
