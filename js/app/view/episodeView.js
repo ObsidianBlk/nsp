@@ -580,6 +580,18 @@ window.View.EpisodeView = (function(){
     this._listDirty = true;
   };
 
+
+  episodeView.prototype.clearSearchFilter = function(no_apply){
+    this._filter = [];
+    this._episodeCard = [];
+    for (var i=0; i < NSP.db.episodeCount; i++){
+      this._episodeCard.push(NSP.db.episode(i));
+    }
+    if (typeof(no_apply) === 'boolean' && no_apply === true){
+      this._ApplySearchFilters();
+    }
+  };
+
   episodeView.prototype.addSearchFilter = function(type, value){
     var findex = -1;
     for (var i=0; i < this._filter.length; i++){
@@ -597,18 +609,35 @@ window.View.EpisodeView = (function(){
       });
     }
 
-    this._list.remove();
-    var elist = this._episodeCard.filter((function(ep){
-      return this._EpisodeInFilter(ep);
-    }).bind(this));
-    this._episodeCard = [];
-    if (elist.length > 0){
-      for (i=0; i < elist.length; i++){
-	this.addEpisode(elist[i]);
+    this._ApplySearchFilters();
+    return findex;
+  };
+
+  episodeView.prototype.addSearchFilters = function(filters, clear){
+    if (typeof(clear) === 'boolean' && clear){
+      this.clearSearchFilter(true);
+    }
+    for (var i=0; i < filters.length; i++){
+      var findex = -1;
+      for (var f=0; f < this._filter.length; f++){
+	if (this._filter[f].type === filters[i].type && this._filter[f].value === filters[i].value){
+	  findex = f;
+	  break;
+	}
+      }
+      if (findex < 0){
+	this._filter.push({
+	  type: filters[i].type,
+	  value: filters[i].value
+	});
       }
     }
 
-    return findex;
+    this._ApplySearchFilters();
+  };
+
+  episodeView.prototype.getSearchFilters = function(){
+    return this._filter;
   };
 
   episodeView.prototype.onEpisodeAdded = function(episode){
@@ -621,19 +650,19 @@ window.View.EpisodeView = (function(){
   episodeView.prototype._EpisodeInFilter = function(episode){
     for (var i=0; i < this._filter.length; i++){
       if (this._filter[i].type === "tag"){
-	  if (episode.hasTagLike(this._search) === false){
+	  if (episode.hasTagLike(this._filter[i].value) === false){
 	    return false;
 	  }
-      } else if (this._searchType === "writer"){
-	if (episode.hasWriter(this._search) === false){
+      } else if (this._filter[i].type === "writer"){
+	if (episode.hasWriter(this._filter[i].value) === false){
 	  return false;
 	}
-      } else if (this._searchType === "narrator"){
-	if (episode.hasNarrator(this._search) === false){
+      } else if (this._filter[i].type === "narrator"){
+	if (episode.hasNarrator(this._filter[i].value) === false){
 	  return false;
 	}
-      } else if (this._searchType === "story"){
-	if (episode.hasStoryTitleLike(this._search) === false){
+      } else if (this._filter[i].type === "story"){
+	if (episode.hasStoryTitleLike(this._filter[i].value) === false){
 	  return false;
 	}
       }
@@ -817,6 +846,19 @@ window.View.EpisodeView = (function(){
 	});
       } 
     });
+  };
+
+  episodeView.prototype._ApplySearchFilters = function(){
+    this._list.empty();
+    var elist = this._episodeCard.filter((function(ep){
+      return this._EpisodeInFilter(ep);
+    }).bind(this));
+    this._episodeCard = [];
+    if (elist.length > 0){
+      for (i=0; i < elist.length; i++){
+	this.addEpisode(elist[i]);
+      }
+    }
   };
 
 

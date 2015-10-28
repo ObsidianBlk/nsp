@@ -15,6 +15,7 @@ $(document).ready(function(){
     sheet:".sheet"});
   var playerView = new View.AudioPlayerView(audioPlayer);
   var poiView = new View.POIView("#person-of-import");
+  var filterView = new View.FilterView("#list-filters");
 
   episodeView.on("view_writer", function(writer){
     poiView.writer(writer);
@@ -26,6 +27,10 @@ $(document).ready(function(){
 
   poiView.on("view_episode", function(info){
     episodeView.openEpisode(info.guid, info.title);
+  });
+
+  filterView.on("apply", function(filters){
+    episodeView.addSearchFilters(filters, true);
   });
   
   app.on("database_created", function(){
@@ -41,7 +46,7 @@ $(document).ready(function(){
     app.on("heartbeat", function(){
       if (NSP.config.autoSaveDatabaseOnChange && NSP.db.dirty){
         if (NSP.db.loading === false && NSP.db.saving === false){
-          NSP.db.save(NSP.db.path.database);
+          NSP.db.save(NSP.config.path.database);
         }
       }
     });
@@ -79,6 +84,10 @@ $(document).ready(function(){
         app.feedUpdate(feed);
         evt.preventDefault();
       }
+    });
+
+    $(".app_action_search").click(function(){
+      filterView.openModal(episodeView.getSearchFilters());
     });
 
 

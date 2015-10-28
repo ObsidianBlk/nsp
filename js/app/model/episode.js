@@ -292,12 +292,15 @@ module.exports = (function(){
     if (typeof(writers) === 'undefined' || writers === null){
       writers = [];
     }
-    if (!(writers instanceof Array)){
+
+    // NOTE: This is a very hack array test.
+    // The webkit and nodeJS contexts have different "Array" types that do not match with instanceof
+    if (typeof(writers.length) === 'undefined'){
       throw new TypeError();
     }
 
     for (var i=0; i < this._story.length; i++){
-      for (var w=0; n < this._story[i].writerCount; w++){
+      for (var w=0; w < this._story[i].writerCount; w++){
 	var writer = this._story[i].writer(w);
 	var key = writer.name.toLowerCase();
 	for (var k=0; k < writers.length; k++){
@@ -346,7 +349,10 @@ module.exports = (function(){
     if (typeof(narrators) === 'undefined' || narrators === null){
       narrators = [];
     }
-    if (!(narrators instanceof Array)){
+
+    // NOTE: This is a very hack array test.
+    // The webkit and nodeJS contexts have different "Array" types that do not match with instanceof
+    if (typeof(narrators.length) === 'undefined'){
       throw new TypeError();
     }
 
@@ -401,7 +407,7 @@ module.exports = (function(){
 
   episode.prototype.hasWriter = function(writer_name){
     for (var i=0; i < this._story.length; i++){
-      if (this._story.hasWriter(writer_name)){
+      if (this._story[i].hasWriter(writer_name)){
 	return true;
       }
     }
@@ -410,7 +416,7 @@ module.exports = (function(){
 
   episode.prototype.hasNarrator = function(narrator_name){
     for (var i=0; i < this._story.length; i++){
-      if (this._story.hasNarrator(narrator_name)){
+      if (this._story[i].hasNarrator(narrator_name)){
 	return true;
       }
     }
@@ -420,7 +426,7 @@ module.exports = (function(){
   episode.prototype.hasStoryTitleLike = function(title){
     var rex = new RegExp("/(.*?)(" + title + ")(.*)/");
     for (var i=0; i < this._story.length; i++){
-      if (this._story.title === title || rex.test(this._story.title)){
+      if (this._story[i].title === title || rex.test(this._story[i].title)){
 	return true;
       }
     }

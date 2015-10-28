@@ -24,6 +24,7 @@
     <script type="text/javascript" src="js/app/view/audioPlayer.js"></script>
     <script type="text/javascript" src="js/app/view/audioPlayerView.js"></script>
     <script type="text/javascript" src="js/app/view/poiView.js"></script>
+    <script type="text/javascript" src="js/app/view/filterView.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -90,6 +91,20 @@
       </div>
       <div class="modal-footer">
 	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">OK</a>
+      </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div id="list-filters" class="modal modal-fixed-footer" style="display:none;">
+      <div class="modal-content">
+	<div class="filter-actions-box">
+	  <a href="#!" class="waves-effect waves-nsp-red btn filter-add-action">Add Filter</a>
+	</div>
+      </div>
+      <div class="modal-footer">
+	<a href="#!" class="waves-effect waves-nsp-red btn filter-clear-action">Clear All</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn filter-apply-action">Apply</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn filter-close-action">Close</a>
       </div>
     </div>
 
