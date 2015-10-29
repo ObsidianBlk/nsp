@@ -2694,8 +2694,12 @@ $(document).ready(function(){
         thumb.velocity({ height: "30px", width: "30px", top: "-20px", marginLeft: "-15px"}, { duration: 300, easing: 'easeOutExpo' });
       }
 
-      if(e.pageX === undefined || e.pageX === null){//mobile
+      /*if(e.pageX === undefined || e.pageX === null){//mobile
          left = e.originalEvent.touches[0].pageX - $(this).offset().left;
+      }*/
+      // OBS: Touch Event Check modification...
+      if (typeof(e.originalEvent.touches) !== 'undefined'){
+	left = e.originalEvent.touches[0].pageX - $(this).offset().left;
       }
       else{ // desktop
          left = e.pageX - $(this).offset().left;

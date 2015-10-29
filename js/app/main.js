@@ -17,12 +17,12 @@ $(document).ready(function(){
   var poiView = new View.POIView("#person-of-import");
   var filterView = new View.FilterView("#list-filters");
 
-  episodeView.on("view_writer", function(writer){
-    poiView.writer(writer);
+  episodeView.on("view_writer", function(writer, link){
+    poiView.writer(writer, link);
   });
 
-  episodeView.on("view_narrator", function(narrator){
-    poiView.narrator(narrator);
+  episodeView.on("view_narrator", function(narrator, link){
+    poiView.narrator(narrator, link);
   });
 
   poiView.on("view_episode", function(info){

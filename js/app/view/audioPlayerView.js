@@ -98,7 +98,7 @@ window.View.AudioPlayerView = (function(){
     this._entity = {
       playlist: $(".player-playlist"),
       title: $(".player-title"),
-      progress: $(".player-progress")
+      progress: $("#player-seek-bar")
     };
     this._configured = false;
     this._audioPlayer = audioPlayer;
@@ -127,10 +127,23 @@ window.View.AudioPlayerView = (function(){
     if (this._configured === false){
       this._configured = true;
 
+      this._entity.progress.on("change", (function(){
+	this._entity.progress.removeClass("dragging");
+	this._audioPlayer.currentTrackTime = this._entity.progress[0].value;
+	//console.log("Scrubber Changed: " + this._entity.progress[0].value + " | " + this._audioPlayer.currentTrackTime);
+      }).bind(this));
+
+      this._entity.progress.on("mousedown", function(){
+	if (!$(this).hasClass("dragging")){
+	  $(this).addClass("dragging");
+	}
+      });
+
       this._audioPlayer.on("playing", (function(){
         // NOTE: Using the ::play() method, audio can be played without it being identified as a track.
         // to ignore trackless audio, check to see if a currentTrackIndex is defined.
         if (this._audioPlayer.currentTrackIndex >= 0){
+	  this._entity.progress.attr("max", this._audioPlayer.currentTrackDuration.toString());
 	  this._SetPlayPauseBTN("pause");
           SetActiveTrackItemPlayState("pause");
         }
@@ -155,7 +168,9 @@ window.View.AudioPlayerView = (function(){
       }).bind(this));
 
       this._audioPlayer.on("timeupdate", (function(progress){
-	this._entity.progress.css("width", Math.floor(100*progress).toString() + "%");
+	if (this._entity.progress.hasClass("dragging") === false){
+	  this._entity.progress[0].value = this._audioPlayer.currentTrackTime;
+	}
       }).bind(this));
 
       this._audioPlayer.on("track_added", (function(info){
@@ -164,11 +179,13 @@ window.View.AudioPlayerView = (function(){
 
       this._audioPlayer.on("track_changed", (function(){
 	this._entity.title.text(this._audioPlayer.currentTrackTitle);
+	this._entity.progress.val(0);
         ActivateTrackItemIndex(this._audioPlayer.currentTrackIndex);
       }).bind(this));
 
       this._audioPlayer.on("tracks_cleared", (function(){
 	this._entity.title.text("No Track");
+	this._entity.progress.val(0);
 	this._entity.playlist.empty();
       }).bind(this));
     }

@@ -56,6 +56,9 @@ body{
 .nsp-grey.lighten {
     background-color: #B6E3f1 !important; }
 
+.nsp-true-grey {
+    background-color: #808474 !important; }
+
 .nsp-red {
     background-color: #8B0000 !important; }
 
@@ -132,6 +135,11 @@ body{
     will-change: left, right; }
 
 
+  .btn.nsp {
+      background-color:#B6E3f1;
+      color: #8B0000;
+  }
+
   .btn-flat-nsp {
     margin: 0;
     margin-left: 0.5rem;
@@ -206,6 +214,10 @@ time{
 .title-block{
     line-height: 1.1em;
     padding: 0.25em;
+}
+.title-block.title-larger{
+    line-height: 1.25em;
+    padding: 0.5em 0.25em
 }
 
 .story-detail-title{

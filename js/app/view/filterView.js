@@ -122,9 +122,15 @@ window.View.FilterView = (function(){
       item = $(templates.filterItem);
     }
 
+    var actRemoveFilter = item.find(".filter-item-action");
     var filterType = item.find(".filter-type select");
     var valInput = item.find(".filter-value-tag");
     var selectInput = item.find(".filter-value-person");
+
+    actRemoveFilter.on("click", function(){
+      item.remove();
+    });
+
     filterType.on("change", (function(){
       var type = filterType.find("option:selected").val();
       if (type === "tag" || type === "story"){

@@ -20,21 +20,29 @@ window.View.POIView = (function(){
       throw new Error("Invalid ID");
     }
 
+    // The one constant link's click event is defined here.
+    this._modal.find(".poi-link-text a").on("click", function(){
+      var link = $(this).attr("data-link");
+      if (link.length > 0){
+	require('nw.gui').Shell.openExternal(link);
+      }
+    });
+
     this._type = null;
     this._name = null;
   }
   poiView.prototype.__proto__ = Events.EventEmitter.prototype;
   poiView.prototype.constructor = poiView;
 
-  poiView.prototype.writer = function(writer){
+  poiView.prototype.writer = function(writer, link){
     this._OpenModal("writer", writer, (function(){
-      this._FillInModal("writer", writer);
+      this._FillInModal("writer", writer, link);
     }).bind(this));
   };
 
-  poiView.prototype.narrator = function(narrator){
+  poiView.prototype.narrator = function(narrator, link){
     this._OpenModal("narrator", narrator, (function(){
-      this._FillInModal("narrator", narrator);
+      this._FillInModal("narrator", narrator, link);
     }).bind(this));
   };
 
@@ -47,9 +55,15 @@ window.View.POIView = (function(){
     }
   };
 
-  poiView.prototype._FillInModal = function(type, name){
+  poiView.prototype._FillInModal = function(type, name, link){
     var info = this._FindPersonData(type, name);
     this._modal.find(".poi-name").empty().append(name);
+    if (typeof(link) === 'string' && link.length > 0){
+      this._modal.find(".poi-link-text").removeAttr("style");
+      this._modal.find(".poi-link-text a").attr("data-link", link);
+    } else {
+      this._modal.find(".poi-link-text").css("display", "none");
+    }
     var list = this._modal.find(".poi-episode-list");
     if (list.length > 0){
       list.empty();

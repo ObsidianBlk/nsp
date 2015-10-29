@@ -356,6 +356,7 @@ window.View.EpisodeView = (function(){
 		       .addClass("waves-effect waves-nsp-red btn-flat-nsp")
 		       .addClass(STORY.action_writer.substr(1))
 		       .attr("data-writer", writer.name)
+		       .attr("data-writer-link", (typeof(writer.link) === 'string') ? writer.link : "")
 		       .append(writer.name));
       }
     }
@@ -371,6 +372,7 @@ window.View.EpisodeView = (function(){
 			 .addClass("waves-effect waves-nsp-red btn-flat-nsp")
 			 .addClass(STORY.action_narrator.substr(1))
 			 .attr("data-narrator", narrator.name)
+			 .attr("data-narrator-link", (typeof(narrator.link) === 'string') ? narrator.link : "")
 			 .append(narrator.name));
       }
     }
@@ -735,8 +737,9 @@ window.View.EpisodeView = (function(){
       act_writers.on("click", (function(event){
 	var targ = $(event.target);
 	var writer = targ.attr("data-writer");
+	var link = targ.attr("data-writer-link");
 	if (writer !== ""){
-	  this.emit("view_writer", writer);
+	  this.emit("view_writer", writer, link);
 	}
       }).bind(this));
     }
@@ -746,8 +749,9 @@ window.View.EpisodeView = (function(){
       act_narrators.on("click", (function(event){
 	var targ = $(event.target);
 	var narrator = targ.attr("data-narrator");
+	var link = targ.attr("data-narrator-link");
 	if (narrator !== ""){
-	  this.emit("view_narrator", narrator);
+	  this.emit("view_narrator", narrator, link);
 	}
       }).bind(this));
     }

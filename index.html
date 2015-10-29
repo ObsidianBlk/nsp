@@ -16,7 +16,7 @@
 
     <!--Import jQuery before materialize.js-->
     <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
-    <script type="text/javascript" src="js/materialize/materialize.min.js"></script>
+    <script type="text/javascript" src="js/materialize/materialize.js"></script>
 
     <!-- The Application class and everything needed to initialize the application-->
     <script type="text/javascript" src="js/app/view/application.js"></script>
@@ -86,7 +86,10 @@
     <div id="person-of-import" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content">
 	<h5 class="poi-name"></h5>
-	<a href="#!" class="poi-link" style="display:none;">More Information</a>
+	<p class="poi-link-text" style="display:none;">
+	  More information on this individual can be found 
+	  <a href="#!" class="poi-link tooltipped" data-tooltip="Opens in system's default browser">here</a>
+	</p>
 	<ul class="poi-episode-list collapsible popout" data-collapsible="accordion"></ul>
       </div>
       <div class="modal-footer">
@@ -96,15 +99,15 @@
 
     <!-- Filter Modal -->
     <div id="list-filters" class="modal modal-fixed-footer" style="display:none;">
-      <div class="modal-content">
+      <div class="modal-content nsp-true-grey">
 	<div class="filter-actions-box">
 	  <a href="#!" class="waves-effect waves-nsp-red btn filter-add-action">Add Filter</a>
 	</div>
       </div>
-      <div class="modal-footer">
-	<a href="#!" class="waves-effect waves-nsp-red btn filter-clear-action">Clear All</a>
-	<a href="#!" class="waves-effect waves-nsp-red btn filter-apply-action">Apply</a>
-	<a href="#!" class="waves-effect waves-nsp-red btn filter-close-action">Close</a>
+      <div class="modal-footer nsp-grey">
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-close-action" style="margin-left:6px;">Close</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-apply-action" style="margin-left:6px;">Apply</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Clear All</a>
       </div>
     </div>
 
@@ -148,8 +151,10 @@
 	  </div>
           <div class="col s12 m6 scroller" style="background-color:#FFFFFF">
             <div class="flow-text player-title">No Track Selected</div>
-            <div class="progress">
-	      <div class="determinate player-progress" style="width:0%;"></div>
+            <div>
+	      <p class="range-field">
+		<input type="range" class="browser-default" id="player-seek-bar" min="0" max="1" value="0">
+	      </p>
             </div>
             <div class="center-align hide-on-med-and-down">
 	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevtrack">
@@ -196,6 +201,7 @@
         </div>
       </div>
 
+      <!-- ------------ AUTO-GEN PAST THIS POINT ------------ -->
       
     </div>
   </body>

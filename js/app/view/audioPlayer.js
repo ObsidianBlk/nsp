@@ -117,7 +117,7 @@ window.View.AudioPlayer = (function(){
 	  console.log("Story not found in Episode.");
 	  story = null;
 	}
-	title += ": " + episode.story(sindex).title;
+	title = episode.story(sindex).title + " - " + title;
       } else {
 	story = null;
       }
@@ -142,18 +142,23 @@ window.View.AudioPlayer = (function(){
   };
 
   audioPlayer.prototype.addTrack = function(url, options){
-    if (this._GetTrackIndex(url) === -1){
-      options = options || {};
-      options.fadeIn = (typeof(options.fadeIn) === 'number') ? options.fadeIn : 0;
-      options.fadeOut = (typeof(options.fadeOut) === 'number') ? options.fadeOut : 0;
+    options = options || {};
+    options.name = (typeof(options.name) === 'string') ? options.name : "";
+    options.fadeIn = (typeof(options.fadeIn) === 'number') ? options.fadeIn : 0;
+    options.fadeOut = (typeof(options.fadeOut) === 'number') ? options.fadeOut : 0;
+    options.episode = (typeof(options.episode) !== 'undefined') ? options.episode : null;
+    options.story = (typeof(options.story) !== 'undefined') ? options.story : null;
+    options.starttime = (typeof(options.starttime) !== 'undefined') ? options.starttime : null;
+    options.endtime = (typeof(options.endtime) !== 'undefined') ? options.endtime : null;
 
+    if (this._GetTrackIndex(url, options.episode, options.story) === -1){
       this._playlist.push({
 	url: url,
 	name: options.name,
-	episode: (typeof(options.episode) !== 'undefined') ? options.episode : null,
-	story: (typeof(options.story) !== 'undefined') ? options.story : null,
-	starttime: (typeof(options.starttime) !== 'undefined') ? options.starttime : null,
-	endtime: (typeof(options.endtime) !== 'undefined') ? options.endtime : null,
+	episode: options.episode,
+	story: options.story,
+	starttime: options.starttime,
+	endtime: options.endtime,
 	fadeIn: options.fadeIn,
 	fadeOut: options.fadeOut
       });
@@ -254,9 +259,9 @@ window.View.AudioPlayer = (function(){
     }
   };
 
-  audioPlayer.prototype._GetTrackIndex = function(url){
+  audioPlayer.prototype._GetTrackIndex = function(url, episode, story){
     for (var i=0; i < this._playlist.length; i++){
-      if (this._playlist[i].url === url){
+      if (this._playlist[i].url === url && this._playlist[i].episode !== episode && this._playlist[i].story !== story){
 	return i;
       }
     }
@@ -447,11 +452,57 @@ window.View.AudioPlayer = (function(){
 	  if (this._playlist[this._currentTrack].episode !== null){
 	    title = this._playlist[this._currentTrack].episode.title;
 	    if (this._playlist[this._currentTrack].story !== null){
-	      title += " - " + this._playlist[this._currentTrack].story.title;
+	      title = this._playlist[this._currentTrack].story.title + " - " + title;
 	    }
 	  }
 	}
 	return title;
+      }
+    },
+
+    "currentTrackTime":{
+      get:function(){
+	// If we have a story, we want the story's duration, otherwise, it's just the duration of the audio itself.
+	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].story !== null){
+	  var storyDur = this._playlist[this._currentTrack].story.duration;
+	  if (storyDur > 0){
+	    return this._player[0].currentTime - this._playlist[this._currentTrack].story.beginningSec;
+	  }
+	}
+	return this._player[0].currentTime;
+      },
+      set:function(time){
+	time = (typeof(time) === 'string') ? parseInt(time) : time;
+	if (typeof(time) !== 'number' || Number.isNaN(time)){
+	  throw new TypeError();
+	}
+
+	if (this._currentTrack >= 0){
+	  if (time < 0){
+	    time = 0;
+	  } else if (time > this.currentTrackDuration){
+	    time = this.currentTrackDuration;
+	  }
+	  if (this._playlist[this._currentTrack].story !== null){
+	    this._player[0].currentTime = this._playlist[this._currentTrack].story.beginningSec + time;
+	  } else {
+	    this._player[0].currentTime = time;
+	  }
+	}
+      }
+    },
+
+    "currentTrackDuration":{
+      get:function(){
+	// If we have a story, we want the story's duration, otherwise, it's just the duration of the audio itself.
+	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].story !== null){
+	  var storyDur = this._playlist[this._currentTrack].story.duration;
+	  if (storyDur === 0 && this._playlist[this._currentTrack].story.beginningSec < this._player[0].duration){
+	    storyDur = this._player[0].duration - this._playlist[this._currentTrack].story.beginningSec;
+	  }
+	  return storyDur;
+	}
+	return this._player[0].duration;
       }
     }
   });
