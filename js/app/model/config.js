@@ -28,6 +28,7 @@ module.exports = (function(){
   function config(){
     this._path = {
       database: Path.normalize("database.json"),
+      playlists: Path.normalize("playlists"),
       audio:    Path.normalize("cache/audio/episodes"),
       images:   Path.normalize("cache/images")
     };
@@ -134,6 +135,7 @@ module.exports = (function(){
       get:function(){
 	return {
 	  database: this._path.database,
+	  playlists: this._path.playlists,
 	  audio: this._path.audio,
 	  images: this._path.images
 	};
@@ -143,6 +145,7 @@ module.exports = (function(){
 	  throw TypeError();
 	}
 	this._path.database = (typeof(path.database) === 'string') ? Path.normalize(path.database) : this._path.database;
+	this._path.playlists = (typeof(path.playlists) === 'string') ? Path.normalize(path.playlists) : this._path.playlists;
 	this._path.audio = (typeof(path.audio) === 'string') ? Path.normalize(path.audio) : this._path.audio;
 	this._path.images = (typeof(path.images) === 'string') ? Path.normalize(path.images) : this._path.images;
         this._dirty = true;

@@ -232,6 +232,37 @@ time{
     padding-left: 0.5em;
 }
 
+.episode-control-container{
+    display:inline-block;
+    width:20rem;
+    height:auto;
+    margin-right:1.25em;
+}
+
+.episode-detail-image{
+    width:20rem;
+    height:auto;
+}
+
+.episode-detail-tags .tags-heading{
+    display:inline-block;
+    width:10%;
+}
+
+.episode-detail-tags .tags-block{
+    display:inline-block;
+    width:90%;
+    min-height:1em;
+    margin-left: 10px;
+}
+
+.episode-detail-tags .tags-editor{
+    display:inline-block;
+    width:90%;
+    min-height:1em;
+    margin-left: 10px;
+}
+
 .truncate-inline {
   display: inline-block;
   white-space: nowrap;

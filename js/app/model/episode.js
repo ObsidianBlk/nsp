@@ -238,21 +238,51 @@ module.exports = (function(){
     return JSON.stringify(data, null, '\t');
   };
 
-  episode.prototype.addTag = function(tag){
-    tag = tag.toLowerCase();
-    if (!this.hasTag(tag)){
-      this._tag.push(tag);
-      this.emit("changed", null);
+  episode.prototype.setTags = function(tagstr, delimiter){
+    delimiter = (typeof(delimiter) === 'string') ? delimiter : ",";
+    this._tag = [];
+    this.addTag(tagstr, delimiter);
+  };
+
+  episode.prototype.addTag = function(tagstr, delimiter){
+    delimiter = (typeof(delimiter) === 'string') ? delimiter : ",";
+    var added = false;
+    if (tagstr.length > 0){
+      var tags = tagstr.split(delimiter);
+      for (var i=0; i < tags.length; i++){
+	var tag = tags[i].trim();
+	if (tag.length > 0){
+	  if (this.hasTag(tag) === false){
+	    this._tag.push(tag);
+	    added = true;
+	  }
+	}
+      }
+      if (added){
+	this.emit("changed", null);
+      }
     }
   };
 
-  episode.prototype.removeTag = function(tag){
-    tag = tag.toLowerCase();
-    for (var i=0; i < this._tag.length; i++){
-      if (tag === this._tag[i]){
-        this._tag.splice(i, 1);
-        this.emit("changed", null);
-        break;
+  episode.prototype.removeTag = function(tagstr, delimiter){
+    delimiter = (typeof(delimiter) === 'string') ? delimiter : ",";
+    var removed = false;
+    if (tagstr.length > 0){
+      var tags = tagstr.split(delimiter);
+      for (var i=0; i < tags.length; i++){
+	var tag = tags[i].trim().toLowerCase();
+	if (tag.length > 0){
+	  for (var t=0; t < this._tag.length; t++){
+	    if (tag === this._tag[t].toLowerCase()){
+              this._tag.splice(t, 1);
+	      removed = true;
+              break;
+	    }
+	  }
+	}
+      }
+      if (removed){
+	this.emit("changed", null);
       }
     }
   };
@@ -265,8 +295,9 @@ module.exports = (function(){
   };
 
   episode.prototype.hasTag = function(tag){
+    var ltag = tag.toLowerCase();
     for (var i=0; i < this._tag.length; i++){
-      if (tag === this._tag[i]){
+      if (ltag === this._tag[i].toLowerCase()){
         return true;
       }
     }
@@ -274,9 +305,10 @@ module.exports = (function(){
   };
 
   episode.prototype.hasTagLike = function(tag){
-    var reg = new RegExp("(.*?)" + tag + "(.*)");
+    var reg = new RegExp("(.*?)" + tag.toLowerCase() + "(.*)");
+    var ltag = tag.toLowerCase();
     for (var i=0; i < this._tag.length; i++){
-      if (this._tag[i] === tag || reg.test(this._tag[i])){
+      if (this._tag[i].toLowerCase() === ltag || reg.test(this._tag[i].toLowerCase())){
 	return true;
       }
       for (var s=0; s < this._story.length; s++){
@@ -434,14 +466,21 @@ module.exports = (function(){
   };
 
   episode.prototype.addStory = function(sdata){
+    var s = null;
     if (typeof(sdata) === typeof({})){
       try {
-	var s = new story(sdata);
-	this._story.push(s);
-	this.emit("changed");
+	s = new story(sdata);
       } catch (e) {throw e;}
     } else if (sdata instanceof story){
-      this._story.push(sdata);
+      s = sdata;
+    } else {
+      throw new TypeError();
+    }
+    if (s !== null){
+      s.on("changed", (function(){
+	this.emit("changed");
+      }).bind(this));
+      this._story.push(s);
       this.emit("changed");
     }
   };
@@ -666,7 +705,7 @@ module.exports = (function(){
     },
 
     "tags":{
-      get:function(){return this._tag.join(",");}
+      get:function(){return this._tag.join(", ");}
     },
 
     "storyCount":{

@@ -45,6 +45,7 @@ window.View.FilterView = (function(){
 
   filterView.prototype.openModal = function(filters){
     if (this.open === false){
+      this._modal.find(".filter-item").remove();
       if (filters instanceof Array){
 	for (var i=0; i < filters.length; i++){
 	  var item = $(templates.filterItem);
@@ -102,9 +103,9 @@ window.View.FilterView = (function(){
 	var type = item.find(".filter-type select option:selected").val();
 	var val = "";
 	if (type === "tag" || type === "story"){
-	  val = this._modal.find(".filter-value-tag input").val();
+	  val = item.find(".filter-value-tag input").val();
 	} else if (type === "writer" || type === "narrator"){
-	  val = this._modal.find(".filter-value-person select option:selected").val();
+	  val = item.find(".filter-value-person select option:selected").val();
 	}
 	if (type !== "" && val !== ""){
 	  filters.push({

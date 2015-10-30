@@ -120,31 +120,34 @@ module.exports = (function(){
   };
 
   database.prototype.addEpisode = function(edata){
+    var ep = null;
     if (typeof(edata) === typeof({})){
       try {
 	var ep = new episode(edata);
-	if (this._GetEpisodeIndex(ep.guid) < 0){
-	  this._episode.push(ep);
-          if (this.loading === false){
-	    this._dirty = true;
-	    this.emit("episode_added", ep);
-	    this.emit("changed");
-          }
+	if (this._GetEpisodeIndex(ep.guid) >= 0){
+	  ep = null;
 	}
       } catch (e) {
 	throw e;
       }
     } else if (edata instanceof episode){
       if (this._GetEpisodeIndex(ep.guid) < 0){
-	this._episode.push(ep);
-        if (this.loading === false){
-	  this._dirty = true;
-	  this.emit("episode_added", ep);
-	  this.emit("changed");
-        }
+	ep = edata;
       }
     } else {
       throw new Error("Invalid type. Given " + typeof(edata));
+    }
+
+    if (ep !== null){
+      ep.on("changed", (function(){
+	this._dirty = true;
+      }).bind(this));
+      this._episode.push(ep);
+      if (this.loading === false){
+	this._dirty = true;
+	this.emit("episode_added", ep);
+	this.emit("changed");
+      }
     }
   };
 

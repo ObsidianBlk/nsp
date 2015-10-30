@@ -30,7 +30,9 @@ window.View.EpisodeView = (function(){
     title: ".episode-detail-title",
     description: ".episode-detail-description",
     img: ".episode-detail-image",
-    tags: ".episode-detail-tags",
+    tags: ".episode-detail-tags .tags-block",
+    tags_editor: ".episode-detail-tags .tags-editor",
+    action_tags_editor: ".episode-tags-edit-action",
     story_list:".episode-detail-story-list",
     actions: ".episode-action",
     action_queue: ".episode-action-queue",
@@ -209,6 +211,24 @@ window.View.EpisodeView = (function(){
   }
 
 
+  function TagChip(tag, episode){
+    var chip = $("<div></div>").addClass("tags chip").append(tag);
+    var icon = $("<i class=\"material-icons\">close</i>");
+    icon.on("click", function(){
+      episode.removeTag(tag);
+    });
+    chip.append(icon);
+    return chip;
+  }
+
+  function SetEpisodeTagChips(entity, episode){
+    for (var i=0; i < episode.tagCount; i++){
+      entity.append(
+	$("<div></div>").addClass("tags chip").append(episode.tag(i))
+      );
+    }
+  }
+
   function EpisodeDetails(entity, episode, audioPlayer){
     entity.empty();
     entity.html(templates.episodeDetails);
@@ -217,23 +237,47 @@ window.View.EpisodeView = (function(){
     entity.find("#entity_id").attr("data-id", episode.guid);
 
     if (episode.img_src !== ""){
-      entity.find(DETAIL.img).attr("src", ImageSource(episode)).css({
+      entity.find(DETAIL.img).attr("src", ImageSource(episode));
+      /*entity.find(DETAIL.img).attr("src", ImageSource(episode)).css({
 	"width":"20rem",
 	"height":"auto"
-      });;
+      });;*/
     }
 
     var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
     entity.find(DETAIL.title).append(title);
     entity.find(DETAIL.description).append(episode.shortDescription);
 
-    var i = 0;
-    for (i=0; i < episode.tagCount; i++){
-      entity.find(DETAIL.tags).append(
-	$("<div></div>").addClass("tags chip").append(episode.tag(i)).append("<i class=\"material-icons\">close</i>")
-      );
-    }
 
+    // Handling TAG area....
+    var tag_editor_field = entity.find(DETAIL.tags_editor).find("input");
+    entity.find(DETAIL.action_tags_editor).on("click", function(){
+      $(this).addClass("action-running");
+      if (entity.find(DETAIL.tags_editor).css("display") === "none"){
+	tag_editor_field.val(episode.tags);
+	entity.find(DETAIL.tags_editor).removeAttr("style");
+	entity.find(DETAIL.tags).css("display", "none");
+      } else {
+	entity.find(DETAIL.tags).removeAttr("style");
+	entity.find(DETAIL.tags_editor).css("display", "none");
+      }
+      $(this).removeClass("action-running");
+    });
+    tag_editor_field.on("change", function(){
+      episode.setTags($(this).val());
+      entity.find(DETAIL.tags).empty();
+      SetEpisodeTagChips(entity.find(DETAIL.tags), episode);
+      if (entity.find(DETAIL.action_tags_editor).hasClass("action-running") === false){
+	if (entity.find(DETAIL.tags_editor).css("display") !== "none"){
+	  entity.find(DETAIL.tags).removeAttr("style");
+	  entity.find(DETAIL.tags_editor).css("display", "none");
+	}
+      }
+    });
+    SetEpisodeTagChips(entity.find(DETAIL.tags), episode);
+
+    var i = 0;
+    // Handling story list...
     var storylist = entity.find(DETAIL.story_list);
     if (storylist.length > 0){
       for (i=0; i < episode.storyCount; i++){
@@ -652,9 +696,13 @@ window.View.EpisodeView = (function(){
   episodeView.prototype._EpisodeInFilter = function(episode){
     for (var i=0; i < this._filter.length; i++){
       if (this._filter[i].type === "tag"){
-	  if (episode.hasTagLike(this._filter[i].value) === false){
-	    return false;
+	var tags = this._filter[i].value.split(",");
+	for (var t=0; t < tags.length; t++){
+	  var tag = tags[t].trim();
+	  if (episode.hasTagLike(tag) === false){
+	    return false; // All tags must be present!
 	  }
+	}
       } else if (this._filter[i].type === "writer"){
 	if (episode.hasWriter(this._filter[i].value) === false){
 	  return false;

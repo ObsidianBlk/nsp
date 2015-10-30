@@ -43,9 +43,18 @@ $(document).ready(function(){
   app.on("application_ready", function(){
     episodeView.connectToDB(NSP.db);
 
+    NSP.db.on("saved", function(){
+      Materialize.toast("Database Saved!", 3000, 'rounded');
+    });
+    NSP.db.on("error", function(err){
+      var errmsg = (typeof(err.message) !== 'undefined') ? err.message : err;
+      Materialize.toast("Database Error: " + errmsg, 3000, 'rounded');
+    });
+
     app.on("heartbeat", function(){
       if (NSP.config.autoSaveDatabaseOnChange && NSP.db.dirty){
         if (NSP.db.loading === false && NSP.db.saving === false){
+	  Materialize.toast("Saving Database Changes...", 3000, 'rounded');
           NSP.db.save(NSP.config.path.database);
         }
       }
