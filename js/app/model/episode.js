@@ -467,9 +467,11 @@ module.exports = (function(){
   };
 
   episode.prototype.hasStoryTitleLike = function(title){
-    var rex = new RegExp("/(.*?)(" + title + ")(.*)/");
+    title = title.toLowerCase();
+    var rex = new RegExp("(.*?)(" + title + ")(.*)", "i");
     for (var i=0; i < this._story.length; i++){
-      if (this._story[i].title === title || rex.test(this._story[i].title)){
+      //console.log(this._story[i].title.match(rex);
+      if (this._story[i].title.toLowerCase() === title || rex.test(this._story[i].title)){
 	return true;
       }
     }

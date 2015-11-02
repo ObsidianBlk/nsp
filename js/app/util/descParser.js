@@ -1,6 +1,11 @@
 
 module.exports = (function(){
   function getTitle(line){
+    var pos = line.indexOf("written by");
+    if (pos > 0){
+      line = line.substr(0, pos+10);
+    } else {return null;}
+    
     var regLink = new RegExp("<a href=\"(.*?)\"(.*?)>");
     var linkMatch = line.match(regLink);
     var link = null;

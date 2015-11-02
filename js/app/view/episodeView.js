@@ -314,7 +314,7 @@ window.View.EpisodeView = (function(){
       }
 
       act_download.on("click", function(){
-	if (act_download.find("option-download").css("display") === "none"){
+	if (act_download.find(".option-download").css("display") === "none"){
 	  DeleteAudioFile(episode);
 	  SetDownloadActionState(act_download, "download");
 	  Materialize.toast("Episode removed from hard drive.", 4000);
@@ -330,9 +330,14 @@ window.View.EpisodeView = (function(){
 		process = true;
 	      }
 
-	      if (err !== null){
-		Materialize.toast("Download failed: " + err.message, 4000);
-		console.log(err.message);
+	      if (typeof(err) !== 'undefined' && err !== null){
+                if (typeof(err.message) !== 'undefined'){
+		  Materialize.toast("Download failed: " + err.message, 4000);
+		  console.log(err.message);
+                } else {
+                  Materialize.toast("Download failed: " + err, 4000);
+		  console.log(err);
+                }
 	      } else {
 		Materialize.toast("Episode \"" + episode.title + "\" download complete.", 4000);
 		if (process){
@@ -630,6 +635,11 @@ window.View.EpisodeView = (function(){
 
   episodeView.prototype.addEpisode = function(episode){
     // We'll assume newest goes first unless explicitly stated
+    for (var e=0; e < this._episodeCard.length; e++){
+      if (this._episodeCard[e] === episode){
+        return; // Duplicate... skip.
+      }
+    }
     this._episodeCard.push(episode);
     this._episodeCard.sort(function(a, b){
       if (a.date > b.date){

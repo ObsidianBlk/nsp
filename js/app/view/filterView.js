@@ -46,6 +46,7 @@ window.View.FilterView = (function(){
   filterView.prototype.openModal = function(filters){
     if (this.open === false){
       this._modal.find(".filter-item").remove();
+      var filterCount = 0;
       if (filters instanceof Array){
 	for (var i=0; i < filters.length; i++){
 	  var item = $(templates.filterItem);
@@ -80,10 +81,13 @@ window.View.FilterView = (function(){
 	    item.find(".filter-value-tag").css("display", "none");
 	    item.find(".filter-value-person").find("option[value=\"" + filters[i].value + "\"]").prop("selected", true); // <-- value
 	  }
+          filterCount++;
 	  this._AddNewFilterOption(item);
 	}
       }
-      this._AddNewFilterOption();
+      if (filterCount === 0){
+        this._AddNewFilterOption();
+      }
       this._modal.openModal();
     }
   };
