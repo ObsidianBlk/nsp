@@ -1,7 +1,6 @@
 
 
 $(document).ready(function(){
-  require('nw.gui').Window.get().showDevTools();
   $('ul.nsp-tabs').tabs();
 
   var Feeder = require('./js/app/util/feeder');
@@ -41,6 +40,14 @@ $(document).ready(function(){
 
 
   app.on("application_ready", function(){
+    if (NSP.config.debugMode){
+      var win = require('nw.gui').Window.get();
+      win.showDevTools();
+      $(".application-debug-element").removeAttr("style");
+      $(".app_action_debugrefresh").on("click", function(){
+	win.reloadDev();
+      });
+    }
     episodeView.connectToDB(NSP.db);
 
     NSP.db.on("saved", function(){

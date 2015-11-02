@@ -263,6 +263,25 @@ time{
     margin-left: 10px;
 }
 
+.story-detail-tags .tags-heading{
+    display:inline-block;
+    width:10%;
+}
+
+.story-detail-tags .tags-block{
+    display:inline-block;
+    width:90%;
+    min-height:1em;
+    margin-left: 10px;
+}
+
+.story-detail-tags .tags-editor{
+    display:inline-block;
+    width:90%;
+    min-height:1em;
+    margin-left: 10px;
+}
+
 .truncate-inline {
   display: inline-block;
   white-space: nowrap;

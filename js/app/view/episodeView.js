@@ -44,6 +44,9 @@ window.View.EpisodeView = (function(){
     header: ".title-block",
     title_block: ".story-title-block",
     title: ".story-detail-title",
+    tags: ".story-detail-tags .tags-block",
+    tags_editor: ".story-detail-tags .tags-editor",
+    action_tags_editor: ".story-tags-edit-action",
     actions: ".story-action",
     action_queue: ".story-action-queue",
     action_jumpto: ".story-action-jumpto",
@@ -376,6 +379,14 @@ window.View.EpisodeView = (function(){
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 
+  function SetStoryTagChips(entity, story){
+    for (var i=0; i < story.tagCount; i++){
+      entity.append(
+	$("<div></div>").addClass("tags chip").append(story.tag(i))
+      );
+    }
+  }
+
 
   function StoryDetails(entity, episode, story, audioPlayer){
     entity.find(STORY.title).append(story.title);
@@ -388,6 +399,36 @@ window.View.EpisodeView = (function(){
       }
       entity.find(STORY.header).append(time);
     }
+
+    // Handling TAG area....
+    var tag_editor_field = entity.find(STORY.tags_editor).find("input");
+    entity.find(STORY.action_tags_editor).on("click", function(){
+      $(this).addClass("action-running");
+      if (entity.find(STORY.tags_editor).css("display") === "none"){
+	tag_editor_field.val(story.tags);
+	entity.find(STORY.tags_editor).removeAttr("style");
+	entity.find(STORY.tags).css("display", "none");
+      } else {
+	entity.find(STORY.tags).removeAttr("style");
+	entity.find(STORY.tags_editor).css("display", "none");
+      }
+      $(this).removeClass("action-running");
+    });
+    tag_editor_field.on("change", function(){
+      console.log(story.title);
+      story.setTags($(this).val());
+      entity.find(STORY.tags).empty();
+      SetStoryTagChips(entity.find(STORY.tags), story);
+      if (entity.find(STORY.action_tags_editor).hasClass("action-running") === false){
+	if (entity.find(STORY.tags_editor).css("display") !== "none"){
+	  entity.find(STORY.tags).removeAttr("style");
+	  entity.find(STORY.tags_editor).css("display", "none");
+	}
+      }
+    });
+    SetStoryTagChips(entity.find(STORY.tags), story);
+
+    // ---------------------
 
     var writers = entity.find(STORY.writers);
     if (writers.length > 0 && story.writerCount > 0){

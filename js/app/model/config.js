@@ -1,4 +1,5 @@
 
+
 module.exports = (function(){
 
   var FS = require("fs");
@@ -22,6 +23,7 @@ module.exports = (function(){
     conf.skipInvalidEpisodes = obj.skip_invalid_episodes;
     conf.downloadFeedAtStartup = obj.download_feed_at_startup;
     conf.playIntroAtStartup = obj.play_intro_at_startup;
+    conf.debugMode = (typeof(obj.debug_mode) === 'boolean') ? obj.debug_mode : false;
     conf.heartbeatRythm = obj.heartbeat_rythm;
   }
 
@@ -38,6 +40,7 @@ module.exports = (function(){
     this._skipInvalidEpisodes = false;
     this._downloadFeedAtStartup = true;
     this._playIntroAtStartup = true;
+    this._debug_mode = false;
     this._heartbeatRythm = 200;
 
     this._loading = false;
@@ -55,7 +58,7 @@ module.exports = (function(){
   };
 
   config.prototype.toString = function(){
-    return JSON.stringify({
+    var data = {
       path: this._path,
       auto_cache_images: this._autoCacheImages,
       auto_save_database_on_change: this._autoSaveDatabaseOnChange,
@@ -64,7 +67,15 @@ module.exports = (function(){
       download_feed_at_startup: this._downloadFeedAtStartup,
       play_intro_at_startup: this._playIntroAtStartup,
       heartbeat_rythm: this._heartbeatRythm
-    }, null, JSON_INDENTATION_STRING);
+    };
+
+    // We don't include debug mode in the export unless it's already true!
+    // Kinda want to keep this hidden unless the person knows about it.
+    if (this._debug_mode === true){
+      data.debug_mode = true;
+    }
+
+    return JSON.stringify(data, null, JSON_INDENTATION_STRING);
   };
 
   config.prototype.open = function(path){
@@ -203,6 +214,15 @@ module.exports = (function(){
       set:function(enable){
 	this._playIntroAtStartup = (typeof(enable) === 'boolean') ? enable : this._playIntroAtStartup;
         this._dirty = true;
+	this.emit("changed");
+      }
+    },
+
+    "debugMode":{
+      get:function(){return this._debug_mode;},
+      set:function(enable){
+	this._debug_mode = (typeof(enable) === 'boolean') ? enable : this._debug_Mode;
+	this._dirty = true;
 	this.emit("changed");
       }
     },

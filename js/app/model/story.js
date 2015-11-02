@@ -144,23 +144,49 @@ module.exports = (function(){
     return JSON.stringify(data);
   };
 
-  story.prototype.addTag = function(tag_name){
-    tag_name = tag_name.toLowerCase();
-    if (!this.hasTag(tag_name)){
-      this._tag.push(tag_name);
-      this.emit("tag_added");
-      this.emit("changed");
+  story.prototype.setTags = function(tagstr, delimiter){
+    delimiter = (typeof(delimiter) === 'string') ? delimiter : ",";
+    this._tag = [];
+    this.addTag(tagstr, delimiter);
+  };
+
+  story.prototype.addTag = function(tagstr, delimiter){
+    delimiter = (typeof(delimiter) === 'string') ? delimiter : ",";
+    var added = false;
+    if (tagstr.length > 0){
+      var tags = tagstr.split(delimiter);
+      for (var i=0; i < tags.length; i++){
+	var tag = tags[i].trim();
+	if (!this.hasTag(tag)){
+	  this._tag.push(tag);
+	  added = true;
+	}
+      }
+      if (added){
+	this.emit("changed");
+      }
     }
   };
 
-  story.prototype.removeTag = function(tag_name){
-    tag_name = tag_name.toLowerCase();
-    for (var i=0; i < this._tag.length; i++){
-      if (this._tag[i] === tag_name){
-	this._tag.splice(i, 1);
-	this.emit("tag_removed");
-	this.emit("changed");
-	break;
+  story.prototype.removeTag = function(tagstr, delimiter){
+    delimiter = (typeof(delimiter) === 'string') ? delimiter : ",";
+    var removed = false;
+    if (tagstr.length > 0){
+      var tags = tagstr.split(delimiter);
+      for (var i=0; i < tags.length; i++){
+	var tag = tags[i].trim().toLowerCase();
+	if (tag.length > 0){
+	  for (var t=0; t < this._tag.length; t++){
+	    if (tag === this._tag[t].toLowerCase()){
+              this._tag.splice(t, 1);
+	      removed = true;
+              break;
+	    }
+	  }
+	}
+      }
+      if (removed){
+	this.emit("changed", null);
       }
     }
   };
@@ -168,7 +194,7 @@ module.exports = (function(){
   story.prototype.hasTag = function(tag_name){
     tag_name = tag_name.toLowerCase();
     for (var i=0; i < this._tag.length; i++){
-      if (this._tag[i] === tag_name){
+      if (this._tag[i].toLowerCase() === tag_name){
 	return true;
       }
     }
@@ -176,13 +202,22 @@ module.exports = (function(){
   };
 
   story.prototype.hasTagLike = function(tag){
+    tag = tag.toLowerCase();
     var reg = new RegExp("(.*?)" + tag + "(.*)");
     for (var i=0; i < this._tag.length; i++){
-      if (this._tag[i] === tag || reg.test(this._tag[i])){
+      var ltag = this._tag[i].toLowerCase();
+      if (ltag === tag || reg.test(ltag)){
 	return true;
       }
     }
     return false;
+  };
+
+  story.prototype.tag = function(index){
+    if (index >= 0 && index < this._tag.length){
+      return this._tag[index];
+    }
+    throw new RangeError();
   };
 
   story.prototype.addWriter = function(writer_name, link){
@@ -379,8 +414,12 @@ module.exports = (function(){
       get:function(){return this._narrator.length;}
     },
 
+    "tagCount":{
+      get:function(){return this._tag.length;}
+    },
+
     "tags":{
-      get:function(){return this._tag.join(",");}
+      get:function(){return this._tag.join(", ");}
     },
 
     "episode":{

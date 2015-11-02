@@ -294,26 +294,37 @@ module.exports = (function(){
     throw new RangeError();
   };
 
-  episode.prototype.hasTag = function(tag){
+  episode.prototype.hasTag = function(tag, ignoreStories){
+    ignoreStories = (typeof(ignoreStories) === 'boolean') ? ignoreStories : false;
     var ltag = tag.toLowerCase();
     for (var i=0; i < this._tag.length; i++){
       if (ltag === this._tag[i].toLowerCase()){
         return true;
       }
+      if (ignoreStories === false){
+	for (var s=0; s < this._story.length; s++){
+	  if (this._story[s].hasTag(tag)){
+	    return true;
+	  }
+	}
+      }
     }
     return false;
   };
 
-  episode.prototype.hasTagLike = function(tag){
+  episode.prototype.hasTagLike = function(tag, ignoreStories){
+    ignoreStories = (typeof(ignoreStories) === 'boolean') ? ignoreStories : false;
     var reg = new RegExp("(.*?)" + tag.toLowerCase() + "(.*)");
     var ltag = tag.toLowerCase();
     for (var i=0; i < this._tag.length; i++){
       if (this._tag[i].toLowerCase() === ltag || reg.test(this._tag[i].toLowerCase())){
 	return true;
       }
-      for (var s=0; s < this._story.length; s++){
-	if (this._story[s].hasTagLike(tag)){
-	  return true;
+      if (ignoreStories === false){
+	for (var s=0; s < this._story.length; s++){
+	  if (this._story[s].hasTagLike(tag)){
+	    return true;
+	  }
 	}
       }
     }
