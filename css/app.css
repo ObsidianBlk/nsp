@@ -38,6 +38,12 @@ body{
     will-change: overflow;
 }
 
+#sheet_content{
+    background: #FFFFFF;
+    margin: 0;
+    padding: 0.25rem 2rem;
+}
+
 .collection-item.player-track{
     padding: 4px 6px;
 }

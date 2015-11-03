@@ -30,6 +30,9 @@
 
   </head>
   <body class="nsp-grey darken">
+    <!-- --File Controls-- -->
+    <input style="display:none;" id="fileDialog" type="file" />
+    <!-- --Audio Controls-- -->
     <audio id="Audio_System">
       <source id="Audio_Source" src="" type=""></source>
     </audio>
@@ -129,8 +132,8 @@
 	    <ul class="episode-card-list collapsible popout" data-collapsible="accordion"></ul>
 	    <br><br><br><br><br><br> <!-- These <br>s fix a scrolling bug -->
           </div>
-          <div class="col m6 hide-on-small-only sheet scroller" style="background-color:#FFFFFF;">
-            <div id="sheet_content" style="margin_left:0"></div>
+          <div class="col m6 hide-on-small-only sheet scroller" style="padding:0;">
+            <div id="sheet_content"></div>
           </div>
         </div>
       </div>
