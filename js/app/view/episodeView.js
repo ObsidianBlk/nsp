@@ -474,12 +474,13 @@ window.View.EpisodeView = (function(){
     if (audioPlayer.isStoryQueued(story)){
       SetActionState(act_queue, ["remove", "add"], 0);
     }
-    act_queue.on("click", function(){
+    act_queue.on("click", function(e){
       if (act_queue.find(".option-add").css("display") === "none"){
 	Materialize.toast("Remove story from queue not implemented yet.");
       } else {
 	audioPlayer.queueEpisode(episode, story);
       }
+      e.stopPropagation();
     });
 
     if (audioPlayer.currentTrackStory === story){
@@ -495,6 +496,7 @@ window.View.EpisodeView = (function(){
       } else {
 	audioPlayer.pause();
       }
+      e.stopPropagation();
     });
 
     return entity;

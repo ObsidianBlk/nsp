@@ -24,50 +24,41 @@ window.View.AudioPlayerView = (function(){
 
   function AddTrackItem(entity, info, audioPlayer){
     var e = $(templates.playlistTrack);
-    entity.append(e);
-    e.addClass("TrackID-" + info.trackIndex);
-    e.find(".track-title").text(info.name);
-    if (info.episode !== null){
-      e.data({episodeid:info.episode.guid});
+    var trackIndex = audioPlayer.getTrackIndex(info.episode, info.story);
+    if (trackIndex >= 0){
+      entity.append(e);
+      e.attr("data-episode", info.episode.guid);
       if (info.story !== null){
-	e.data({storytitle:info.story.title});
+	e.attr("data-story", info.story.title);
+      } else {
+	e.attr("data-story", info.episode.guid);
       }
-    } else if (info.url !== null){
-      e.data({url:info.url});
-    }
+      e.find(".track-title").text(info.name);
 
-    e.on("click", function(){
-      if (audioPlayer.currentTrackIndex >= 0 && audioPlayer.currentTrackIndex !== info.trackIndex){
-	audioPlayer.playTrack(info.trackIndex);
-      }
-    });
+      e.on("click", function(){
+	var trackIndex = audioPlayer.getTrackIndex(info.episode, info.story);
+	if (trackIndex >= 0 && audioPlayer.currentTrackIndex >= 0 && audioPlayer.currentTrackIndex !== trackIndex){
+	  audioPlayer.playTrack(trackIndex);
+	}
+      });
+    }
   }
 
 
-  function ActivateTrackItemIndex(index){
-    if (index >= 0){
-      var trackEntity = $(".player-track.darken-3");
-      var btn = null;
+  function ActivateTrackItem(episode, story){
+    if (episode !== null){
+      var trackEntity = $(".player-track.selected");
       if (trackEntity.length > 0){
-        trackEntity.removeClass("darken-3").addClass("darken-1");
-        btn = trackEntity.find(".track-action-jumpto");
-        if (btn.length > 0){
-          btn.find(".option-jumpto").removeAttr("style");
-          btn.find(".option-play").css("display", "none");
-          btn.find(".option-pause").css("display", "none");
-        }
+        trackEntity.removeClass("selected");
       }
-      trackEntity = $(".TrackID-" + index);
-      if (trackEntity.length > 0){
-        if (trackEntity.hasClass("darken-3") === false){
-          trackEntity.removeClass("darken-1").addClass("darken-3");
-          btn = trackEntity.find(".track-action-jumpto");
-          if (btn.length > 0){
-            btn.find(".option-jumpto").css("display", "none");
-            btn.find(".option-play").removeAttr("style");
-          }
-        }
-      }
+      var stitle = (story !== null) ? story.title : episode.guid;
+      trackEntity = $(".player-track");
+      trackEntity.each(function(e){
+	var ent = $(trackEntity[e]);
+	if (ent.attr("data-episode") === episode.guid && ent.attr("data-story") === stitle){
+	  ent.addClass("selected");
+	}
+      });
     }
   }
 
@@ -180,7 +171,7 @@ window.View.AudioPlayerView = (function(){
       this._audioPlayer.on("track_changed", (function(){
 	this._entity.title.text(this._audioPlayer.currentTrackTitle);
 	this._entity.progress.val(0);
-        ActivateTrackItemIndex(this._audioPlayer.currentTrackIndex);
+        ActivateTrackItem(this._audioPlayer.currentTrackEpisode, this._audioPlayer.currentTrackStory);
       }).bind(this));
 
       this._audioPlayer.on("tracks_cleared", (function(){

@@ -40,7 +40,7 @@ module.exports = (function(){
     this._saving = false;
   }
 
-  playlist.prototype.__proto__ = Events.Emitter.prototype;
+  playlist.prototype.__proto__ = Events.EventEmitter.prototype;
   playlist.prototype.contructor = playlist;
 
   playlist.prototype.fromString = function(str){
@@ -92,6 +92,22 @@ module.exports = (function(){
       name: this._name,
       items: this._item
     }, null, JSON_INDENTATION_STRING);
+  };
+
+  playlist.prototype.clone = function(){
+    var pl = new playlist();
+    try {
+      pl.fromString(this.toString());
+    } catch (e) {throw e;}
+    return pl;
+  };
+
+  playlist.prototype.clear = function(){
+    if (this.saving || this.loading){return;}
+    this._item = [];
+    this._name = "";
+    this._filename = "";
+    this._dirty = false;
   };
 
   playlist.prototype.add = function(guid, title){
@@ -248,6 +264,13 @@ module.exports = (function(){
 	  return fn + ".plj";
 	}
 	return this._filename;
+      },
+      set:function(filename){
+	if (typeof(filename) !== 'string'){throw new TypeError();}
+	if (filename.length > 0){
+	  this._filename = filename;
+	  this.emit("changed");
+	}
       }
     },
 

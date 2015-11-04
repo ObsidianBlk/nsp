@@ -81,6 +81,16 @@ body{
     color: #8B0000 !important; }
 
 
+.player-track{
+    background-color: #3A4A44 !important;
+    color: #B6E3f1 !important;
+}
+.player-track.selected{
+    background-color: #1D2723 !important;
+    color: #8B0000 !important;
+}
+
+
 .waves-effect.waves-nsp-red .waves-ripple {
     background-color: rgba(139, 0, 0, 0.45); }
 

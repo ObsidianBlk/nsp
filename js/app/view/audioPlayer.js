@@ -8,6 +8,7 @@ window.View.AudioPlayer = (function(){
   var Events = require('events');
   var FS = require('fs');
   var Path = require('path');
+  var Playlist = require('./js/app/model/playlist');
 
   function TimeToTag(starttime, endtime){
     var tag = "#t=";
@@ -48,14 +49,21 @@ window.View.AudioPlayer = (function(){
 
   function audioPlayer(system_id){
     if (typeof(system_id) !== 'string'){system_id="#Audio_System";}
-    
-    this._playlist = [];
+
+    this._playlist = new Playlist();
     this._currentTrack = -1;
     this._currentStory = null;
     this._volume = 0; // This is not the actual volume, but the targeted maximum value.
     this._loop = false;
 
     this._fadeWatch = null;
+    this._currentStartTime = 0;
+    this._currentEndTime = 0;
+
+    this._defaultFadeIn = 0;
+    this._defaultFadeOut = 0;
+    this._currentFadeIn = 0;
+    this._currentFadeOut = 0;
 
     this._player = $(system_id);
     if (this._player.length <= 0){
@@ -75,41 +83,50 @@ window.View.AudioPlayer = (function(){
       this._player[0].pause();
       this.emit("ended");
     }
-    this._playlist = [];
+    this._playlist.clear();
     this._currentTrack = -1;
     this.emit("tracks_cleared");
   };
 
-  audioPlayer.prototype.isEpisodeQueued = function(episode){
-    for (var i=0; i < this._playlist.length; i++){
-      if (this._playlist[i].episode === episode && this._playlist[i].story === null){
-	return true;
+  audioPlayer.prototype.setPlaylist = function(playlist){
+    this.clearTracks();
+    for (var i=0; i < playlist.length; i++){
+      var episode = NSP.db.episode(playlist.item(i).guid);
+      if (episode !== null){
+	var story = (playlist.item(i).title !== null) ? episode.storyByTitle(playlist.item(i).title) : null;
+	this.queueEpisode(episode, story);
       }
     }
-    return false;
+    this._playlist.name = playlist.name;
+    if (this._playlist.filename !== playlist.filename){
+      this._playlist.filename = playlist.filename;
+    }
+  };
+
+  audioPlayer.prototype.isEpisodeQueued = function(episode){
+    return this._playlist.has(episode.guid, null);
   };
 
   audioPlayer.prototype.isStoryQueued = function(story){
-    for (var i=0; i < this._playlist.length; i++){
-      if (this._playlist[i].story !== null && this._playlist[i].story === story){
-	return true;
-      }
-    }
-    return false;
+    return this._playlist.has(story.episode.guid, story.title);
   };
 
   audioPlayer.prototype.queueEpisode = function(episode, story){
-    var url = episode.audio_src;
-    if (episode.audio_path === ""){
-      var path = Path.join(NSP.config.path.audio, episode.audio_filename);
-      if (FileExists(path)){
-	url = path;
-      }
-    } else {
-      url = episode.audio_path;
-    }
     var eindex = NSP.db.getEpisodeIndex(episode.guid);
-    if (eindex >= 0){
+    if (eindex >= 0){ // Validate that the episode we're given is in the database.
+
+      // Determin the URL (URI) of the audio. Basically, play the local file if we have it, otherwise, stream.
+      var url = episode.audio_src;
+      if (episode.audio_path === ""){
+	var path = Path.join(NSP.config.path.audio, episode.audio_filename);
+	if (FileExists(path)){
+	  url = path;
+	}
+      } else {
+	url = episode.audio_path;
+      }
+
+      // Calculate the track title. This is optional, really.
       var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
       if (typeof(story) !== 'undefined'){
 	var sindex = episode.getStoryIndexByTitle(story.title);
@@ -122,15 +139,16 @@ window.View.AudioPlayer = (function(){
 	story = null;
       }
 
-      var track = {
+      this._playlist.add(episode.guid, story.title);
+      this.emit("track_added", {
 	name: title,
-	episode: episode
-      };
-      if (story !== null){
-	track.story = story;
+	episode: episode,
+	story: story
+      });
+      if (this._currentTrack < 0){
+	this._currentTrack = 0;
+	this.emit("track_changed"); // Special case for this emit.
       }
-
-      this.addTrack(url, track);
       this.emit("episode_queued", episode, story);
     } else {
       throw new Error("Episode invalid or not in database.");
@@ -138,10 +156,27 @@ window.View.AudioPlayer = (function(){
   };
 
   audioPlayer.prototype.dequeueEpisode = function(episode, story){
-
+    var trackIndex = this._GetTrackIndex(episode, story);
+    if (trackIndex === this._currentTrack){
+      if (this._currentTrack+1 === this._playlist.length){
+	this._player[0].pause();
+	this.emit("ended");
+	this._currentTrack = -1;
+      } else {
+	this.playTrack(this._currentTrack + 1);
+      }
+    }
+    var len = this._playlist.length;
+    this._playlist.remove(episode.guid, story.title);
+    if (len > this._playlist.length){
+      if (this._currentTrack > trackIndex){
+	this._currentTrack -= 1;
+      }
+      this.emit("episode_dequeued", episode, story);
+    }
   };
 
-  audioPlayer.prototype.addTrack = function(url, options){
+  /*audioPlayer.prototype.addTrack = function(url, options){
     options = options || {};
     options.name = (typeof(options.name) === 'string') ? options.name : "";
     options.fadeIn = (typeof(options.fadeIn) === 'number') ? options.fadeIn : 0;
@@ -173,7 +208,7 @@ window.View.AudioPlayer = (function(){
 	trackIndex: this._playlist.length-1
       });
     }
-  };
+  };*/
 
   audioPlayer.prototype.nextTrack = function(){
     var nextTrack = this._currentTrack+1;
@@ -199,31 +234,30 @@ window.View.AudioPlayer = (function(){
 
   audioPlayer.prototype.playTrack = function(index){
     if (index >= 0 && index < this._playlist.length){
-      var url = this._playlist[index].url;
+      var es = this._GetTrackEpisodeAndStory(index);
+      if (es === null){return;}
 
-      if (this._playlist[index].episode !== null && this._playlist[index].story !== null){
-	if (this._playlist[index].story.beginningSec > 0){
-	  this._playlist[index].starttime = this._playlist[index].story.beginningSec;
-	  this._playlist[index].endtime = (this._playlist[index].story.endingSec <= 0) ?
-	    this._playlist[index].episode.estimateStoryEndTime(this._playlist[index].story) : 
-	    this._playlist[index].story.endingSec;
+      var url = es.episode.audio_src;
+      if (es.episode.audio_path === ""){
+	var path = Path.join(NSP.config.path.audio, es.episode.audio_filename);
+	if (FileExists(path)){
+	  url = path;
+	}
+      } else {
+	url = es.episode.audio_path;
+      }
+
+
+      var trackoptions = {};
+      if (es.story !== null){
+	if (es.story.beginningSec > 0){
+	  trackoptions.starttime = es.story.beginningSec;
+	  trackoptions.endtime = (es.story.endingSec <= 0) ? es.episode.estimateStoryEndTime(es.story) : es.story.endingSec;
 	}
       }
-      var time = TimeToTag(this._playlist[index].starttime, this._playlist[index].endtime);
 
       this._currentTrack = index;
-      if (this._fadeWatch !== null){
-	clearInterval(this._fadeWatch);
-	this._fadeWatch = null;
-      }
-
-      this._player[0].pause();
-      this._player.find("source").remove();
-      this._player.append($("<source></source>").attr({
-	"src":url+time,
-	"type":"audio/mp3"
-      }));
-      this._player[0].load();
+      this.play(url, trackoptions);
       this.emit("track_changed");
     } else {
       throw new RangeError();
@@ -231,18 +265,29 @@ window.View.AudioPlayer = (function(){
   };
 
   audioPlayer.prototype.play = function(url, options){
+    options = options || {};
     if (typeof(url) === 'string'){
-      if (this._playlist.length > 0){
-	this._playlist = [];
+      this._currentFadeIn = (typeof(options.fadeIn) === 'number') ? options.fadeIn : this._defaultFadeIn;
+      this._currentFadeOut = (typeof(options.fadeOut) === 'number') ? options.fadeOut : this._defaultFadeOut;
+      if (typeof(options.starttime) !== 'undefined' && typeof(options.endtime) !== 'undefined'){
+	this._currentStartTime = options.starttime;
+	this._currentEndTime = options.endtime;
+	url += TimeToTag(options.starttime, options.endtime);
+      } else {
+	this._currentStartTime = 0;
+	this._currentEndTime = 0;
       }
-      try {
-	this.addTrack(url, options);
-	this.playTrack(0);
-      } catch (e) {throw e;}
+      this._player[0].pause();
+      this._player.find("source").remove();
+      this._player.append($("<source></source>").attr({
+	"src":url,
+	"type":"audio/mp3"
+      }));
+      this._player[0].load();
     } else {
       var source = this._player.find("source");
       if (source.length > 0){
-	if (source.attr("src") === "" && this.playing === false){
+	if (source.attr("src") === "" && this.playing === false && this._playlist.length < this._currentTrack){
 	  this.playTrack(this._currentTrack);
 	} else if (this.playing === false){
 	  this._player[0].play();
@@ -259,15 +304,38 @@ window.View.AudioPlayer = (function(){
     }
   };
 
-  audioPlayer.prototype._GetTrackIndex = function(url, episode, story){
+  audioPlayer.prototype.getTrackIndex = function(episode, story){
+    // NOTE: I want to eventually move the _GetTrackIndex() function INTO this one, but for the sake of speed,
+    // just call the old function for now.
+    return this._GetTrackIndex(episode, story);
+  };
+
+  audioPlayer.prototype._GetTrackIndex = function(episode, story){
+    var stitle = (story !== null) ? story.title : null;
     for (var i=0; i < this._playlist.length; i++){
-      if (this._playlist[i].url === url && this._playlist[i].episode !== episode && this._playlist[i].story !== story){
+      if (this._playlist.item(i).guid === episode.guid && this._playlist.item(i).title === stitle){
 	return i;
       }
     }
     return -1;
   };
 
+  audioPlayer.prototype._GetTrackEpisodeAndStory = function(trackIndex){
+    if (trackIndex >= 0 && trackIndex < this._playlist.length){
+      var episode = NSP.db.episode(this._playlist.item(trackIndex).guid);
+      var story = null;
+      if (episode !== null){
+	if (this._playlist.item(trackIndex).title !== null){
+	  story = episode.storyByTitle(this._playlist.item(trackIndex).title);
+	}
+	return {
+	  episode:episode,
+	  story:story
+	};
+      }
+    }
+    return null;
+  };
 
   
   audioPlayer.prototype._SetAudioPlayerEvents = function(){
@@ -289,11 +357,8 @@ window.View.AudioPlayer = (function(){
       // EVENT timeupdate
       this._player.on("timeupdate", (function(){
         if (this._currentTrack >= 0){
-	  var starttime = this._playlist[this._currentTrack].starttime;
-	  starttime = (starttime !== null) ? TimeToSecond(starttime) : 0;
-	  var endtime = this._playlist[this._currentTrack].endtime;
-	  endtime = (endtime !== null) ? TimeToSecond(endtime) : this._player[0].duration;
-
+	  var starttime = TimeToSecond(this._currentStartTime);
+	  var endtime = (this._currentEndTime !== 0) ? TimeToSecond(this._currentEndTime) : this._player[0].duration;
 	  var duration = endtime - starttime;
 
 	  // Now check to see if we've reached the endtime (incase we're playing a story and not an episode)...
@@ -307,8 +372,10 @@ window.View.AudioPlayer = (function(){
 	      this.emit("ended");
 	    }
 	  } else {
-	    if (this._playlist[this._currentTrack].episode !== null && this._playlist[this._currentTrack].story === null){
-	      var curStory = this._playlist[this._currentTrack].episode.storyByTime(this._player[0].currentTime);
+	    var title = this._playlist.item(this._currentTrack).title;
+	    var episode = NSP.db.episode(this._playlist.item(this._currentTrack).guid);
+	    if (episode !== null && title === null){
+	      var curStory = episode.storyByTime(this._player[0].currentTime);
 	      if (curStory !== this._currentStory){
 	        this._currentStory = curStory;
 	        this.emit("story_changed", this._currentStory);
@@ -323,39 +390,36 @@ window.View.AudioPlayer = (function(){
       // -----------------------------
       // EVENT canplay
       this._player.on("canplay", (function(){
-        var fadingIn = (this._currentTrack >= 0) ? (this._playlist[this._currentTrack].fadeIn > 0) : false;
-        var fadingOut = (this._currentTrack >= 0) ? (this._playlist[this._currentTrack].fadeOut > 0) : false;
-        console.log("I can PLAY!");
-	if (fadingIn){
+	if (this._currentFadeIn > 0){
 	  this._player[0].volume = 0;
 	} else {
 	  this._player[0].volume = this._volume;
 	}
-	if (this._playlist[this._currentTrack].story !== this._currentStory){
-	  this._currentStory = this._playlist[this._currentTrack].story;
+
+	var es = this._GetTrackEpisodeAndStory(this._currentTrack);
+	if (es.story !== this._currentStory){
+	  this._currentStory = es.story;
 	  this.emit("story_changed", this._currentStory);
 	}
 	this._player[0].play();
 	this.emit("playing");
 
-	if (fadingIn || fadingOut){
+	if (this._currentFadeIn > 0 || this._currentFadeOut > 0){
 	  this._fadeWatch = setInterval((function(){
 	    if (this._currentTrack >= 0){
-	      var starttime = this._playlist[this._currentTrack].starttime;
-	      starttime = (starttime !== null) ? TimeToSecond(starttime) : 0;
-	      var endtime = this._playlist[this._currentTrack].endtime;
-	      endtime = (endtime !== null) ? TimeToSecond(endtime) : this._player[0].duration;
+	      var starttime = TimeToSecond(this._currentStartTime);
+	      var endtime = (this._currentEndTime !== 0) ? TimeToSecond(this._currentEndTime) : this._player[0].duration;
 
 	      // Manage the fade in/out of the audio.
 	      var fadeVol = 0;
-	      if (this._playlist[this._currentTrack].fadeIn > 0){
+	      if (this._currentFadeIn > 0){
 		if (this._player[0].volume !== this._volume){
-		  fadeVol = (this._player[0].currentTime - starttime) / this._playlist[this._currentTrack].fadeIn;
+		  fadeVol = (this._player[0].currentTime - starttime) / this._currentFadeIn;
 		  if (fadeVol >= 0){
 		    fadeVol = (fadeVol <= this._volume) ? fadeVol : this._volume;
 		    if (fadeVol !== this._player[0].volume){
 		      this._player[0].volume = this._volume*fadeVol;
-		      if (fadeVol >= 1.0 && fadingOut === false){
+		      if (fadeVol >= 1.0 && this._currentFadeOut <= 0){
 			clearInterval(this._fadeWatch);
 			this._fadeWatch = null;
 		      }
@@ -364,9 +428,9 @@ window.View.AudioPlayer = (function(){
 		}
 	      }
 
-	      if (this._playlist[this._currentTrack].fadeOut > 0){
+	      if (this._currentFadeOut > 0){
 		if (this._player[0].volume !== 0){
-		  fadeVol = (endtime - this._player[0].currentTime) / this._playlist[this._currentTrack].fadeOut;
+		  fadeVol = (endtime - this._player[0].currentTime) / this._currentFadeOut;
 		  if (fadeVol <= 1.0){
 		    fadeVol = (fadeVol <= this._volume) ? fadeVol : this._volume;
 		    fadeVol = (fadeVol >= 0) ? fadeVol : 0;
@@ -414,6 +478,10 @@ window.View.AudioPlayer = (function(){
       get:function(){return this._player[0].paused;}
     },
 
+    "playlist":{
+      get:function(){return this._playlist.clone();}
+    },
+
     "currentURI":{
       get:function(){return this._player[0].currentSrc;}
     },
@@ -429,7 +497,7 @@ window.View.AudioPlayer = (function(){
     "currentTrackEpisode":{
       get:function(){
 	if (this._currentTrack >= 0){
-	  return this._playlist[this._currentTrack].episode;
+	  return NSP.db.episode(this._playlist.item(this._currentTrack).guid);
 	}
 	return null;
       }
@@ -437,8 +505,11 @@ window.View.AudioPlayer = (function(){
 
     "currentTrackStory":{
       get:function(){
-	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].episode !== null){
-	  return this._playlist[this._currentTrack].story;
+	if (this._currentTrack >= 0 && this._playlist.item(this._currentTrack).title !== null){
+	  var e = this.currentTrackEpisode;
+	  if (e !== null){
+	    return e.storyByTitle(this._playlist.item(this._currentTrack).title);
+	  }
 	}
 	return null;
       }
@@ -448,11 +519,11 @@ window.View.AudioPlayer = (function(){
       get:function(){
 	var title = "";
 	if (this._currentTrack >= 0){
-	  title = this._playlist[this._currentTrack].title;
-	  if (this._playlist[this._currentTrack].episode !== null){
-	    title = this._playlist[this._currentTrack].episode.title;
-	    if (this._playlist[this._currentTrack].story !== null){
-	      title = this._playlist[this._currentTrack].story.title + " - " + title;
+	  var es = this._GetTrackEpisodeAndStory(this._currentTrack);
+	  if (es !== null){
+	    title = es.episode.title;
+	    if (es.story !== null){
+	      title = es.story.title + " - " + title;
 	    }
 	  }
 	}
@@ -463,10 +534,13 @@ window.View.AudioPlayer = (function(){
     "currentTrackTime":{
       get:function(){
 	// If we have a story, we want the story's duration, otherwise, it's just the duration of the audio itself.
-	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].story !== null){
-	  var storyDur = this._playlist[this._currentTrack].story.duration;
-	  if (storyDur > 0){
-	    return this._player[0].currentTime - this._playlist[this._currentTrack].story.beginningSec;
+	if (this._currentTrack >= 0 && this._playlist.item(this._currentTrack).title !== null){
+	  var es = this._GetTrackEpisodeAndStory(this._currentTrack);
+	  if (es !== null && es.story !== null){
+	    var storyDur = es.story.duration;
+	    if (storyDur > 0){
+	      return this._player[0].currentTime - es.story.beginningSec;
+	    }
 	  }
 	}
 	return this._player[0].currentTime;
@@ -483,8 +557,11 @@ window.View.AudioPlayer = (function(){
 	  } else if (time > this.currentTrackDuration){
 	    time = this.currentTrackDuration;
 	  }
-	  if (this._playlist[this._currentTrack].story !== null){
-	    this._player[0].currentTime = this._playlist[this._currentTrack].story.beginningSec + time;
+	  if (this._playlist.item(this._currentTrack).title !== null){
+	    var es = this._GetTrackEpisodeAndStory(this._currentTrack);
+	    if (es !== null && es.story !== null){
+	      this._player[0].currentTime = es.story.beginningSec + time;
+	    }
 	  } else {
 	    this._player[0].currentTime = time;
 	  }
@@ -495,12 +572,15 @@ window.View.AudioPlayer = (function(){
     "currentTrackDuration":{
       get:function(){
 	// If we have a story, we want the story's duration, otherwise, it's just the duration of the audio itself.
-	if (this._currentTrack >= 0 && this._playlist[this._currentTrack].story !== null){
-	  var storyDur = this._playlist[this._currentTrack].story.duration;
-	  if (storyDur === 0 && this._playlist[this._currentTrack].story.beginningSec < this._player[0].duration){
-	    storyDur = this._player[0].duration - this._playlist[this._currentTrack].story.beginningSec;
+	if (this._currentTrack >= 0 && this._playlist.item(this._currentTrack).title !== null){
+	  var es = this._GetTrackEpisodeAndStory(this._currentTrack);
+	  if (es !== null && es.story !== null){
+	    var storyDur = es.story.duration;
+	    if (storyDur === 0 && es.story.beginningSec < this._player[0].duration){
+	      storyDur = this._player[0].duration - es.story.beginningSec;
+	    }
+	    return storyDur;
 	  }
-	  return storyDur;
 	}
 	return this._player[0].duration;
       }
