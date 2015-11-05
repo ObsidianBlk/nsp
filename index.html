@@ -25,6 +25,7 @@
     <script type="text/javascript" src="js/app/view/audioPlayerView.js"></script>
     <script type="text/javascript" src="js/app/view/poiView.js"></script>
     <script type="text/javascript" src="js/app/view/filterView.js"></script>
+    <script type="text/javascript" src="js/app/view/playlistView.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -115,6 +116,31 @@
       </div>
     </div>
 
+    <!-- Playlist Load/Save Dialog -->
+    <div id="playlist-select" class="modal modal-fixed-footer" style="display:none;">
+      <div class="modal-content nsp-true-grey">
+	<div class="playlist-current-editor" style="display:none;">
+	  <input id="playlist-current-name" type="text" placeholder="Playlist Name">
+	  <a href="#!" class="waves-effect waves-nsp-red btn nsp playlist-save-action">Save</a>
+	</div>
+	<div class="playlist-load-indicator preloader-wrapper active">
+	  <div class="spinner-layer spinner-blue-only">
+	    <div class="circle-clipper left">
+              <div class="circle"></div>
+	    </div><div class="gap-patch">
+              <div class="circle"></div>
+	    </div><div class="circle-clipper right">
+              <div class="circle"></div>
+	    </div>
+	  </div>
+	</div>
+	<ul class="collection playlist-selection"></ul>
+      </div>
+      <div class="modal-footer nsp-grey">
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp playlist-close-action" style="margin-left:6px;">Close</a>
+      </div>
+    </div>
+
     <!-- ------------ BODY/IES ------------ -->
     <!-- Screen TABs -->
     <div class="row">
@@ -144,10 +170,10 @@
         <div class="row scrollable">
           <div class="col s12 m6 hide-on-small-only playlist scroller">
 	    <div class="nsp-grey center-align">
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat playlist-action playlist-action-save">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat playlist-action playlist-action-save tooltipped" data-tooltip="Load/Save Playlist">
 		<i class="small material-icons md-light">import_export</i>
 	      </a>
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat playlist-action playlist-action-clear">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat playlist-action playlist-action-clear tooltipped" data-tooltip="Clear current Playlist">
 		<i class="small material-icons md-light">clear_all</i>
 	      </a>
 	    </div>

@@ -81,13 +81,12 @@ body{
     color: #8B0000 !important; }
 
 
-.player-track{
+.nsp-list-item{
     background-color: #3A4A44 !important;
     color: #B6E3f1 !important;
 }
-.player-track.selected{
-    background-color: #1D2723 !important;
-    color: #8B0000 !important;
+.nsp-list-item.selected{
+    color: #F1E3B6 !important;
 }
 
 

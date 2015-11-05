@@ -1,4 +1,5 @@
 node_modules/*
 cache/*
+playlists/*
 database*.json
 config.json

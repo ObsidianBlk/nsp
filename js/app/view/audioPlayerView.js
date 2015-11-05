@@ -97,6 +97,7 @@ window.View.AudioPlayerView = (function(){
     // These are the hooks.
     this._ConfigurePlayerCallbacks();
     this._ConfigureControlButtons();
+    this._ConfigurePlaylistControlButtons();
   }
   audioPlayerView.prototype.__proto__ = Events.EventEmitter.prototype;
   audioPlayerView.prototype.constructor = audioPlayerView;
@@ -194,6 +195,24 @@ window.View.AudioPlayerView = (function(){
 	  this._audioPlayer.play();
 	  this._SetPlayPauseBTN("pause");
 	}
+      }
+    }).bind(this));
+  };
+
+
+  audioPlayerView.prototype._ConfigurePlaylistControlButtons = function(){
+    var act_save_playlist = $(".playlist-action-save");
+    var act_clear_playlist = $(".playlist-action-clear");
+
+    // This... is very easy!
+    act_save_playlist.on("click", (function(){
+      this.emit("request_playlist_dialog", this._audioPlayer.playlist);
+    }).bind(this));
+
+
+    act_clear_playlist.on("click", (function(){
+      if (this._audioPlayer.trackCount > 0){
+	this._audioPlayer.clearTracks();
       }
     }).bind(this));
   };

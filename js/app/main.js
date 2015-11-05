@@ -15,6 +15,7 @@ $(document).ready(function(){
   var playerView = new View.AudioPlayerView(audioPlayer);
   var poiView = new View.POIView("#person-of-import");
   var filterView = new View.FilterView("#list-filters");
+  var playlistView = new View.PlaylistView("#playlist-select");
 
   episodeView.on("view_writer", function(writer, link){
     poiView.writer(writer, link);
@@ -30,6 +31,14 @@ $(document).ready(function(){
 
   filterView.on("apply", function(filters){
     episodeView.addSearchFilters(filters, true);
+  });
+
+  playerView.on("request_playlist_dialog", function(pl){
+    playlistView.openModal(pl);
+  });
+
+  playlistView.on("playlist_selected", function(pl){
+    audioPlayer.setPlaylist(pl);
   });
   
   app.on("database_created", function(){

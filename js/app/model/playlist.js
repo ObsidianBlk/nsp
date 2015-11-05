@@ -191,7 +191,9 @@ module.exports = (function(){
           } else {
             try {
               this.fromString(data.toString());
-	      this._filename = path;
+	      if (Path.basename(path).toLowerCase() !== this.filename.toLowerCase()){
+		this._filename = Path.basename(path);
+	      }
               this._loading = false;
               this.emit("opened", true);
               this.emit("changed");
