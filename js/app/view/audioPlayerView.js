@@ -87,8 +87,11 @@ window.View.AudioPlayerView = (function(){
 
   function audioPlayerView(audioPlayer){
     this._entity = {
+      link_action: $(".player-story-weblink-action"),
       playlist: $(".player-playlist"),
       title: $(".player-title"),
+      title_episode: $(".player-episode-title"),
+      title_story: $(".player-story-title"),
       progress: $("#player-seek-bar")
     };
     this._configured = false;
@@ -118,6 +121,13 @@ window.View.AudioPlayerView = (function(){
   audioPlayerView.prototype._ConfigurePlayerCallbacks = function(){
     if (this._configured === false){
       this._configured = true;
+
+      this._entity.link_action.on("click", (function(){
+	var story = this._audioPlayer.currentTrackStory;
+	if (story !== null && story.link !== "" && story.link !== null){
+	  require('nw.gui').Shell.openExternal(story.link);
+	}
+      }).bind(this));
 
       this._entity.progress.on("change", (function(){
 	this._entity.progress.removeClass("dragging");
@@ -170,15 +180,44 @@ window.View.AudioPlayerView = (function(){
       }).bind(this));
 
       this._audioPlayer.on("track_changed", (function(){
-	this._entity.title.text(this._audioPlayer.currentTrackTitle);
+	//this._entity.title.text(this._audioPlayer.currentTrackTitle);
+	this._entity.title_episode.text(this._audioPlayer.currentTrackEpisodeTitle);
+	var story_title = this._audioPlayer.currentTrackStoryTitle;
+	if (story_title !== ""){
+	  this._entity.title_story.css("display", "block");
+	  this._entity.title_story.text(story_title);
+	} else {
+	  this._entity.title_story.css("display", "hidden");
+	}
 	this._entity.progress.val(0);
         ActivateTrackItem(this._audioPlayer.currentTrackEpisode, this._audioPlayer.currentTrackStory);
       }).bind(this));
 
       this._audioPlayer.on("tracks_cleared", (function(){
-	this._entity.title.text("No Track");
+	this._entity.title_episode.text("No Track");
+	this._entity.title_story.css("display", "hidden");
+	$(".player-story-web-link").css("display", "hidden");
 	this._entity.progress.val(0);
 	this._entity.playlist.empty();
+      }).bind(this));
+
+      this._audioPlayer.on("story_changed", (function(){
+	//this._entity.title.text(this._audioPlayer.currentTrackTitle);
+	var story_title = this._audioPlayer.currentTrackStoryTitle;
+	if (story_title !== ""){
+	  this._entity.title_story.css("display", "block");
+	  this._entity.title_story.text(story_title);
+
+	  var story = this._audioPlayer.currentTrackStory;
+	  if (story.link !== null && story.link !== ""){
+	    $(".player-story-web-link").css("display", "block");
+	  } else {
+	    $(".player-story-web-link").css("display", "hidden");
+	  }
+	} else {
+	  this._entity.title_story.css("display", "hidden");
+	  $(".player-story-web-link").css("display", "hidden");
+	}
       }).bind(this));
     }
   };

@@ -47,6 +47,8 @@ window.View.EpisodeView = (function(){
     tags: ".story-detail-tags .tags-block",
     tags_editor: ".story-detail-tags .tags-editor",
     action_tags_editor: ".story-tags-edit-action",
+    web_link: ".story-web-link",
+    action_weblink: ".story-weblink-action",
     actions: ".story-action",
     action_queue: ".story-action-queue",
     action_jumpto: ".story-action-jumpto",
@@ -405,6 +407,16 @@ window.View.EpisodeView = (function(){
       entity.find(STORY.header).append(time);
     }
 
+    // Handling Web-Links...
+    if (story.link !== null && story.link !== ""){
+      entity.find(STORY.web_link).removeAttr("style");
+      var act_weblink = entity.find(STORY.action_weblink);
+      act_weblink.on("click", function(){
+	require('nw.gui').Shell.openExternal(story.link);
+      });
+    }
+    // ---------------------
+
     // Handling TAG area....
     var tag_editor_field = entity.find(STORY.tags_editor).find("input");
     entity.find(STORY.action_tags_editor).on("click", function(){
@@ -443,7 +455,7 @@ window.View.EpisodeView = (function(){
 	  writers.append(", ");
 	}
 	writers.append($("<a href=\"#!\"></a>")
-		       .addClass("waves-effect waves-nsp-red btn-flat-nsp")
+		       .addClass("waves-effect waves-nsp-red btn-flat nsp-tight nsp-action")
 		       .addClass(STORY.action_writer.substr(1))
 		       .attr("data-writer", writer.name)
 		       .attr("data-writer-link", (typeof(writer.link) === 'string') ? writer.link : "")
@@ -459,7 +471,7 @@ window.View.EpisodeView = (function(){
 	  narrators.append(", ");
 	}
 	narrators.append($("<a href=\"#!\"></a>")
-			 .addClass("waves-effect waves-nsp-red btn-flat-nsp")
+			 .addClass("waves-effect waves-nsp-red btn-flat nsp-tight nsp-action")
 			 .addClass(STORY.action_narrator.substr(1))
 			 .attr("data-narrator", narrator.name)
 			 .attr("data-narrator-link", (typeof(narrator.link) === 'string') ? narrator.link : "")
@@ -486,7 +498,7 @@ window.View.EpisodeView = (function(){
     if (audioPlayer.currentTrackStory === story){
       SetActionState(act_jumpto, ["pause", "jumpto", "play"], 0);
     }
-    act_jumpto.on("click", function(){
+    act_jumpto.on("click", function(e){
       if (act_jumpto.find(".option-jumpto").css("display") !== "none"){
 	audioPlayer.clearTracks();
 	audioPlayer.queueEpisode(episode, story);

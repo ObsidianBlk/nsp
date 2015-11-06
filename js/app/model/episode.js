@@ -558,7 +558,7 @@ module.exports = (function(){
       throw new TypeError();
     }
 
-    if (time >= 0 && time < this.audio_length && this._story.length > 0){
+    if (time >= 0 && this._story.length > 0){
       var storyBT = this._story.filter(function(s){
 	if (s.beginningSec <= 0 || s.beginningSec > time){
 	  return false;
@@ -567,17 +567,18 @@ module.exports = (function(){
       });
 
       if (storyBT.length > 0){
-	var story = null;
+	/*var story = null;
 	var timeIn = 0;
 	for (var i=0; i < storyBT.length; i++){
 	  var tin = storyBT[i].beginningSec - time;
 	  if (story === null || timeIn > tin){
-	    story = storyBT;
+	    story = storyBT[i];
 	    timeIn = tin;
 	  }
 	}
 
-	return story;
+	return story;*/
+	return storyBT[storyBT.length-1];
       }
     }
     return null;

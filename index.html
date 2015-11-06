@@ -30,9 +30,7 @@
     <script type="text/javascript" src="js/app/main.js"></script>
 
   </head>
-  <body class="nsp-grey darken">
-    <!-- --File Controls-- -->
-    <input style="display:none;" id="fileDialog" type="file" />
+  <body class="nsp-grey">
     <!-- --Audio Controls-- -->
     <audio id="Audio_System">
       <source id="Audio_Source" src="" type=""></source>
@@ -41,11 +39,11 @@
     
     <!-- ------------ HEADER ------------ -->
     <div class="navbar-fixed">
-      <nav class="nsp-grey z-depth-6">
+      <nav class="nsp-grey lighten z-depth-6">
         <div class="nav-wrapper">
 
           <!-- Logo -->
-	  <a href="#!" class="brand-logo left nsp-grey-text text-lighten">The NoSleep Pod-App</a>
+	  <a href="#!" class="brand-logo left nsp-text text-title">The NoSleep Pod-App</a>
 
           <!-- Nav Controls -->
           <ul class="right">
@@ -78,45 +76,45 @@
     <!-- ------------ MODAL DIALOGS ------------ -->
 
     <!-- About App -->
-    <div id="about-app" class="modal" style="display:none;">
+    <div id="about-app" class="modal nsp-grey nsp-text" style="display:none;">
       <div class="modal-content">
 	<p>Cool stuff to say about the app.</p>
       </div>
-      <div class="modal-footer">
-	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+      <div class="modal-footer nsp-grey lighten">
+	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn nsp">Agree</a>
       </div>
     </div>
 
     <!-- "Person of Importance" Modal -->
     <div id="person-of-import" class="modal modal-fixed-footer" style="display:none;">
-      <div class="modal-content">
-	<h5 class="poi-name"></h5>
-	<p class="poi-link-text" style="display:none;">
+      <div class="modal-content nsp-grey nsp-text">
+	<h5 class="poi-name nsp-text text-title"></h5>
+	<p style="display:none;">
 	  More information on this individual can be found 
-	  <a href="#!" class="poi-link tooltipped" data-tooltip="Opens in system's default browser">here</a>
+	  <a href="#!" class="btn-flat nsp-action tooltipped" data-tooltip="Opens in system's default browser">here</a>
 	</p>
 	<ul class="poi-episode-list collapsible popout" data-collapsible="accordion"></ul>
       </div>
-      <div class="modal-footer">
-	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">OK</a>
+      <div class="modal-footer nsp-grey lighten">
+	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn nsp">OK</a>
       </div>
     </div>
 
     <!-- Filter Modal -->
     <div id="list-filters" class="modal modal-fixed-footer" style="display:none;">
-      <div class="modal-content nsp-true-grey">
+      <div class="modal-content nsp-grey nsp-text">
 	<div class="filter-actions-box">
-	  <a href="#!" class="waves-effect waves-nsp-red btn filter-add-action">Add Filter</a>
+	  <a href="#!" class="waves-effect waves-nsp-red btn nsp filter-add-action">Add Filter</a>
 	</div>
       </div>
-      <div class="modal-footer nsp-grey">
+      <div class="modal-footer nsp-grey lighten">
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-close-action" style="margin-left:6px;">Close</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-apply-action" style="margin-left:6px;">Apply</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Clear All</a>
       </div>
     </div>
 
-    <!-- Playlist Load/Save Dialog -->
+    <!-- Playlist Management Dialog -->
     <div id="playlist-select" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content nsp-true-grey">
 	<div class="playlist-current-editor" style="display:none;">
@@ -159,7 +157,7 @@
 	    <br><br><br><br><br><br> <!-- These <br>s fix a scrolling bug -->
           </div>
           <div class="col m6 hide-on-small-only sheet scroller" style="padding:0;">
-            <div id="sheet_content"></div>
+            <div id="sheet_content" class="nsp-grey darken nsp-text"></div>
           </div>
         </div>
       </div>
@@ -169,7 +167,7 @@
       <div class="col s12" id="now_playing">
         <div class="row scrollable">
           <div class="col s12 m6 hide-on-small-only playlist scroller">
-	    <div class="nsp-grey center-align">
+	    <div class="nsp-grey lighten center-align">
 	      <a href="#!" class="waves-effect waves-nsp-red btn-flat playlist-action playlist-action-save tooltipped" data-tooltip="Load/Save Playlist">
 		<i class="small material-icons md-light">import_export</i>
 	      </a>
@@ -179,51 +177,58 @@
 	    </div>
 	    <ul class="collection player-playlist"></ul>
 	  </div>
-          <div class="col s12 m6 scroller" style="background-color:#FFFFFF">
-            <div class="flow-text player-title">No Track Selected</div>
+          <div class="col s12 m6 scroller nsp-grey darken nsp-text">
+            <div class="flow-text player-title nsp-text text-title truncated" style="display:none;">No Track Selected</div>
+	    <div class="flow-text player-episode-title nsp-text text-title truncated">No Track Selected</div>
+	    <div class="player-story-title nsp-text text-title truncated" style="display:hidden;">&nbsp;</div>
+	    <div class="player-story-web-link" style="display:hidden;">
+	      <a href="#!" class="tooltipped" data-tooltip="Read along in browser">
+		Read Along In Your Browser
+	      </a>
+	    </div>
             <div>
 	      <p class="range-field">
 		<input type="range" class="browser-default" id="player-seek-bar" min="0" max="1" value="0">
 	      </p>
             </div>
             <div class="center-align hide-on-med-and-down">
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevtrack">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_prevtrack">
 		<i class="material-icons">skip_previous</i>
 	      </a>
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevstory">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_prevstory">
 		<i class="material-icons">fast_rewind</i>
 	      </a>
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_playpause">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_playpause">
 		<i class="material-icons option-play">play_circle_filled</i>
 		<i class="material-icons option-pause" style="display:none;">pause_circle_filled</i>
 	      </a>
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nextstory">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_nextstory">
 		<i class="material-icons">fast_forward</i>
 	      </a>
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nexttrack">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_nexttrack">
 		<i class="material-icons">skip_next</i>
 	      </a>
             </div>
 
             <div class="center-align hide-on-large-only">
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_playpause">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_playpause">
 		<i class="material-icons option-play">play_circle_filled</i>
 		<i class="material-icons option-pause" style="display:none;">pause_circle_filled</i>
 	      </a>
             </div>
             <div class="center-align hide-on-large-only">
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevstory">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_prevstory">
 		<i class="material-icons">fast_rewind</i>
 	      </a>
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nextstory">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_nextstory">
 		<i class="material-icons">fast_forward</i>
 	      </a>
 	    </div>
 	    <div class="center-align hide-on-large-only">
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_prevtrack">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_prevtrack">
 		<i class="material-icons">skip_previous</i>
 	      </a>
-	      <a href="#!" class="waves-effect waves-nsp-red btn-flat player-action player_action_nexttrack">
+	      <a href="#!" class="waves-effect waves-nsp-red btn-flat nsp-player nsp-action player-action player_action_nexttrack">
 		<i class="material-icons">skip_next</i>
 	      </a>
             </div>

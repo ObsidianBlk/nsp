@@ -139,7 +139,7 @@ window.View.AudioPlayer = (function(){
 	story = null;
       }
 
-      this._playlist.add(episode.guid, story.title);
+      this._playlist.add(episode.guid, (story !== null) ? story.title : null);
       this.emit("track_added", {
 	name: title,
 	episode: episode,
@@ -175,40 +175,6 @@ window.View.AudioPlayer = (function(){
       this.emit("episode_dequeued", episode, story);
     }
   };
-
-  /*audioPlayer.prototype.addTrack = function(url, options){
-    options = options || {};
-    options.name = (typeof(options.name) === 'string') ? options.name : "";
-    options.fadeIn = (typeof(options.fadeIn) === 'number') ? options.fadeIn : 0;
-    options.fadeOut = (typeof(options.fadeOut) === 'number') ? options.fadeOut : 0;
-    options.episode = (typeof(options.episode) !== 'undefined') ? options.episode : null;
-    options.story = (typeof(options.story) !== 'undefined') ? options.story : null;
-    options.starttime = (typeof(options.starttime) !== 'undefined') ? options.starttime : null;
-    options.endtime = (typeof(options.endtime) !== 'undefined') ? options.endtime : null;
-
-    if (this._GetTrackIndex(url, options.episode, options.story) === -1){
-      this._playlist.push({
-	url: url,
-	name: options.name,
-	episode: options.episode,
-	story: options.story,
-	starttime: options.starttime,
-	endtime: options.endtime,
-	fadeIn: options.fadeIn,
-	fadeOut: options.fadeOut
-      });
-      if (this._currentTrack < 0){
-	this._currentTrack = 0;
-	this.emit("track_changed"); // Special case for this emit.
-      }
-      this.emit("track_added", {
-	name: options.name,
-	episode: (typeof(options.episode) !== 'undefined') ? options.episode : null,
-	story: (typeof(options.story) !== 'undefined') ? options.story : null,
-	trackIndex: this._playlist.length-1
-      });
-    }
-  };*/
 
   audioPlayer.prototype.nextTrack = function(){
     var nextTrack = this._currentTrack+1;
@@ -503,15 +469,41 @@ window.View.AudioPlayer = (function(){
       }
     },
 
+    "currentTrackEpisodeTitle":{
+      get:function(){
+	if (this._currentTrack >= 0){
+	  var e = this.currentTrackEpisode;
+	  return (e.seasonEpisodeTitle !== "") ? e.seasonEpisodeTitle : e.title;
+	}
+	return "";
+      }
+    },
+
     "currentTrackStory":{
       get:function(){
-	if (this._currentTrack >= 0 && this._playlist.item(this._currentTrack).title !== null){
+	if (this._currentTrack >= 0){
 	  var e = this.currentTrackEpisode;
-	  if (e !== null){
-	    return e.storyByTitle(this._playlist.item(this._currentTrack).title);
+	  if (this._playlist.item(this._currentTrack).title !== null){
+	    if (e !== null){
+	      return e.storyByTitle(this._playlist.item(this._currentTrack).title);
+	    }
+	  } else {
+	    return e.storyByTime(this.currentTrackTime);
 	  }
 	}
 	return null;
+      }
+    },
+
+    "currentTrackStoryTitle":{
+      get:function(){
+	if (this._currentTrack >= 0){
+	  var s = this.currentTrackStory;
+	  if (s !== null){
+	    return s.title;
+	  }
+	}
+	return "";
       }
     },
 
@@ -519,11 +511,13 @@ window.View.AudioPlayer = (function(){
       get:function(){
 	var title = "";
 	if (this._currentTrack >= 0){
-	  var es = this._GetTrackEpisodeAndStory(this._currentTrack);
-	  if (es !== null){
-	    title = es.episode.title;
-	    if (es.story !== null){
-	      title = es.story.title + " - " + title;
+	  var ep = this.currentTrackEpisode;
+	  //var es = this._GetTrackEpisodeAndStory(this._currentTrack);
+	  if (ep !== null){
+	    title = (ep.seasonEpisodeTitle !== "") ? ep.seasonEpisodeTitle : ep.title;
+	    var s = this.currentTrackStory;
+	    if (s !== null){
+	      title = s.title + " - " + title;
 	    }
 	  }
 	}

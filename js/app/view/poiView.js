@@ -73,7 +73,7 @@ window.View.POIView = (function(){
 	entry.find(".poi-episode-entry-title").append(title);
 	var storyList = entry.find(".poi-episode-story-list");
 	for (var s=0; s < info[i].story.length; s++){
-	  var entity = $("<a href=\"#!\" class=\"collection-item\"></a>");
+	  var entity = $("<a href=\"#!\" class=\"collection-item nsp-grey nsp-text text-highlight\"></a>");
 	  entity.attr("data-poiguid", info[i].episode.guid);
 	  entity.attr("data-poititle", info[i].story[s].title);
 	  entity.on("click", (function(evt){
