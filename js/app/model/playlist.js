@@ -236,7 +236,7 @@ module.exports = (function(){
 
   playlist.prototype._ItemIndex = function(guid, title){
     for (var i=0; i < this._item.length; i++){
-      if (this._item[i] === guid && this._item[i] === title){
+      if (this._item[i].guid === guid && this._item[i].title === title){
 	return i;
       }
     }

@@ -57,6 +57,13 @@ window.View.POIView = (function(){
 
   poiView.prototype._FillInModal = function(type, name, link){
     var info = this._FindPersonData(type, name);
+    if (type === "writer"){
+      this._modal.find("i.option-writer").css("display", "inline-block");
+      this._modal.find("i.option-narrator").css("display", "none");
+    } else if (type === "narrator"){
+      this._modal.find("i.option-narrator").css("display", "inline-block");
+      this._modal.find("i.option-writer").css("display", "none");
+    }
     this._modal.find(".poi-name").empty().append(name);
     if (typeof(link) === 'string' && link.length > 0){
       this._modal.find(".poi-link-text").removeAttr("style");

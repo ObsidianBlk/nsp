@@ -1,7 +1,8 @@
 
 
 $(document).ready(function(){
-  $('ul.nsp-tabs').tabs();
+  $('ul.nsp-tabs.mainwindow').tabs();
+  $('ul.nsp-tabs.playlist').tabs();
 
   var Feeder = require('./js/app/util/feeder');
 

@@ -41,6 +41,20 @@ window.View.AudioPlayerView = (function(){
 	  audioPlayer.playTrack(trackIndex);
 	}
       });
+
+      e.find(".track-action-clear").on("click", (function(ent){
+	var guid = e.attr("data-episode");
+	var title = e.attr("data-story");
+	var episode = NSP.db.episode(guid);
+	var story = null;
+	if (episode !== null){
+	  if (guid !== title){
+	    story = episode.storyByTitle(title);
+	  }
+	  audioPlayer.dequeueEpisode(episode, story);
+	}
+	ent.stopPropagation();
+      }).bind(this));
     }
   }
 
@@ -87,7 +101,7 @@ window.View.AudioPlayerView = (function(){
 
   function audioPlayerView(audioPlayer){
     this._entity = {
-      link_action: $(".player-story-weblink-action"),
+      link_action: $(".player-story-web-link"),
       playlist: $(".player-playlist"),
       title: $(".player-title"),
       title_episode: $(".player-episode-title"),
@@ -179,15 +193,30 @@ window.View.AudioPlayerView = (function(){
 	AddTrackItem(this._entity.playlist, info, this._audioPlayer);
       }).bind(this));
 
+      this._audioPlayer.on("episode_dequeued", (function(episode, story){
+	var track_elements = $(".player-track");
+	for (var i=0; i < track_elements.length; i++){
+	  var element = $(track_elements[i]);
+	  var eguid = element.attr("data-episode");
+	  var estory = element.attr("data-story");
+	  if (eguid === episode.guid){
+	    if (estory !== eguid && story !== null && story.title === estory){
+	      element.remove();
+	      break;
+	    }
+	  }
+	}
+      }).bind(this));
+
       this._audioPlayer.on("track_changed", (function(){
 	//this._entity.title.text(this._audioPlayer.currentTrackTitle);
 	this._entity.title_episode.text(this._audioPlayer.currentTrackEpisodeTitle);
 	var story_title = this._audioPlayer.currentTrackStoryTitle;
 	if (story_title !== ""){
-	  this._entity.title_story.css("display", "block");
+	  this._entity.title_story.css("visibility", "visible");
 	  this._entity.title_story.text(story_title);
 	} else {
-	  this._entity.title_story.css("display", "hidden");
+	  this._entity.title_story.css("visibility", "hidden");
 	}
 	this._entity.progress.val(0);
         ActivateTrackItem(this._audioPlayer.currentTrackEpisode, this._audioPlayer.currentTrackStory);
@@ -195,8 +224,8 @@ window.View.AudioPlayerView = (function(){
 
       this._audioPlayer.on("tracks_cleared", (function(){
 	this._entity.title_episode.text("No Track");
-	this._entity.title_story.css("display", "hidden");
-	$(".player-story-web-link").css("display", "hidden");
+	this._entity.title_story.css("visibility", "hidden");
+	$(".player-story-web-link").css("visibility", "hidden");
 	this._entity.progress.val(0);
 	this._entity.playlist.empty();
       }).bind(this));
@@ -205,18 +234,18 @@ window.View.AudioPlayerView = (function(){
 	//this._entity.title.text(this._audioPlayer.currentTrackTitle);
 	var story_title = this._audioPlayer.currentTrackStoryTitle;
 	if (story_title !== ""){
-	  this._entity.title_story.css("display", "block");
+	  this._entity.title_story.css("visibility", "visible");
 	  this._entity.title_story.text(story_title);
 
 	  var story = this._audioPlayer.currentTrackStory;
 	  if (story.link !== null && story.link !== ""){
-	    $(".player-story-web-link").css("display", "block");
+	    $(".player-story-web-link").css("visibility", "visible");
 	  } else {
-	    $(".player-story-web-link").css("display", "hidden");
+	    $(".player-story-web-link").css("visibility", "hidden");
 	  }
 	} else {
-	  this._entity.title_story.css("display", "hidden");
-	  $(".player-story-web-link").css("display", "hidden");
+	  this._entity.title_story.css("visibility", "hidden");
+	  $(".player-story-web-link").css("visibility", "hidden");
 	}
       }).bind(this));
     }

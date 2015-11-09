@@ -77,10 +77,18 @@
 
     <!-- About App -->
     <div id="about-app" class="modal nsp-grey nsp-text" style="display:none;">
-      <div class="modal-content">
-	<p>Cool stuff to say about the app.</p>
+      <div class="modal-content flow-text">
+	<div style="overflow:auto;">
+	  <i class="material-icons left" style="font-size: 8rem;">info</i>
+	  <h5>About: The NoSleep Pod-App</h5>
+	  <p>Written by <b>Bryan Miller</b>.<br>
+	    This application is one fans way of enjoying the podcast! I am in no way affiliated with The Nosleep Podcast other than as a listener.
+	    <br>
+	    This application is released as is under GPL3 License.
+	  </p>
+	</div>
       </div>
-      <div class="modal-footer nsp-grey lighten">
+      <div class="modal-footer nsp-grey lighten z-depth-5">
 	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn nsp">Agree</a>
       </div>
     </div>
@@ -88,14 +96,18 @@
     <!-- "Person of Importance" Modal -->
     <div id="person-of-import" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content nsp-grey nsp-text">
-	<h5 class="poi-name nsp-text text-title"></h5>
-	<p style="display:none;">
+	<div class="valign-wrapper">
+	  <i class="material-icons valign option-writer tooltipped" style="display:inline-block; font-size: 4rem;" data-tooltip="Writer">info</i>
+	  <i class="material-icons valign option-narrator tooltipped" style="display:none; font-size: 4rem;" data-tooltip="Narrator">mic</i>
+	  <h5 class="poi-name nsp-text text-title valign" style="display:inline-block;"></h5>
+	</div>
+	<p class="poi-link-text" style="display:none;">
 	  More information on this individual can be found 
 	  <a href="#!" class="btn-flat nsp-action tooltipped" data-tooltip="Opens in system's default browser">here</a>
 	</p>
 	<ul class="poi-episode-list collapsible popout" data-collapsible="accordion"></ul>
       </div>
-      <div class="modal-footer nsp-grey lighten">
+      <div class="modal-footer nsp-grey lighten z-depth-5">
 	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn nsp">OK</a>
       </div>
     </div>
@@ -107,7 +119,7 @@
 	  <a href="#!" class="waves-effect waves-nsp-red btn nsp filter-add-action">Add Filter</a>
 	</div>
       </div>
-      <div class="modal-footer nsp-grey lighten">
+      <div class="modal-footer nsp-grey lighten z-depth-5">
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-close-action" style="margin-left:6px;">Close</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-apply-action" style="margin-left:6px;">Apply</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Clear All</a>
@@ -116,39 +128,51 @@
 
     <!-- Playlist Management Dialog -->
     <div id="playlist-select" class="modal modal-fixed-footer" style="display:none;">
-      <div class="modal-content nsp-true-grey">
-	<div class="playlist-current-editor" style="display:none;">
-	  <input id="playlist-current-name" type="text" placeholder="Playlist Name">
-	  <a href="#!" class="waves-effect waves-nsp-red btn nsp playlist-save-action">Save</a>
-	</div>
-	<div class="playlist-load-indicator preloader-wrapper active">
-	  <div class="spinner-layer spinner-blue-only">
-	    <div class="circle-clipper left">
-              <div class="circle"></div>
-	    </div><div class="gap-patch">
-              <div class="circle"></div>
-	    </div><div class="circle-clipper right">
-              <div class="circle"></div>
-	    </div>
+      <div class="modal-content nsp-grey nsp-text">
+	<ul class="nsp-tabs playlist">
+          <li class="tab col s6"><a class="active" href="#playlist-manager-tab">Manage</a></li>
+          <li class="tab col s6"><a href="#playlist-save-tab">Save</a></li>
+        </ul>
+	
+	<div id="playlist-save-tab">
+	  <div class="card-panel nsp-grey darken playlist-current-editor" style="display:none;">
+	    <input id="playlist-current-name" type="text" placeholder="Playlist Name">
+	    <a href="#!" class="waves-effect waves-nsp-red btn nsp playlist-save-action">Save</a>
 	  </div>
 	</div>
-	<ul class="collection playlist-selection"></ul>
+
+	<div id="playlist-manager-tab">
+	  <div class="playlist-load-indicator preloader-wrapper active">
+	    <div class="spinner-layer spinner-blue-only">
+	      <div class="circle-clipper left">
+		<div class="circle"></div>
+	      </div><div class="gap-patch">
+		<div class="circle"></div>
+	      </div><div class="circle-clipper right">
+		<div class="circle"></div>
+	      </div>
+	    </div>
+	  </div>
+	  <ul class="collection playlist-selection"></ul>
+	</div>
       </div>
-      <div class="modal-footer nsp-grey">
+      <div class="modal-footer nsp-grey lighten z-depth-5">
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp playlist-close-action" style="margin-left:6px;">Close</a>
       </div>
     </div>
 
     <!-- ------------ BODY/IES ------------ -->
     <!-- Screen TABs -->
-    <div class="row">
-      <div class="col s12 z-depth-5">
-        <ul class="nsp-tabs">
+    <div class="row nsp-tight z-depth-5">
+      <div class="col s12">
+        <ul class="nsp-tabs mainwindow">
           <li class="tab col s6"><a class="active" href="#episodes">Episodes</a></li>
           <li class="tab col s6"><a href="#now_playing">Now Playing</a></li>
         </ul>
       </div>
+    </div>
 
+    <div class="row">
       <!-- Episodes -->
       <div class="col s12" id="episodes">
         <div class="row scrollable">
@@ -179,13 +203,11 @@
 	  </div>
           <div class="col s12 m6 scroller nsp-grey darken nsp-text">
             <div class="flow-text player-title nsp-text text-title truncated" style="display:none;">No Track Selected</div>
-	    <div class="flow-text player-episode-title nsp-text text-title truncated">No Track Selected</div>
-	    <div class="player-story-title nsp-text text-title truncated" style="display:hidden;">&nbsp;</div>
-	    <div class="player-story-web-link" style="display:hidden;">
-	      <a href="#!" class="tooltipped" data-tooltip="Read along in browser">
-		Read Along In Your Browser
-	      </a>
-	    </div>
+	    <div class="flow-text nsp-title player-episode-title nsp-text text-title truncated">No Track Selected</div>
+	    <div class="flow-text nsp-subtitle player-story-title nsp-text text-title truncated" style="visibility:hidden;">&nbsp;</div>
+	    <a href="#!" class="player-story-web-link tooltipped" style="visibility:hidden;">
+	      Read Along In Your Browser
+	    </a>
             <div>
 	      <p class="range-field">
 		<input type="range" class="browser-default" id="player-seek-bar" min="0" max="1" value="0">

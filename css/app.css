@@ -38,6 +38,10 @@ body{
     will-change: overflow;
 }
 
+.row.nsp-tight{
+    margin-bottom:0px;
+}
+
 #sheet_content{
     margin: 0;
     padding: 0.25rem 2rem;
@@ -46,6 +50,13 @@ body{
 .collection-item.player-track .secondary-content {
     position: relative;
     right:0;
+}
+
+.flow-text.nsp-title{
+    font-weight: 700;
+}
+.flow-text.nsp-subtitle{
+    font-weight: 400;
 }
 
 
@@ -92,12 +103,21 @@ body{
     color: #8B0000 !important; }
 
 
+.nsp-card-header{
+    background: -webkit-linear-gradient(left, rgba(53,63,75,1) 66%,rgba(125,185,232,0) 100%);
+    padding-left: 8px;
+    margin-left: -20px;
+    margin-top: -20px;
+}
+
 .nsp-list-item{
     background-color: #353f4b !important;
     color: #CCCCCC !important;
+    cursor: pointer;
 }
 .nsp-list-item.selected{
     color: #658495 !important;
+    cursor: pointer;
 }
 
 
