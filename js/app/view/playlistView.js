@@ -15,10 +15,26 @@ window.View.PlaylistView = (function(){
   };
 
 
+  function DeletePlaylistFile(path, pl, callback){
+    path = Path.normalize(path);
+    var filepath = Path.normalize(Path.join(path, pl.filename));
+
+    FS.lstat(filepath, function(err, lstat){
+      if (!err && lstat.isFile()){
+	FS.unlink(filepath, callback);
+      } else {
+	if (callback){
+	  callback(); // Not passing the err argument as we'll assume that's a "file not found". Since we're looking to delete... job done, I'd say.
+	}
+      }
+    });
+  }
+
 
   function PlaylistItem(pl){
     var e = $(templates.playlistItem);
     e.find(".playlist-title").text(pl.name);
+    e.attr("data-playlistname", pl.name);
     e.on("click", (function(){
       this.emit("playlist_selected", pl);
       this.close();
@@ -71,6 +87,31 @@ window.View.PlaylistView = (function(){
     }
   };
 
+  playlistView.prototype._AddPlaylistToList = function(pl){
+    var pllist = this._modal.find(".playlist-selection");
+    this._playlist.push(pl);
+    pllist.append((PlaylistItem.bind(this))(pl));
+  };
+
+  playlistView.prototype._RemovePlaylistFromList = function(plname){
+    var plitems = this._modal.find(".playlist-item");
+    var i = 0;
+    for (i=0; i < plitems.length; i++){
+      var item = $(plitems[i]);
+      if (item.attr("data-playlistname") === plname){
+	item.remove();
+	break;
+      }
+    }
+
+    for (i=0; i < this._playlist.length; i++){
+      if (this._playlist[i].name === plname){
+	this._playlist.splice(i, 1);
+	break;
+      }
+    }
+  };
+
   playlistView.prototype._HasPlaylistAtPath = function(filename){
     for (var i=0; i < this._playlist.length; i++){
       var path = Path.normalize(Path.join(NSP.config.path.playlists, filename));
@@ -83,8 +124,21 @@ window.View.PlaylistView = (function(){
   };
 
   playlistView.prototype._ScanForPlaylists = function(path, callback){
+
     FS.readdir(path, (function(err, files){
       var loading = 0;
+      var PLClosure = function(self, pl){
+	pl.on("opened", function(){
+	  pl.removeAllListeners(); // Clears the "opened" and "error" event listeners from this playlist.
+	  self._playlist.push(pl);
+	  loading -= 1;
+	});
+	pl.on("error", function(e){
+	  loading -= 1;
+	  console.log(e);
+	});
+      };
+
       if (err){
 	if (callback){callback(err);}
 	console.log(err);
@@ -97,15 +151,7 @@ window.View.PlaylistView = (function(){
 	      if (Path.extname(files[i]).toLowerCase() === ".plj" && this._HasPlaylistAtPath(files[i]) === false){
 		try {
 		  var pl = new Playlist();
-		  pl.on("opened", (function(){
-		    pl.removeAllListeners(); // Clears the "opened" and "error" event listeners from this playlist.
-		    this._playlist.push(pl);
-		    loading -= 1;
-		  }).bind(this));
-		  pl.on("error", function(e){
-		    loading -= 1;
-		    console.log(e);
-		  });
+		  PLClosure(this, pl);
 		  loading += 1;
 		  pl.open(fpath);
 		} catch (e) {
@@ -134,26 +180,40 @@ window.View.PlaylistView = (function(){
     act_save_playlist.on("click", (function(){
       if (this._modal.find(".playlist-current-editor").css("display") !== "none" && this._curPlaylist !== null){
 	var value = this._modal.find("#playlist-current-name").val();
-	if (typeof(value) === 'string' && value.length > 0 && this._curPlaylist.name !== value){
-	  this._curPlaylist.name = value;
-	  act_save_playlist.addClass("disable");
+	var path = NSP.config.path.playlists;
+	var callback = (function(err){
+	  act_save_playlist.removeClass("disable");
+	  this._curPlaylist.removeListener("saved", callback);
+	  if (err){
+	    var errmsg = (typeof(err.message) === 'string') ? err.message : err;
+	    Materialize.toast("Playlist Save ERROR: " + errmsg, 3000);
+	  } else {
+	    Materialize.toast("\"" + this._curPlaylist.name + "\" Saved", 3000);
+	    this._AddPlaylistToList(this._curPlaylist);
+	  }
+	}).bind(this);
 
-	  var path = Path.normalize(Path.join(NSP.config.path.playlists, this._curPlaylist.filename));
-	  var callback = (function(err){
-	    act_save_playlist.removeClass("disable");
-	    this._curPlaylist.removeListener("saved", callback);
-	    if (err){
-	      var errmsg = (typeof(err.message) === 'string') ? err.message : err;
-	      Materialize.toast("Playlist Save ERROR: " + errmsg, 3000);
-	    } else {
-	      Materialize.toast("\"" + this._curPlaylist.name + "\" Saved", 3000);
-	    }
-	  }).bind(this);
+
+	// Remove the old file first...
+	DeletePlaylistFile(path, this._curPlaylist, (function(err){
+	  if (err){
+	    console.log(err);
+	    return;
+	  }
+
+	  // Update the playlist name if needed
+	  if (typeof(value) === 'string' && value.length > 0 && this._curPlaylist.name !== value){
+	    this._RemovePlaylistFromList(this._curPlaylist.name);
+	    this._curPlaylist.name = value;
+	  }
+	  // Now... let's save.
+	  act_save_playlist.addClass("disable");
 	  this._curPlaylist.on("saved", callback);
 	  this._curPlaylist.save(path);
-	}
+	}).bind(this));
       }
     }).bind(this));
+
 
     var act_close = this._modal.find(".playlist-close-action");
     act_close.on("click", (function(){

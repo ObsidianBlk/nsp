@@ -108,7 +108,10 @@ window.View.AudioPlayer = (function(){
   };
 
   audioPlayer.prototype.isStoryQueued = function(story){
-    return this._playlist.has(story.episode.guid, story.title);
+    if (typeof(story) !== 'undefined' && story !== null){
+      return this._playlist.has(story.episode.guid, story.title);
+    }
+    return false;
   };
 
   audioPlayer.prototype.queueEpisode = function(episode, story){
@@ -128,7 +131,7 @@ window.View.AudioPlayer = (function(){
 
       // Calculate the track title. This is optional, really.
       var title = (episode.seasonEpisodeTitle !== "") ? episode.seasonEpisodeTitle : episode.title;
-      if (typeof(story) !== 'undefined'){
+      if (typeof(story) !== 'undefined' && story !== null){
 	var sindex = episode.getStoryIndexByTitle(story.title);
 	if (sindex < 0){
 	  console.log("Story not found in Episode.");

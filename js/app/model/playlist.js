@@ -32,6 +32,7 @@ module.exports = (function(){
 
   function playlist(){
     this._filename = "";
+    this._defaultFilename = "";
     this._name = "";
     this._item = [];
     this._dirty = false;
@@ -74,6 +75,11 @@ module.exports = (function(){
       throw new Error("Missing property 'name' or property is not a string.");
     }
     this._name = data.name;
+    this._defaultFilename = NameToFilename(this._name);
+    if (this._defaultFilename.length > 251){
+      this._defaultFilename = this.defaultFilename.substr(0, 251);
+    }
+    this._defaultFilename += ".plj";
 
     if (typeof(data.items) !== 'undefined' && typeof(data.items.length) !== 'undefined'){
       for (var i=0; i < data.items.length; i++){
@@ -180,20 +186,18 @@ module.exports = (function(){
     if (this.loading || this.saving){return;}
     
     path = Path.normalize(path);
+    var filepath = Path.normalize(Path.join(path, this.filename));
     this._loading = true;
-    FS.access(path, FS.R_OK | FS.W_OK, (function(err){
+    FS.access(filepath, FS.R_OK | FS.W_OK, (function(err){
       if (!err){
         // Only bother loading if there was no issue. This should mean the file exists.
-        FS.readFile(path, (function(err, data){
+        FS.readFile(filepath, (function(err, data){
           if (err){
             this._loading = false;
             this.emit("error", err);
           } else {
             try {
               this.fromString(data.toString());
-	      if (Path.basename(path).toLowerCase() !== this.filename.toLowerCase()){
-		this._filename = Path.basename(path);
-	      }
               this._loading = false;
               this.emit("opened", true);
               this.emit("changed");
@@ -214,11 +218,11 @@ module.exports = (function(){
     if (this.loading || this.saving){return;}
     
     path = Path.normalize(path);
-    var base = Path.dirname(path);
+    var filepath = Path.normalize(Path.join(path, this.filename));
     this._saving = true;
-    FS.access(base, FS.R_OK | FS.W_OK, (function(err){
+    FS.access(path, FS.R_OK | FS.W_OK, (function(err){
       if (!err){
-	FS.writeFile(path, this.toString(), (function(err){
+	FS.writeFile(filepath, this.toString(), (function(err){
           this._saving = false;
 	  if (err){
 	    this.emit("error", err);
@@ -251,6 +255,13 @@ module.exports = (function(){
 	  throw new TypeError();
 	}
 	this._name = name;
+
+	this._defaultFilename = NameToFilename(this._name);
+	if (this._defaultFilename.length > 251){
+	  this._defaultFilename = this.defaultFilename.substr(0, 251);
+	}
+	this._defaultFilename += ".plj";
+
 	this.emit("changed");
 	this._dirty = true;
       }
@@ -259,17 +270,14 @@ module.exports = (function(){
     "filename":{
       get:function(){
 	if (this._filename === ""){
-	  var fn = NameToFilename(this._name);
-	  if (fn.length > 250){
-	    fn = fn.substr(0, 250);
-	  }
-	  return fn + ".plj";
+	  return this._defaultFilename;
 	}
 	return this._filename;
       },
       set:function(filename){
 	if (typeof(filename) !== 'string'){throw new TypeError();}
-	if (filename.length > 0){
+	if (filename !== this._filename && filename !== this._defaultFilename){
+	  // NOTE: Setting 'pl.filename = "";' will make the default filename the playlist's filename.
 	  this._filename = filename;
 	  this.emit("changed");
 	}

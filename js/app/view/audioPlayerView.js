@@ -131,6 +131,25 @@ window.View.AudioPlayerView = (function(){
     }
   };
 
+  audioPlayerView.prototype._UpdateTrackTitle = function(){
+    this._entity.title_episode.text(this._audioPlayer.currentTrackEpisodeTitle);
+    var story_title = this._audioPlayer.currentTrackStoryTitle;
+    if (story_title !== ""){
+      this._entity.title_story.css("visibility", "visible");
+      this._entity.title_story.text(story_title);
+
+      var story = this._audioPlayer.currentTrackStory;
+      if (story.link !== null && story.link !== ""){
+	$(".player-story-web-link").css("visibility", "visible");
+      } else {
+	$(".player-story-web-link").css("visibility", "hidden");
+      }
+    } else {
+      this._entity.title_story.css("visibility", "hidden");
+      $(".player-story-web-link").css("visibility", "hidden");
+    }
+  };
+
 
   audioPlayerView.prototype._ConfigurePlayerCallbacks = function(){
     if (this._configured === false){
@@ -209,15 +228,7 @@ window.View.AudioPlayerView = (function(){
       }).bind(this));
 
       this._audioPlayer.on("track_changed", (function(){
-	//this._entity.title.text(this._audioPlayer.currentTrackTitle);
-	this._entity.title_episode.text(this._audioPlayer.currentTrackEpisodeTitle);
-	var story_title = this._audioPlayer.currentTrackStoryTitle;
-	if (story_title !== ""){
-	  this._entity.title_story.css("visibility", "visible");
-	  this._entity.title_story.text(story_title);
-	} else {
-	  this._entity.title_story.css("visibility", "hidden");
-	}
+	this._UpdateTrackTitle();
 	this._entity.progress.val(0);
         ActivateTrackItem(this._audioPlayer.currentTrackEpisode, this._audioPlayer.currentTrackStory);
       }).bind(this));
@@ -231,22 +242,7 @@ window.View.AudioPlayerView = (function(){
       }).bind(this));
 
       this._audioPlayer.on("story_changed", (function(){
-	//this._entity.title.text(this._audioPlayer.currentTrackTitle);
-	var story_title = this._audioPlayer.currentTrackStoryTitle;
-	if (story_title !== ""){
-	  this._entity.title_story.css("visibility", "visible");
-	  this._entity.title_story.text(story_title);
-
-	  var story = this._audioPlayer.currentTrackStory;
-	  if (story.link !== null && story.link !== ""){
-	    $(".player-story-web-link").css("visibility", "visible");
-	  } else {
-	    $(".player-story-web-link").css("visibility", "hidden");
-	  }
-	} else {
-	  this._entity.title_story.css("visibility", "hidden");
-	  $(".player-story-web-link").css("visibility", "hidden");
-	}
+	this._UpdateTrackTitle();
       }).bind(this));
     }
   };
