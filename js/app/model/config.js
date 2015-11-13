@@ -27,12 +27,19 @@ module.exports = (function(){
     conf.heartbeatRythm = obj.heartbeat_rythm;
   }
 
-  function config(){
+  function config(application_name){
+    this._dataPath = "";
+    if (typeof(application_name) === 'string'){
+      this._dataPath = require("../util/userPath")(application_name);
+      console.log(this._dataPath);
+      //this._dataPath = "";
+    }
+
     this._path = {
       database: Path.normalize("database.json"),
       playlists: Path.normalize("playlists"),
-      audio:    Path.normalize("cache/audio/episodes"),
-      images:   Path.normalize("cache/images")
+      audio:    Path.normalize("data/audio/episodes"),
+      images:   Path.normalize("data/images")
     };
     this._autoCacheImages = true;
     this._autoSaveDatabaseOnChange = true;
@@ -142,13 +149,17 @@ module.exports = (function(){
       }
     },
 
+    "dataPath":{
+      get:function(){return this._dataPath;}
+    },
+
     "path":{
       get:function(){
 	return {
-	  database: this._path.database,
-	  playlists: this._path.playlists,
-	  audio: this._path.audio,
-	  images: this._path.images
+	  database: Path.join(this._dataPath, this._path.database),
+	  playlists: Path.join(this._dataPath, this._path.playlists),
+	  audio: Path.join(this._dataPath, this._path.audio),
+	  images: Path.join(this._dataPath, this._path.images)
 	};
       },
       set:function(path){

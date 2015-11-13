@@ -58,11 +58,11 @@
 	  </ul>
 
 	  <!-- System Menu Dropdown Structure -->
-	  <ul id='system_menu' class='dropdown-content'>
-	    <li><a href="#!">Settings</a></li>
-	    <li><a class="waves-effect waves-light" href="javascript: NSP.db.save(NSP.config.path.database);">Save Database</a></li>
+	  <ul id='system_menu' class='dropdown-content nsp'>
+	    <li><a href="#!" class="waves-effect waves-nsp-red">Settings</a></li>
+	    <li><a class="waves-effect waves-nsp-red" href="javascript: NSP.db.save(NSP.config.path.database);">Save Database</a></li>
 	    <li class="divider"></li>
-	    <li><a class="waves-effect waves-light modal-trigger" href="javascript: $('#about-app').openModal();">About</a></li>
+	    <li><a class="waves-effect waves-nsp-red modal-trigger" href="javascript: $('#about-app').openModal();">About</a></li>
 	  </ul>
           
           <!-- Progress bar! -->
@@ -181,6 +181,11 @@
 	    <br><br><br><br><br><br> <!-- These <br>s fix a scrolling bug -->
           </div>
           <div class="col m6 hide-on-small-only sheet scroller" style="padding:0;">
+	    <div class="welcome-text flow-text nsp-text" style="margin-top: 6rem; display:block;">
+	      <b>WARNING:</b> This is a horror fiction podcast. 
+	      It is intended for mature adults, not the faint of heart. 
+	      Join us at your own risk...
+	    </div>
             <div id="sheet_content" class="nsp-grey darken nsp-text"></div>
           </div>
         </div>

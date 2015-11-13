@@ -787,6 +787,11 @@ window.View.EpisodeView = (function(){
 
 
   episodeView.prototype._SlideToContent = function(entity, episode){
+    // First see if the welcome/warning text is still visible. If so, remove/hide it.
+    if ($(".welcome-text").css("display") === "block"){
+      $(".welcome-text").css("display", "none");
+    }
+
     if (entity.hasClass("active")){
       if (this._activeCard[0] !== episode){
         this._activeCard[1] = episode;

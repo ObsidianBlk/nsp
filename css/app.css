@@ -344,3 +344,16 @@ time{
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis; }
+
+
+.dropdown-content.nsp {
+    background-color: #3b3e32;
+}
+
+.dropdown-content.nsp li > a, .dropdown-content.nsp li > span {
+    color: #658495;
+}
+
+.dropdown-content.nsp li:hover, .dropdown-content.nsp li.active {
+    background-color: #23241e;
+}

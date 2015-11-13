@@ -1,6 +1,7 @@
 
 var Application = (function($){
   var Events = require("events");
+  var Path = require("path");
   var Database = require("./js/app/model/database");
   var Config = require("./js/app/model/config");
   var Feeder = require("./js/app/util/feeder");
@@ -8,6 +9,7 @@ var Application = (function($){
 
   if (typeof(window.NSP) === 'undefined'){
     window.NSP = {
+      application_name:"nosleeppodapp",
       config:null,
       db:null
     };
@@ -15,7 +17,6 @@ var Application = (function($){
 
 
   var App = function(){
-    this._application_running = false;
     this._heartbeatID = null;
     this._curHeartbeatRythm = 0;
   };
@@ -63,7 +64,8 @@ var Application = (function($){
       this.emit("application_ready");
     }).bind(this);
 
-    NSP.config = new Config();
+    var config_path = Path.normalize(Path.join(require("./js/app/util/userPath")(NSP.application_name), "config.json"));
+    NSP.config = new Config(NSP.application_name);
     NSP.db = new Database();
 
     this.emit("config_created");
@@ -109,13 +111,13 @@ var Application = (function($){
     NSP.config.on("opened", (function(config_exists){
       this.emit("config_loaded");
       if (config_exists === false){
-	NSP.config.save("config.json");
+	NSP.config.save(config_path);
       }
       // Config loaded, now load the database file.
       NSP.db.open(NSP.config.path.database, NSP.config.skipInvalidEpisodes);
     }).bind(this));
 
-    NSP.config.open("config.json");
+    NSP.config.open(config_path);
   };
 
   App.prototype._HeartbeatRythm = function(rythm){
