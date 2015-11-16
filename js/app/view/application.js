@@ -5,7 +5,7 @@ var Application = (function($){
   var Database = require("./js/app/model/database");
   var Config = require("./js/app/model/config");
   var Feeder = require("./js/app/util/feeder");
-
+  var Mkdirr = require("./js/app/util/mkdirr");
 
   if (typeof(window.NSP) === 'undefined'){
     window.NSP = {
@@ -13,6 +13,21 @@ var Application = (function($){
       config:null,
       db:null
     };
+  }
+
+
+  function MkConfigPaths(pathList, index, cb){
+    Mkdirr(pathList[index], function(err){
+      if (err){
+	cb(err);
+      } else {
+	if (index+1 < pathList.length){
+	  MkConfigPaths(pathList, index+1, cb);
+	} else {
+	  cb();
+	}
+      }
+    });
   }
 
 
@@ -82,7 +97,7 @@ var Application = (function($){
 
         feed.on("rss_complete", (function(){
           if (NSP.db.dirty || !database_exists){
-	    NSP.db.save(NSP.config.path.database);
+	    NSP.db.save(NSP.config.absolutePath.database);
           } else {
 	    console.log("No new episodes.");
           }
@@ -93,7 +108,7 @@ var Application = (function($){
 
       } else {
 	if (database_exists === false){
-	  NSP.db.save(NSP.config.path.database);
+	  NSP.db.save(NSP.config.absolutePath.database);
 	}
 
 	AnnounceApplicationReady();
@@ -105,7 +120,7 @@ var Application = (function($){
 
       // Load DB anyway. Config should have default values.
       // TODO: Change this to a question for the user.
-      NSP.db.open(NSP.config.path.database, NSP.config.skipInvalidEpisodes);
+      NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);
     });
 
     NSP.config.on("opened", (function(config_exists){
@@ -113,8 +128,21 @@ var Application = (function($){
       if (config_exists === false){
 	NSP.config.save(config_path);
       }
-      // Config loaded, now load the database file.
-      NSP.db.open(NSP.config.path.database, NSP.config.skipInvalidEpisodes);
+
+      // Now... create the required paths defined by the config if they don't exist.
+      MkConfigPaths([
+	Path.dirname(NSP.config.absolutePath.database),
+	NSP.config.absolutePath.playlists,
+	NSP.config.absolutePath.audio,
+	NSP.config.absolutePath.images
+      ], 0, function(err){
+	if (!err){
+	  // Config loaded and paths should be ready, now load the database file.
+	  NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);
+	} else {
+	  console.log(err.message);
+	}
+      });
     }).bind(this));
 
     NSP.config.open(config_path);

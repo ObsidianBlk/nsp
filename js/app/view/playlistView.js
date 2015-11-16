@@ -59,7 +59,7 @@ window.View.PlaylistView = (function(){
       this._modal.find(".playlist-current-editor").css("display", "none");
       this._modal.find(".playlist-load-indicator").removeAttr("style");
       
-      this._ScanForPlaylists(NSP.config.path.playlists, (function(err){
+      this._ScanForPlaylists(NSP.config.absolutePath.playlists, (function(err){
 	if (err){
 	  Materialize.toast(err.message);
 	} else {
@@ -114,8 +114,8 @@ window.View.PlaylistView = (function(){
 
   playlistView.prototype._HasPlaylistAtPath = function(filename){
     for (var i=0; i < this._playlist.length; i++){
-      var path = Path.normalize(Path.join(NSP.config.path.playlists, filename));
-      var plpath = Path.normalize(Path.join(NSP.config.path.playlists, this._playlist[i].filename));
+      var path = Path.normalize(Path.join(NSP.config.absolutePath.playlists, filename));
+      var plpath = Path.normalize(Path.join(NSP.config.absolutePath.playlists, this._playlist[i].filename));
       if (plpath === path){
 	return true;
       }
@@ -180,7 +180,7 @@ window.View.PlaylistView = (function(){
     act_save_playlist.on("click", (function(){
       if (this._modal.find(".playlist-current-editor").css("display") !== "none" && this._curPlaylist !== null){
 	var value = this._modal.find("#playlist-current-name").val();
-	var path = NSP.config.path.playlists;
+	var path = NSP.config.absolutePath.playlists;
 	var callback = (function(err){
 	  act_save_playlist.removeClass("disable");
 	  this._curPlaylist.removeListener("saved", callback);

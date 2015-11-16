@@ -34,6 +34,7 @@ module.exports = (function(){
       console.log(this._dataPath);
       //this._dataPath = "";
     }
+    this._saveFilePath = "config.json"; // If a relative value, this will me merged with _dataPath when no path is given in the save() function.
 
     this._path = {
       database: Path.normalize("database.json"),
@@ -87,19 +88,30 @@ module.exports = (function(){
 
   config.prototype.open = function(path){
     if (this.loading || this.saving){return;}
-    
-    path = Path.normalize(path);
+
+    var assumedPath = Path.join(this._dataPath, this._saveFilePath);
+    path = (typeof(path) === 'string') ? path : this._saveFilePath;
+
+    var loadPath = path;
+    if (Path.isAbsolute(loadPath) === false){
+      loadPath = Path.join(this._dataPath, loadPath);
+    }
+    loadPath = Path.resolve(loadPath);
+
     this._loading = true;
-    FS.access(path, FS.R_OK | FS.W_OK, (function(err){
+    FS.access(loadPath, FS.R_OK | FS.W_OK, (function(err){
       if (!err){
         // Only bother loading if there was no issue. This should mean the file exists.
-        FS.readFile(path, (function(err, data){
+        FS.readFile(loadPath, (function(err, data){
           if (err){
             this._loading = false;
             this.emit("error", err);
           } else {
             try {
               VerifyConfig(this, JSON.parse(data.toString()));
+	      if (path !== this._saveFilePath){
+		this._saveFilePath = path;
+	      }
               this._loading = false;
               this.emit("opened", true);
               this.emit("changed");
@@ -118,16 +130,25 @@ module.exports = (function(){
   config.prototype.save = function(path){
     if (this.loading || this.saving){return;}
     
-    path = Path.normalize(path);
-    var base = Path.dirname(path);
+    path = (typeof(path) === 'string') ? Path.normalize(path) : this._saveFilePath;
+    var savePath = path;
+    if (Path.isAbsolute(savePath) === false){
+      savePath = Path.join(this._dataPath, savePath);
+    }
+    savePath = Path.resolve(savePath);
+
+    var base = Path.dirname(savePath);
     this._saving = true;
     FS.access(base, FS.R_OK | FS.W_OK, (function(err){
       if (!err){
-	FS.writeFile(path, this.toString(), (function(err){
+	FS.writeFile(savePath, this.toString(), (function(err){
           this._saving = false;
 	  if (err){
 	    this.emit("error", err);
 	  } else {
+	    if (path !== this._saveFilePath){
+	      this._saveFilePath = path;
+	    }
             this._dirty = false;
 	    this.emit("saved");
 	  }
@@ -156,10 +177,10 @@ module.exports = (function(){
     "path":{
       get:function(){
 	return {
-	  database: Path.join(this._dataPath, this._path.database),
-	  playlists: Path.join(this._dataPath, this._path.playlists),
-	  audio: Path.join(this._dataPath, this._path.audio),
-	  images: Path.join(this._dataPath, this._path.images)
+	  database: this._path.database,
+	  playlists: this._path.playlists,
+	  audio: this._path.audio,
+	  images: this._path.images
 	};
       },
       set:function(path){
@@ -172,6 +193,17 @@ module.exports = (function(){
 	this._path.images = (typeof(path.images) === 'string') ? Path.normalize(path.images) : this._path.images;
         this._dirty = true;
 	this.emit("changed");
+      }
+    },
+
+    "absolutePath":{
+      get:function(){
+	return {
+	  database: (Path.isAbsolute(this._path.database)) ? this._path.database : Path.join(this._dataPath, this._path.database),
+	  playlists: (Path.isAbsolute(this._path.playlists)) ? this._path.playlists : Path.join(this._dataPath, this._path.playlists),
+	  audio: (Path.isAbsolute(this._path.audio)) ? this._path.audio : Path.join(this._dataPath, this._path.audio),
+	  images: (Path.isAbsolute(this._path.images)) ? this._path.images : Path.join(this._dataPath, this._path.images)
+	};
       }
     },
 

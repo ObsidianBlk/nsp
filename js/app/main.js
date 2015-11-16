@@ -17,6 +17,7 @@ $(document).ready(function(){
   var poiView = new View.POIView("#person-of-import");
   var filterView = new View.FilterView("#list-filters");
   var playlistView = new View.PlaylistView("#playlist-select");
+  var settingsView = new View.SettingsView("#app-settings");
 
   episodeView.on("view_writer", function(writer, link){
     poiView.writer(writer, link);
@@ -101,7 +102,7 @@ $(document).ready(function(){
           // TODO: Stop load spinner and... ummm... save the database maybe.
           if (NSP.db.dirty){
             Materialize.toast("New Episodes", 3000, 'rounded');
-	    NSP.db.save(NSP.config.path.database);
+	    NSP.db.save(NSP.config.absolutePath.database);
           } else {
 	    Materialize.toast("No new episodes.", 3000, 'rounded');
           }
@@ -114,6 +115,10 @@ $(document).ready(function(){
 
     $(".app_action_search").click(function(){
       filterView.openModal(episodeView.getSearchFilters());
+    });
+
+    $(".app-act-mainmenu-settings").click(function(){
+      settingsView.openModal();
     });
 
 

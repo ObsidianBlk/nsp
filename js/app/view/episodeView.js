@@ -80,7 +80,7 @@ window.View.EpisodeView = (function(){
 
 
   function AudioPath(episode){
-    var path = Path.join(NSP.config.path.audio, episode.audio_filename);
+    var path = Path.join(NSP.config.absolutePath.audio, episode.audio_filename);
     var lstat = null;
     try {
       lstat = FS.lstatSync(path);
@@ -107,7 +107,7 @@ window.View.EpisodeView = (function(){
 
 
   function DeleteAudioFile(episode){
-    var path = Path.join(NSP.config.path.audio, episode.audio_filename);
+    var path = Path.join(NSP.config.absolutePath.audio, episode.audio_filename);
     var lstat = null;
     try {
       var lstat = FS.lstatSync(path);
@@ -136,7 +136,7 @@ window.View.EpisodeView = (function(){
     e.attr("data-guid", episode.guid);
 
     if (img.length > 0 && episode.img_src !== ""){
-      var localPath = Path.join(NSP.config.path.images, episode.img_filename);
+      var localPath = Path.join(NSP.config.absolutePath.images, episode.img_filename);
       if (FilePathExists(localPath)){
 	img.attr("src", localPath);
       } else {
@@ -211,7 +211,7 @@ window.View.EpisodeView = (function(){
 
 
   function ImageSource(episode){
-    var path = Path.join(NSP.config.path.images, episode.img_filename);
+    var path = Path.join(NSP.config.absolutePath.images, episode.img_filename);
     return (FilePathExists(path)) ? path : episode.img_src;
   }
 
@@ -326,7 +326,7 @@ window.View.EpisodeView = (function(){
 
 	    Materialize.toast("Downloading episode...", 4000);
 	    actions.addClass("disabled");
-	    feed.downloadFile(episode.audio_src, Path.join(NSP.config.path.audio, episode.audio_filename), function(err){
+	    feed.downloadFile(episode.audio_src, Path.join(NSP.config.absolutePath.audio, episode.audio_filename), function(err){
 	      var process = false;
 	      if (entity.find("#entity_id").length > 0 && entity.find("#entity_id").data("id") === episode.guid){
 		process = true;

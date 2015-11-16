@@ -26,6 +26,7 @@
     <script type="text/javascript" src="js/app/view/poiView.js"></script>
     <script type="text/javascript" src="js/app/view/filterView.js"></script>
     <script type="text/javascript" src="js/app/view/playlistView.js"></script>
+    <script type="text/javascript" src="js/app/view/settingsView.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -59,7 +60,8 @@
 
 	  <!-- System Menu Dropdown Structure -->
 	  <ul id='system_menu' class='dropdown-content nsp'>
-	    <li><a href="#!" class="waves-effect waves-nsp-red">Settings</a></li>
+	    <li><a href="#!" class="waves-effect waves-nsp-red app-act-mainmenu-settings">Settings</a></li>
+	    <li class="divider"></li>
 	    <li><a class="waves-effect waves-nsp-red" href="javascript: NSP.db.save(NSP.config.path.database);">Save Database</a></li>
 	    <li class="divider"></li>
 	    <li><a class="waves-effect waves-nsp-red modal-trigger" href="javascript: $('#about-app').openModal();">About</a></li>
@@ -76,7 +78,7 @@
     <!-- ------------ MODAL DIALOGS ------------ -->
 
     <!-- About App -->
-    <div id="about-app" class="modal nsp-grey nsp-text" style="display:none;">
+    <div id="about-app" class="modal modal-fixed-footer nsp-grey nsp-text" style="display:none;">
       <div class="modal-content flow-text">
 	<div style="overflow:auto;">
 	  <i class="material-icons left" style="font-size: 8rem;">info</i>
@@ -90,6 +92,82 @@
       </div>
       <div class="modal-footer nsp-grey lighten z-depth-5">
 	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn nsp">Agree</a>
+      </div>
+    </div>
+
+    <!-- Application Settings -->
+    <div id="app-settings" class="modal modal-fixed-footer nsp-grey nsp-text" style="display:none;">
+      <div class="modal-content flow-text">
+	<div style="overflow:auto;">
+	  <i class="material-icons left" style="font-size: 8rem;">settings</i>
+	  <form>
+	    <label>Download Current Episode List at Startup</label>
+	    <div class="switch">
+	      <label>
+		Off
+		<input type="checkbox" id="downloadFeedAtStartup">
+		<span class="lever"></span>
+		On
+	      </label>
+	    </div>
+
+	    <label>Play Intro at Startup</label>
+	    <div class="switch">
+	      <label>
+		Off
+		<input type="checkbox" id="playIntroAtStartup">
+		<span class="lever"></span>
+		On
+	      </label>
+	    </div>
+
+	    <label>Cache Downloaded Images</label>
+	    <div class="switch">
+	      <label>
+		Off
+		<input type="checkbox" id="autoCacheImages">
+		<span class="lever"></span>
+		On
+	      </label>
+	    </div>
+
+	    <label>Auto Save Database on Change</label>
+	    <div class="switch">
+	      <label>
+		Off
+		<input type="checkbox" id="autoSaveDatabaseOnChange">
+		<span class="lever"></span>
+		On
+	      </label>
+	    </div>
+
+
+	    <div class="input-field">
+              <input placeholder="Database File Path" id="database_path" type="text" class="validate">
+              <label for="database_path">Database</label>
+            </div>
+
+	    <div class="input-field">
+              <input placeholder="Playlist Path" id="playlist_path" type="text" class="validate">
+              <label for="playlist_path">Playlist Path</label>
+            </div>
+
+	    <div class="input-field">
+              <input placeholder="Image Cache Path" id="imagecache_path" type="text" class="validate">
+              <label for="database_path">Image Cache Path</label>
+            </div>
+
+	    <div class="input-field">
+              <input placeholder="Audio Cache Path" id="audiocache_path" type="text" class="validate">
+              <label for="audiocache_path">Audio Cache Path</label>
+            </div>
+	  </form>
+	</div>
+      </div>
+      <div class="modal-footer nsp-grey lighten z-depth-5">
+	<a href="#!" class="modal-action action-settings-close waves-effect waves-green btn nsp" style="margin-left:6px;">Close</a>
+	<a href="#!" class="modal-action action-settings-reset waves-effect waves-green btn nsp" style="margin-left:6px;">Reset</a>
+	<a href="#!" class="modal-action action-settings-apply waves-effect waves-green btn nsp" style="margin-left:6px;">Apply</a>
       </div>
     </div>
 
