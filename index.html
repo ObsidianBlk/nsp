@@ -99,68 +99,87 @@
     <div id="app-settings" class="modal modal-fixed-footer nsp-grey nsp-text" style="display:none;">
       <div class="modal-content flow-text">
 	<div style="overflow:auto;">
-	  <i class="material-icons left" style="font-size: 8rem;">settings</i>
+	  <div class="valign-wrapper">
+	  <i class="material-icons valign" style="display:inline-block;font-size: 8rem;">settings</i>
+	  <h4 class="valign nsp-grey-text text-highlight">Settings</h4>
+	  </div>
 	  <form>
-	    <label>Download Current Episode List at Startup</label>
-	    <div class="switch">
-	      <label>
-		Off
-		<input type="checkbox" id="downloadFeedAtStartup">
-		<span class="lever"></span>
-		On
-	      </label>
+	    <div class="row valign-wrapper nsp-grey darken">
+	      <p class="col s8 flow-text valign">Download RSS Feed at Startup:</p>
+	      <div class="switch col valign">
+		<label>
+		  Off
+		  <input type="checkbox" id="downloadFeedAtStartup">
+		  <span class="lever"></span>
+		  On
+		</label>
+	      </div>
 	    </div>
 
-	    <label>Play Intro at Startup</label>
-	    <div class="switch">
-	      <label>
-		Off
-		<input type="checkbox" id="playIntroAtStartup">
-		<span class="lever"></span>
-		On
-	      </label>
+	    <div class="row valign-wrapper">
+	      <p class="flow-text col s8 valign">Play Intro at Startup:</p>
+	      <div class="switch col valign">
+		<label>
+		  Off
+		  <input type="checkbox" id="playIntroAtStartup">
+		  <span class="lever"></span>
+		  On
+		</label>
+	      </div>
 	    </div>
 
-	    <label>Cache Downloaded Images</label>
-	    <div class="switch">
-	      <label>
-		Off
-		<input type="checkbox" id="autoCacheImages">
-		<span class="lever"></span>
-		On
-	      </label>
+	    <div class="row valign-wrapper nsp-grey darken">
+	      <p class="flow-text col s8 valign">Cache Downloaded Images:</p>
+	      <div class="switch col valign">
+		<label>
+		  Off
+		  <input type="checkbox" id="autoCacheImages">
+		  <span class="lever"></span>
+		  On
+		</label>
+	      </div>
 	    </div>
 
-	    <label>Auto Save Database on Change</label>
-	    <div class="switch">
-	      <label>
-		Off
-		<input type="checkbox" id="autoSaveDatabaseOnChange">
-		<span class="lever"></span>
-		On
-	      </label>
+	    <div class="row valign-wrapper">
+	      <p class="flow-text col s8 valign">Auto Save Database on Change:</p>
+	      <div class="switch col valign">
+		<label>
+		  Off
+		  <input type="checkbox" id="autoSaveDatabaseOnChange">
+		  <span class="lever"></span>
+		  On
+		</label>
+	      </div>
 	    </div>
 
 
-	    <div class="input-field">
-              <input placeholder="Database File Path" id="database_path" type="text" class="validate">
-              <label for="database_path">Database</label>
-            </div>
+	    <div class="row valign-wrapper nsp-grey darken">
+	      <p class="flow-text valign col s6">Path to Database File:</p>
+	      <div class="input-field valign col">
+		<input placeholder="Database File Path" id="database_path" type="text" class="validate">
+              </div>
+	    </div>
 
-	    <div class="input-field">
-              <input placeholder="Playlist Path" id="playlist_path" type="text" class="validate">
-              <label for="playlist_path">Playlist Path</label>
-            </div>
+	    <div class="row valign-wrapper">
+	      <p class="flow-text valign col s6">Path to Playlists:</p>
+	      <div class="input-field valign col">
+		<input placeholder="Playlist Path" id="playlist_path" type="text" class="validate">
+              </div>
+	    </div>
 
-	    <div class="input-field">
-              <input placeholder="Image Cache Path" id="imagecache_path" type="text" class="validate">
-              <label for="database_path">Image Cache Path</label>
-            </div>
+	    <div class="row valign-wrapper nsp-grey darken">
+	      <p class="flow-text valign col s6">Path to Image Cache:</p>
+	      <div class="input-field valign col">
+		<input placeholder="Image Cache Path" id="imagecache_path" type="text" class="validate">
+              </div>
+	    </div>
 
-	    <div class="input-field">
-              <input placeholder="Audio Cache Path" id="audiocache_path" type="text" class="validate">
-              <label for="audiocache_path">Audio Cache Path</label>
-            </div>
+	    <div class="row valign-wrapper">
+	      <p class="flow-text valign col s6">Path to Audio Cache:</p>
+	      <div class="input-field valign col">
+		<input placeholder="Audio Cache Path" id="audiocache_path" type="text" class="validate">
+              </div>
+	    </div>
 	  </form>
 	</div>
       </div>
@@ -259,10 +278,16 @@
 	    <br><br><br><br><br><br> <!-- These <br>s fix a scrolling bug -->
           </div>
           <div class="col m6 hide-on-small-only sheet scroller" style="padding:0;">
-	    <div class="welcome-text flow-text nsp-text" style="margin-top: 6rem; display:block;">
-	      <b>WARNING:</b> This is a horror fiction podcast. 
+	    <div class="welcome-text flow-text nsp-text" style="margin-top: 1rem; display:block;">
+	      <p><b>WARNING:</b> This is a horror fiction podcast. 
 	      It is intended for mature adults, not the faint of heart. 
-	      Join us at your own risk...
+	      Join us at your own risk...<p>
+
+	      <p style="color:#DF0000;">
+		<!-- IMPORTANT: This must NEVER change! -->
+		The copyright for all audio content is held by The NoSleep Podcast and Creative Reason Media Inc. and is used with permission.
+		The copyrights for each story are held by the respective authors.
+	      </p>
 	    </div>
             <div id="sheet_content" class="nsp-grey darken nsp-text"></div>
           </div>
