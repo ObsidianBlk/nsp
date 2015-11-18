@@ -9,7 +9,6 @@ var Application = (function($){
 
   if (typeof(window.NSP) === 'undefined'){
     window.NSP = {
-      application_name:"nosleeppodapp",
       config:null,
       db:null
     };
@@ -79,8 +78,7 @@ var Application = (function($){
       this.emit("application_ready");
     }).bind(this);
 
-    var config_path = Path.normalize(Path.join(require("./js/app/util/userPath")(NSP.application_name), "config.json"));
-    NSP.config = new Config(NSP.application_name);
+    NSP.config = new Config(require("nw.gui").App.dataPath);
     NSP.db = new Database();
 
     this.emit("config_created");
@@ -126,7 +124,7 @@ var Application = (function($){
     NSP.config.on("opened", (function(config_exists){
       this.emit("config_loaded");
       if (config_exists === false){
-	NSP.config.save(config_path);
+	NSP.config.save();
       }
 
       // Now... create the required paths defined by the config if they don't exist.
@@ -145,7 +143,7 @@ var Application = (function($){
       });
     }).bind(this));
 
-    NSP.config.open(config_path);
+    NSP.config.open();
   };
 
   App.prototype._HeartbeatRythm = function(rythm){

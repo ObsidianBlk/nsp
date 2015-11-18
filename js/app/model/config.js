@@ -27,10 +27,11 @@ module.exports = (function(){
     conf.heartbeatRythm = obj.heartbeat_rythm;
   }
 
-  function config(application_name){
+  function config(application_path){
     this._dataPath = "";
-    if (typeof(application_name) === 'string'){
-      this._dataPath = require("../util/userPath")(application_name);
+    if (typeof(application_path) === 'string'){
+      //this._dataPath = require("../util/userPath")(application_name);
+      this._dataPath = application_path;
       console.log(this._dataPath);
       //this._dataPath = "";
     }

@@ -17,7 +17,11 @@ window.View.SettingsView = (function(){
   settingsView.prototype.openModal = function(){
     if (!this.open){
       this._ConfigToEntries();
-      this._modal.openModal();
+      this._modal.openModal({
+	ready:(function(){
+	  this._modal.find(".modal-content").scrollTop(0);
+	}).bind(this)
+      });
     }
   };
 

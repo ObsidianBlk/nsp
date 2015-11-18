@@ -601,6 +601,7 @@ window.View.EpisodeView = (function(){
     this._sheetDirty = false;
 
     this._activeCard = [null, null];
+    this._activeCardLock = false;
     this._slideActive = false;
     this._slideBuffer = 200; // px
 
@@ -638,13 +639,17 @@ window.View.EpisodeView = (function(){
   episodeView.prototype.openEpisode = function(guid, title){
     // NOTE: title is a "story" title and may be omitted.
     var item = this._list.find("[data-guid='" + guid + "']");
-    item.find(".collapsible-header").trigger("click");
-    var top = item.offset().top - $(".episode-card-list").offset().top + $(".episode-card-list").scrollTop();
-    console.log(top);
-    $(".episode-card-list").scrollTop(top);
-    //$('html, body').animate({
-                        //scrollTop: $("#div1").offset().top
-                    //}, 2000);
+    if (item.length > 0){
+      item.find(".collapsible-header").trigger("click");
+
+      var scroller = $(".episode-card-list").parent();
+      var top = item.offset().top - ($(".episode-card-list").offset().top + scroller.offset().top);// + $(".episode-card-list").parent().scrollTop();
+      scroller.animate({
+	scrollTop: top
+      }, 500);
+    } else {
+      Materialize.toast("Can only open episodes in main list. Check filters.", 3000);
+    }
   };
 
   episodeView.prototype.addEpisode = function(episode){
@@ -673,6 +678,7 @@ window.View.EpisodeView = (function(){
     }
     
     var le = ListEntity(episode);
+    //le.find(".collapsible-header").on("click", (function(){
     le.on("click", (function(){
       this._SlideToContent(le, episode);
     }).bind(this));
@@ -698,7 +704,7 @@ window.View.EpisodeView = (function(){
     for (var i=0; i < NSP.db.episodeCount; i++){
       this._episodeCard.push(NSP.db.episode(i));
     }
-    if (typeof(no_apply) === 'boolean' && no_apply === true){
+    if (typeof(no_apply) !== 'boolean' || no_apply === false){
       this._ApplySearchFilters();
     }
   };
@@ -793,10 +799,15 @@ window.View.EpisodeView = (function(){
     }
 
     if (entity.hasClass("active")){
+      this._activeCardLock = false; // Always disable the lock when explicitly closing.
       if (this._activeCard[0] !== episode){
         this._activeCard[1] = episode;
       }
-    } else {
+    } else if (this._activeCard[0] !== null){
+      if (this._activeCard[0].guid === episode.guid && this._activeCardLock){
+	this._activeCardLock = false; // It did it's job. Reset.
+	return;
+      }
       this._activeCard[0] = null;
     }
     var content = this._sheetview.find("#sheet_content");
@@ -832,6 +843,7 @@ window.View.EpisodeView = (function(){
 
   episodeView.prototype._OnSlideIn = function(){
     var content = this._sheetview.find("#sheet_content");
+    content.parent().scrollTop(content.offset().top); // Scroll back to top of sheet.
     if (this._activeCard[1] !== null){
       this._activeCard[0] = this._activeCard[1];
       this._activeCard[1] = null;
@@ -971,6 +983,7 @@ window.View.EpisodeView = (function(){
   };
 
   episodeView.prototype._ApplySearchFilters = function(){
+    console.log("Applying filters!");
     this._list.empty();
     var elist = this._episodeCard.filter((function(ep){
       return this._EpisodeInFilter(ep);
@@ -979,6 +992,16 @@ window.View.EpisodeView = (function(){
     if (elist.length > 0){
       for (i=0; i < elist.length; i++){
 	this.addEpisode(elist[i]);
+      }
+    }
+
+    if (this._activeCard[0] !== null){
+      if (this._list.find("[data-guid='" + this._activeCard[0].guid + "']").length > 0){
+	this._activeCardLock = true;
+	this.openEpisode(this._activeCard[0].guid);
+      } else {
+	this._activeCard[0] = null;
+	this._sheetview.find("#sheet_content").animate({"margin-left":this._sheetview.width()+this._slideBuffer}, 400, this._OnSlideOut.bind(this));
       }
     }
   };

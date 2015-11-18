@@ -138,10 +138,16 @@ window.View.POIView = (function(){
 	this._type = type;
 	this._name = name;
 	func();
-	this._modal.openModal({complete:(function(){
-	  this._type = null;
-	  this._name = null;
-	}).bind(this)});
+	this._modal.openModal({
+	  ready:(function(){
+	    this._modal.find(".modal-content").scrollTop(0);
+	  }).bind(this),
+
+	  complete:(function(){
+	    this._type = null;
+	    this._name = null;
+	  }).bind(this)
+	});
       }
     }
   };

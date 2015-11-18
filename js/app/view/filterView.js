@@ -88,7 +88,11 @@ window.View.FilterView = (function(){
       if (filterCount === 0){
         this._AddNewFilterOption();
       }
-      this._modal.openModal();
+      this._modal.openModal({
+	ready:(function(){
+	  this._modal.find(".modal-content").scrollTop(0);
+	}).bind(this)
+      });
     }
   };
 
