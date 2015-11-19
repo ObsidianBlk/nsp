@@ -640,7 +640,17 @@ window.View.EpisodeView = (function(){
     // NOTE: title is a "story" title and may be omitted.
     var item = this._list.find("[data-guid='" + guid + "']");
     if (item.length > 0){
-      item.find(".collapsible-header").trigger("click");
+      // Ok... first check to see if the episode list is dirty!
+      if (this._listDirty){ // If it is... we have to wait for the heartbeat to reset it!
+	var intervalVal = setInterval((function(){
+	  if (this._listDirty === false){
+	    clearInterval(intervalVal);
+	    item.find(".collapsible-header").trigger("click");
+	  }
+	}).bind(this), 100);
+      } else { // Otherwise, we can just trigger and be done with it!
+	item.find(".collapsible-header").trigger("click");
+      }
 
       var scroller = $(".episode-card-list").parent();
       var top = item.offset().top - ($(".episode-card-list").offset().top + scroller.offset().top);// + $(".episode-card-list").parent().scrollTop();
@@ -678,8 +688,14 @@ window.View.EpisodeView = (function(){
     }
     
     var le = ListEntity(episode);
-    //le.find(".collapsible-header").on("click", (function(){
-    le.on("click", (function(){
+    le.find(".collapsible-header").on("click", (function(){
+    //le.on("click", (function(){
+      if (le.attr("data-state") === "opened"){
+	le.removeAttr("data-state");
+      } else {
+	this._list.find("li[data-state=\"opened\"]").removeAttr("data-state");
+	le.attr("data-state", "opened");
+      }
       this._SlideToContent(le, episode);
     }).bind(this));
 
@@ -766,13 +782,21 @@ window.View.EpisodeView = (function(){
   
   episodeView.prototype._EpisodeInFilter = function(episode){
     for (var i=0; i < this._filter.length; i++){
-      if (this._filter[i].type === "tag"){
+      if (this._filter[i].type.substr(0, 3) === "tag"){
 	var tags = this._filter[i].value.split(",");
+	var opand = this._filter[i].type === "taga";
+	var found = false;
 	for (var t=0; t < tags.length; t++){
 	  var tag = tags[t].trim();
-	  if (episode.hasTagLike(tag) === false){
+	  found = episode.hasTagLike(tag);
+	  if (found === false && opand){
 	    return false; // All tags must be present!
+	  } else if (found === true && !opand){
+	    break; // Found at least one tag!
 	  }
+	}
+	if (found === false){
+	  return false;
 	}
       } else if (this._filter[i].type === "writer"){
 	if (episode.hasWriter(this._filter[i].value) === false){
@@ -798,23 +822,28 @@ window.View.EpisodeView = (function(){
       $(".welcome-text").css("display", "none");
     }
 
-    if (entity.hasClass("active")){
-      this._activeCardLock = false; // Always disable the lock when explicitly closing.
+    var content = this._sheetview.find("#sheet_content");
+    var entityOpen = entity.attr("data-state") === "opened";
+    var contentOpen = content.css("margin-left") === "0px";
+
+    if (entityOpen){
+      this._activeCardLock = false; // Always disable the lock when explicitly opening.
       if (this._activeCard[0] !== episode){
         this._activeCard[1] = episode;
+      } else if (contentOpen){
+	return; // If the entity is OPEN and the episode is the same as the currently active episode... we're done.
       }
-    } else if (this._activeCard[0] !== null){
+    } else if (this._activeCard[0] !== null && contentOpen){
       if (this._activeCard[0].guid === episode.guid && this._activeCardLock){
 	this._activeCardLock = false; // It did it's job. Reset.
 	return;
       }
       this._activeCard[0] = null;
     }
-    var content = this._sheetview.find("#sheet_content");
 
     if (!this._slideActive){
       this._slideActive = true;
-      if (content.css("margin-left") === "0px"){
+      if (contentOpen){
         content.animate({"margin-left":this._sheetview.width()+this._slideBuffer}, 400, this._OnSlideOut.bind(this));
       } else {
         if (this._activeCard[1] !== null){
@@ -983,7 +1012,6 @@ window.View.EpisodeView = (function(){
   };
 
   episodeView.prototype._ApplySearchFilters = function(){
-    console.log("Applying filters!");
     this._list.empty();
     var elist = this._episodeCard.filter((function(ep){
       return this._EpisodeInFilter(ep);

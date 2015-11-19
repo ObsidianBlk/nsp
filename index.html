@@ -82,16 +82,25 @@
       <div class="modal-content flow-text">
 	<div style="overflow:auto;">
 	  <i class="material-icons left" style="font-size: 8rem;">info</i>
-	  <h5>About: The NoSleep Pod-App</h5>
-	  <p>Written by <b>Bryan Miller</b>.<br>
-	    This application is one fans way of enjoying the podcast! I am in no way affiliated with The Nosleep Podcast other than as a listener.
-	    <br>
+	  <h5>The NoSleep Pod-App</h5>
+	  <p>Written by <strong>Bryan Miller</strong>.<br>
+	    For the enjoyment of the Nosleep Podcast by it's community.
+	  </p>
+	  <p><strong>WARNING:</strong> This is a horror fiction podcast. 
+	    It is intended for mature adults, not the faint of heart. 
+	    Join us at your own risk...<p>
+
+	  <p style="color:#DF0000;">
+	    The copyright for all audio content is held by The NoSleep Podcast and Creative Reason Media Inc. and is used with permission.
+	    The copyrights for each story are held by the respective authors.
+	  </p>
+	  <p>
 	    This application is released as is under GPL3 License.
 	  </p>
 	</div>
       </div>
       <div class="modal-footer nsp-grey lighten z-depth-5">
-	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn nsp">Agree</a>
+	<a href="#!" class=" modal-action modal-close waves-effect waves-green btn nsp">Ok</a>
       </div>
     </div>
 
@@ -222,6 +231,97 @@
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Clear All</a>
       </div>
     </div>
+
+    <!-- Episode Editor Modal -->
+    <div id="episode-editor" class="modal modal-fixed-footer" style="display:none;">
+      <div class="modal-content nsp-grey nsp-text">
+	<div class="row valign-wrapper">
+	  <p class="flow-text valign col s6">Episode Title:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Title" id="episode_title" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper nsp-grey darken">
+	  <p class="flow-text valign col s6">Episode Link/Filename:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Title" id="episode_audio" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper">
+	  <p class="flow-text valign col s6">Episode Link [optional]:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Episode Link" id="episode_link" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper nsp-grey darken">
+	  <div class="input-field valign col">
+	    <textarea id="episode_description" class="materialize-textarea"></textarea>
+	    <label for="episode_description">Episode Description</label>
+	  </div>
+	</div>
+
+	<div class="row">
+	  <div class="col s12 content">
+	    <ul class="episode-story-list collapsible popout" data-collapsible="accordion"></ul>
+	  </div>
+	</div>
+      </div>
+      <div class="modal-footer nsp-grey lighten z-depth-5">
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-close-action" style="margin-left:6px;">Close</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-apply-action" style="margin-left:6px;">Save</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Reset</a>
+      </div>
+    </div>
+
+    <!-- Story Editor Modal -->
+    <div id="story-editor" class="modal modal-fixed-footer" style="display:none;">
+      <div class="modal-content nsp-grey nsp-text">
+	<div class="row valign-wrapper">
+	  <p class="flow-text valign col s6">Story Title:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Title" id="story_title" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper nsp-grey darken">
+	  <p class="flow-text valign col s6">Start Time [HH:MM:SS]:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Time [hh:mm:ss]" id="story_start_time" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper">
+	  <p class="flow-text valign col s6">End Time [Optional: HH:MM:SS]:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Time [hh:mm:ss]" id="story_end_time" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper nsp-grey darken">
+	  <p class="flow-text valign col s6">Writers (comma separated):</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Writer(s)" id="story_writers" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper">
+	  <p class="flow-text valign col s6">Narrators (comma separated):</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Narrator(s)" id="story_writers" type="text" class="validate">
+          </div>
+	</div>
+      </div>
+
+      <div class="modal-footer nsp-grey lighten z-depth-5">
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-close-action" style="margin-left:6px;">Close</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-apply-action" style="margin-left:6px;">Save</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Reset</a>
+      </div>
+    </div>
+
 
     <!-- Playlist Management Dialog -->
     <div id="playlist-select" class="modal modal-fixed-footer" style="display:none;">

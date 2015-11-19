@@ -51,11 +51,11 @@ window.View.FilterView = (function(){
 	for (var i=0; i < filters.length; i++){
 	  var item = $(templates.filterItem);
 	  item.find(".filter-type select option[value=\"" + filters[i].type + "\"]").prop("selected", true);
-	  if (filters[i].type === "tag" || filters[i].type === "story"){
+	  if (filters[i].type.substr(0, 3) === "tag" || filters[i].type === "story"){
 	    item.find(".filter-value-tag").removeAttr("style");
 	    item.find(".filter-value-person").css("display", "none");
 	    item.find(".filter-value-tag input").val(filters[i].value); // <-- value
-	    if (filters[i].type === "tag"){
+	    if (filters[i].type.substr(0, 3) === "tag"){
 	      item.find(".filter-value-tag input").attr("placeholder", "Comma seperated tag list");
 	    } else if (filters[i].type === "story"){
 	      item.find(".filter-value-tag input").attr("placeholder", "Enter (partial) story title");
@@ -110,7 +110,7 @@ window.View.FilterView = (function(){
 	var item = $(items[i]);
 	var type = item.find(".filter-type select option:selected").val();
 	var val = "";
-	if (type === "tag" || type === "story"){
+	if (type.substr(0, 3) === "tag" || type === "story"){
 	  val = item.find(".filter-value-tag input").val();
 	} else if (type === "writer" || type === "narrator"){
 	  val = item.find(".filter-value-person select option:selected").val();
@@ -135,16 +135,23 @@ window.View.FilterView = (function(){
     var filterType = item.find(".filter-type select");
     var valInput = item.find(".filter-value-tag");
     var selectInput = item.find(".filter-value-person");
+    item.attr("data-lastFilterType", filterType.find("option:selected").val());
+
 
     actRemoveFilter.on("click", function(){
       item.remove();
     });
 
     filterType.on("change", (function(){
+      var lastType = item.attr("data-lastFilterType");
       var type = filterType.find("option:selected").val();
-      if (type === "tag" || type === "story"){
-	valInput.find("input").val("");
-	if (type === "tag"){
+      item.attr("data-lastFilterType", type);
+
+      if (type.substr(0, 3) === "tag" || type === "story"){
+	if (lastType.substr(0, 3) !== type.substr(0, 3)){
+	  valInput.find("input").val("");
+	}
+	if (type.substr(0, 3) === "tag"){
 	  valInput.find("input").attr("placeholder", "Comma seperated tag list");
 	} else if (type === "story"){
 	  valInput.find("input").attr("placeholder", "Enter (partial) story title");
