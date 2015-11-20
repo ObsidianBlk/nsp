@@ -27,6 +27,7 @@
     <script type="text/javascript" src="js/app/view/filterView.js"></script>
     <script type="text/javascript" src="js/app/view/playlistView.js"></script>
     <script type="text/javascript" src="js/app/view/settingsView.js"></script>
+    <script type="text/javascript" src="js/app/view/epEditorView.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -235,33 +236,42 @@
     <!-- Episode Editor Modal -->
     <div id="episode-editor" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content nsp-grey nsp-text">
-	<div class="row valign-wrapper">
-	  <p class="flow-text valign col s6">Episode Title:</p>
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Title:</p>
 	  <div class="input-field valign col">
 	    <input placeholder="Title" id="episode_title" type="text" class="validate">
           </div>
 	</div>
 
-	<div class="row valign-wrapper nsp-grey darken">
-	  <p class="flow-text valign col s6">Episode Link/Filename:</p>
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Release Date:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Title" id="episode_date" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Link/Filename:</p>
 	  <div class="input-field valign col">
 	    <input placeholder="Title" id="episode_audio" type="text" class="validate">
           </div>
 	</div>
 
-	<div class="row valign-wrapper">
-	  <p class="flow-text valign col s6">Episode Link [optional]:</p>
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Link [optional]:</p>
 	  <div class="input-field valign col">
 	    <input placeholder="Episode Link" id="episode_link" type="text" class="validate">
           </div>
 	</div>
 
-	<div class="row valign-wrapper nsp-grey darken">
+	<div class="row valign-wrapper color-alternation">
 	  <div class="input-field valign col">
 	    <textarea id="episode_description" class="materialize-textarea"></textarea>
-	    <label for="episode_description">Episode Description</label>
+	    <label for="episode_description">Description</label>
 	  </div>
 	</div>
+
+	<hr>
 
 	<div class="row">
 	  <div class="col s12 content">
@@ -270,9 +280,9 @@
 	</div>
       </div>
       <div class="modal-footer nsp-grey lighten z-depth-5">
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-close-action" style="margin-left:6px;">Close</a>
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-apply-action" style="margin-left:6px;">Save</a>
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Reset</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp epeditor-close-action" style="margin-left:6px;">Close</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp epeditor-save-action" style="margin-left:6px;">Save</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp epeditor-reset-action" style="margin-left:6px;">Reset</a>
       </div>
     </div>
 
@@ -316,9 +326,9 @@
       </div>
 
       <div class="modal-footer nsp-grey lighten z-depth-5">
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-close-action" style="margin-left:6px;">Close</a>
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-apply-action" style="margin-left:6px;">Save</a>
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp filter-clear-action" style="margin-left:6px;">Reset</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-close-action" style="margin-left:6px;">Close</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-save-action" style="margin-left:6px;">Save</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-reset-action" style="margin-left:6px;">Reset</a>
       </div>
     </div>
 

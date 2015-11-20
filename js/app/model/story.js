@@ -410,8 +410,34 @@ module.exports = (function(){
       get:function(){return this._writer.length;}
     },
 
+    "writers":{
+      get:function(){
+	var w = "";
+	for (var i=0; i < this._writer.length; i++){
+	  if (w !== ""){
+	    w += ", ";
+	  }
+	  w += this._writer[i].name;
+	}
+	return w;
+      }
+    },
+
     "narratorCount":{
       get:function(){return this._narrator.length;}
+    },
+
+    "narrators":{
+      get:function(){
+	var n = "";
+	for (var i=0; i < this._narrator.length; i++){
+	  if (n !== ""){
+	    n += ", ";
+	  }
+	  n += this._narrator[i].name;
+	}
+	return n;
+      }
     },
 
     "tagCount":{

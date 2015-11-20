@@ -18,6 +18,8 @@ $(document).ready(function(){
   var filterView = new View.FilterView("#list-filters");
   var playlistView = new View.PlaylistView("#playlist-select");
   var settingsView = new View.SettingsView("#app-settings");
+  var episodeEditorView = new View.EpEditorView("#episode-editor");
+  //var storyEditorView = new View.StEditorView("#story-editor");
 
   episodeView.on("view_writer", function(writer, link){
     poiView.writer(writer, link);
@@ -25,6 +27,14 @@ $(document).ready(function(){
 
   episodeView.on("view_narrator", function(narrator, link){
     poiView.narrator(narrator, link);
+  });
+
+  episodeView.on("edit_episode", function(episode, options){
+    episodeEditorView.openModal(episode, options);
+  });
+
+  episodeEditorView.on("edit_story", function(episode, story, options){
+    Materialize.toast("Story Editor not yet implemented.");
   });
 
   poiView.on("view_episode", function(info){
