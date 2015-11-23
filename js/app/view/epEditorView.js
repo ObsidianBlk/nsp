@@ -44,16 +44,15 @@ window.View.EpEditorView = (function(){
 	var sindex = episode.getStoryIndexByTitle(story.title);
 	if (sindex >= 0){
 	  episode.removeStory(sindex);
-	  if (editor._onEpisodeChanged !== null){
-	    editor._onEpisodeChanged();
-	  }
+	  entity.remove();
 	}
       }
     });
 
     entity.find(".epepisode-story-edit").on("click", function(){
       var completeCallback = (editor._completeCallback !== null) ? editor._completeCallback : function(){}; // A... little hack.
-      Editor.close();
+      editor._completeCallback = null;
+      editor.close();
       editor.emit("edit_story", episode, story, {
 	complete:function(){
 	  editor.openModal(episode, {
@@ -62,6 +61,8 @@ window.View.EpEditorView = (function(){
 	}
       });
     });
+
+    return entity;
   }
 
 
@@ -88,13 +89,16 @@ window.View.EpEditorView = (function(){
       this._ShowInput("#episode_date", this._newEpisode);
       this._ColorAlternator();
 
+      this._modal.find(".episode-story-list").empty();
       this._modal.find(".epeditor-reset-action").trigger("click");
       if (this._episode !== null){
 	var storyList = this._modal.find(".episode-story-list");
 	for (var i=0; i < this._episode.storyCount; i++){
-	  var e = StoryEntry(this. this._episode, this._episode.story(i));
+	  var e = StoryEntry(this, this._episode, this._episode.story(i));
 	  storyList.append(e);
 	}
+	this._modal.find('.collapsible').collapsible();
+	this._modal.find('.tooltipped').tooltip();
       }
 
       this._modal.openModal(options);
@@ -103,23 +107,30 @@ window.View.EpEditorView = (function(){
 
   epEditorView.prototype.close = function(){
     if (this.open){
+      var data = {};
+      if (this._completeCallback !== null){
+	data.complete = this._completeCallback;
+      }
+
       this._newEpisode = false;
       this._episode = null;
       this._completeCallback = null;
-      this._modal.closeModal();
+      this._modal.closeModal(data);
     }
   };
 
   epEditorView.prototype._ColorAlternator = function(){
     var row = 0;
-    this._modal.find(".color-alternation:visible").each(function(){
+    this._modal.find(".color-alternation").each(function(){
       var item = $(this);
-      if (row === 0 || row%2 === 0){
-	item.removeClass("nsp-grey darken");
-      } else {
-	item.addClass("nsp-grey darken");
+      if (item.css("display") !== "none"){
+	if (row === 0 || row%2 === 0){
+	  item.removeClass("nsp-grey darken");
+	} else {
+	  item.addClass("nsp-grey darken");
+	}
+	row++;
       }
-      row++;
     });
   };
 
@@ -143,6 +154,8 @@ window.View.EpEditorView = (function(){
       var audio = this._modal.find("#episode_audio").val();
       var link = this._modal.find("#episode_link").val();
       var desc = this._modal.find("#episode_description").val();
+      var season = parseInt(this._modal.find("#episode_season").val());
+      var epnumber = parseInt(this._modal.find("#episode_epnumber").val());
 
       if (this._episode === null){
 	var guid = GenerateUUID();
@@ -167,6 +180,12 @@ window.View.EpEditorView = (function(){
 	if (date !== ""){
 	  data.date = date;
 	}
+	if (Number.isNaN(season) === false){
+	  data.season = season;
+	}
+	if (Number.isNaN(epnumber) === false){
+	  data.episode = epnumber;
+	}
 
 	NSP.db.addEpisode(data);
 	this._episode = NSP.db.episode(guid);
@@ -183,6 +202,12 @@ window.View.EpEditorView = (function(){
 	this._episode.link = link;
 	this._episode.audio_path = audio;
 	this._episode.shortDescription = desc;
+	if (Number.isNaN(season) === false){
+	  this._episode.season = season;
+	}
+	if (Number.isNaN(epnumber) === false){
+	  this._episode.episode = epnumber;
+	}
 	if (NSP.config.autoSaveDatabaseOnChange === false){
 	  NSP.db.save(NSP.config.absolutePath.database);
 	}
@@ -197,11 +222,15 @@ window.View.EpEditorView = (function(){
 	this._modal.find("#episode_audio").val(this._episode.audio_path);
 	this._modal.find("#episode_link").val(this._episode.link);
 	this._modal.find("#episode_description").val(this._episode.shortDescription);
+	this._modal.find("#episode_season").val(this._episode.season);
+	this._modal.find("#episode_epnumber").val(this._episode.episode);
       } else {
 	this._modal.find("#episode_title").val("");
 	this._modal.find("#episode_audio").val("");
 	this._modal.find("#episode_link").val("");
 	this._modal.find("#episode_description").val("");
+	this._modal.find("#episode_season").val("1");
+	this._modal.find("#episode_epnumber").val("0");
       }
     }).bind(this));
 
@@ -210,6 +239,15 @@ window.View.EpEditorView = (function(){
       this.close();
     }).bind(this));
   };
+
+
+  Object.defineProperties(epEditorView.prototype, {
+    "open":{
+      get:function(){
+	return this._modal.css("display") !== "none";
+      }
+    }
+  });
 
   return epEditorView;
 })();

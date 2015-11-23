@@ -23,6 +23,7 @@ module.exports = (function(){
     conf.skipInvalidEpisodes = obj.skip_invalid_episodes;
     conf.downloadFeedAtStartup = obj.download_feed_at_startup;
     conf.playIntroAtStartup = obj.play_intro_at_startup;
+    conf.showEditor = obj.show_editor;
     conf.debugMode = (typeof(obj.debug_mode) === 'boolean') ? obj.debug_mode : false;
     conf.heartbeatRythm = obj.heartbeat_rythm;
   }
@@ -49,6 +50,7 @@ module.exports = (function(){
     this._skipInvalidEpisodes = false;
     this._downloadFeedAtStartup = true;
     this._playIntroAtStartup = true;
+    this._showEditor = false;
     this._debug_mode = false;
     this._heartbeatRythm = 200;
 
@@ -75,6 +77,7 @@ module.exports = (function(){
       skip_invalid_episodes: this._skipInvalidEpisodes,
       download_feed_at_startup: this._downloadFeedAtStartup,
       play_intro_at_startup: this._playIntroAtStartup,
+      show_editor: this._showEditor,
       heartbeat_rythm: this._heartbeatRythm
     };
 
@@ -258,6 +261,15 @@ module.exports = (function(){
       set:function(enable){
 	this._playIntroAtStartup = (typeof(enable) === 'boolean') ? enable : this._playIntroAtStartup;
         this._dirty = true;
+	this.emit("changed");
+      }
+    },
+
+    "showEditor":{
+      get:function(){return this._showEditor;},
+      set:function(enable){
+	this._showEditor = (typeof(enable) === 'boolean') ? enable : this._showEditor;
+	this._dirty = true;
 	this.emit("changed");
       }
     },

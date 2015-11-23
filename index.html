@@ -114,7 +114,7 @@
 	  <h4 class="valign nsp-grey-text text-highlight">Settings</h4>
 	  </div>
 	  <form>
-	    <div class="row valign-wrapper nsp-grey darken">
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="col s8 flow-text valign">Download RSS Feed at Startup:</p>
 	      <div class="switch col valign">
 		<label>
@@ -126,7 +126,7 @@
 	      </div>
 	    </div>
 
-	    <div class="row valign-wrapper">
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="flow-text col s8 valign">Play Intro at Startup:</p>
 	      <div class="switch col valign">
 		<label>
@@ -138,7 +138,7 @@
 	      </div>
 	    </div>
 
-	    <div class="row valign-wrapper nsp-grey darken">
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="flow-text col s8 valign">Cache Downloaded Images:</p>
 	      <div class="switch col valign">
 		<label>
@@ -150,7 +150,19 @@
 	      </div>
 	    </div>
 
-	    <div class="row valign-wrapper">
+	    <div class="row valign-wrapper color-alternation">
+	      <p class="flow-text col s8 valign">Show Episode Editor Button:</p>
+	      <div class="switch col valign">
+		<label>
+		  Off
+		  <input type="checkbox" id="showEditor">
+		  <span class="lever"></span>
+		  On
+		</label>
+	      </div>
+	    </div>
+
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="flow-text col s8 valign">Auto Save Database on Change:</p>
 	      <div class="switch col valign">
 		<label>
@@ -163,28 +175,28 @@
 	    </div>
 
 
-	    <div class="row valign-wrapper nsp-grey darken">
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="flow-text valign col s6">Path to Database File:</p>
 	      <div class="input-field valign col">
 		<input placeholder="Database File Path" id="database_path" type="text" class="validate">
               </div>
 	    </div>
 
-	    <div class="row valign-wrapper">
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="flow-text valign col s6">Path to Playlists:</p>
 	      <div class="input-field valign col">
 		<input placeholder="Playlist Path" id="playlist_path" type="text" class="validate">
               </div>
 	    </div>
 
-	    <div class="row valign-wrapper nsp-grey darken">
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="flow-text valign col s6">Path to Image Cache:</p>
 	      <div class="input-field valign col">
 		<input placeholder="Image Cache Path" id="imagecache_path" type="text" class="validate">
               </div>
 	    </div>
 
-	    <div class="row valign-wrapper">
+	    <div class="row valign-wrapper color-alternation">
 	      <p class="flow-text valign col s6">Path to Audio Cache:</p>
 	      <div class="input-field valign col">
 		<input placeholder="Audio Cache Path" id="audiocache_path" type="text" class="validate">
@@ -251,6 +263,20 @@
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Season:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Title" id="episode_season" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Episode # (&lt;1 means &qt;Bonus&qt; episode):</p>
+	  <div class="input-field valign col">
+	    <input placeholder="Title" id="episode_epnumber" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper color-alternation">
 	  <p class="flow-text valign col s6">Link/Filename:</p>
 	  <div class="input-field valign col">
 	    <input placeholder="Title" id="episode_audio" type="text" class="validate">
@@ -265,7 +291,7 @@
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
-	  <div class="input-field valign col">
+	  <div class="input-field valign col s12">
 	    <textarea id="episode_description" class="materialize-textarea"></textarea>
 	    <label for="episode_description">Description</label>
 	  </div>

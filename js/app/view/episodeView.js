@@ -23,7 +23,9 @@ window.View.EpisodeView = (function(){
   var LISTENTRY = {
     img:".episode-entry-image",
     title:".episode-entry-title",
-    description:".episode-entry-description"
+    description:".episode-entry-description",
+    editor:".episode-editor-item",
+    editor_action:".episode-editor-action"
   };
 
   var DETAIL = {
@@ -134,6 +136,10 @@ window.View.EpisodeView = (function(){
     e.find(LISTENTRY.title).append(title);
     e.find(LISTENTRY.description).append(episode.shortDescription);
     e.attr("data-guid", episode.guid);
+
+    if (NSP.config.showEditor === false){
+      e.find(LISTENTRY.editor).css("display", "none");
+    }
 
     if (img.length > 0 && episode.img_src !== ""){
       var localPath = Path.join(NSP.config.absolutePath.images, episode.img_filename);
@@ -612,7 +618,16 @@ window.View.EpisodeView = (function(){
 
     this._configured = false;
 
+    this._showEditor = false;
     app.on("heartbeat", (function(){
+      if (this._showEditor !== NSP.config.showEditor){
+	this._showEditor = NSP.config.showEditor;
+	if (this._showEditor){
+	  this._list.find(LISTENTRY.editor).css("display", "block");
+	} else {
+	  this._list.find(LISTENTRY.editor).css("display", "none");
+	}
+      }
       if (this._listDirty || this._sheetDirty){
 	$('.collapsible').collapsible();
 	$('.tooltipped').tooltip();
@@ -688,6 +703,18 @@ window.View.EpisodeView = (function(){
     }
     
     var le = ListEntity(episode);
+    le.find(LISTENTRY.editor_action).on("click", (function(){
+      this.emit("edit_episode", episode, {
+	complete:(function(){
+	  le.find(LISTENTRY.description).html(episode.shortDescription);
+	  if (le.attr("data-state") === "opened"){
+	    var content = this._sheetview.find("#sheet_content");
+	    EpisodeDetails(content, episode, this._audioPlayer);
+	    this._SheetDirty(content);
+	  }
+	}).bind(this)
+      });
+    }).bind(this));
     le.find(".collapsible-header").on("click", (function(){
     //le.on("click", (function(){
       if (le.attr("data-state") === "opened"){

@@ -76,6 +76,85 @@ function getWriters(line){
 }
 
 
+function FindNames(line){
+  var name = "";
+  var link = "";
+  var conjunction = "";
+  var r = /<a href="(.*?)"(.*?)>/i;
+
+  var nlist = [];
+  console.log("TESTING: " + line);
+  
+  var FindTagClosing = function(s, opos){
+    var cpos = s.indexOf(">", opos+1);
+    if (cpos >= 0){
+      var nopos = s.indexOf("<", opos+1);
+      if (nopos >= 0 && nopos < cpos){ // If there's another opening symbol... let's assume the closing symbol we have is that symbols match. Look again.
+	cpos = FindTagClosing(s, cpos);
+      }
+    }
+    return cpos;
+  };
+
+  for (var i=0; i < line.length; i++){
+    var c = line[i];
+    if (c === "," || c === "&"){
+      if (name !== ""){
+	nlist.push({
+	  name:name.trim(),
+	  link: (link !== "") ? link : null
+	});
+	name = "";
+	link = "";
+	conjunction = "";
+      } 
+    } else if (/\s/.test(c)){
+      if (name !== ""){
+	name += c;
+      } else if (conjunction.toLowerCase() !== "and"){
+	name += conjunction + c;
+	conjunction = ""; // It wasn't a conjunction, so... must have been part of the name.
+      } else {
+	conjunction = ""; // Must have been the "and" conjunction.
+      }
+    } else if (c === "<"){
+      var cpos = FindTagClosing(line, i);
+      if (cpos >= 0){
+	var s = line.substr(i, cpos-(i-1));
+	var m = s.match(r);
+	if (m !== null){
+	  link = m[1];
+	}
+	i = cpos;
+      } else {
+	console.log("BYE! ... " + line.indexOf(">", i+1));
+	break; // If we don't close the tag, then the we're done parsing as something is messed up.
+      }
+    } else if (c === "."){
+      break; // Done!
+    } else {
+      if (name === "" && conjunction.length < 3){
+	conjunction += c;
+      } else {
+	if (conjunction.length > 0){
+	  name += conjunction;
+	  conjunction = "";
+	}
+	name += c;
+      }
+    }
+  }
+  if (name !== ""){
+    nlist.push({
+      name:name.trim(),
+      link: (link !== "") ? link : null
+    });
+  }
+
+  return nlist;
+}
+
+
 function getNarrators(line){
   var narrators = [];
 
@@ -94,9 +173,16 @@ function getNarrators(line){
   }
 
   if (res !== null){
-    var nar = null;
+    var list = FindNames(res);
+    for (var i=0; i < list.length; i++){
+      narrators.push({
+	narrator:list[i].name,
+	link:list[i].link
+      });
+    }
+    /*var nar = null;
     var link = null;
-    var rex = /(<a href=\\*\\*\"(.*?)\\*\\*\"(.*?)>(.*?)<\/a>(\s*)(,|&|and){0,1})./;
+    var rex = /(<a href=\\*\\*\"(.*?)\\*\\*\"(.*?)>(.*?)<\/a>(\s*)(, | & | and ){0,1})./;
     if (rex.test(res)){
       var item = null;
       while ((item = rex.exec(res)) !== null){
@@ -155,7 +241,7 @@ function getNarrators(line){
 	  }
 	}
       }
-    }
+    }*/
   }
 
   return narrators;

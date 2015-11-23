@@ -72,6 +72,14 @@ window.View.FilterView = (function(){
 		NSP.db.episode(e).narrators(persons);
 	      }
 	    }
+	    persons.sort(function(a, b){
+	      if (a.key < b.key){
+		return -1;
+	      } else if (a.key > b.key){
+		return 1;
+	      }
+	      return 0;
+	    });
 	    item.find(".filter-value-person select").empty();
 	    item.find(".filter-value-person select").append($("<option value=\"\" disabled selected>Select " + filters[i].type + "</option>"));
 	    for (e=0; e < persons.length; e++){
@@ -170,6 +178,14 @@ window.View.FilterView = (function(){
 	    NSP.db.episode(e).narrators(persons);
 	  }
 	}
+	persons.sort(function(a, b){
+	  if (a.key < b.key){
+	    return -1;
+	  } else if (a.key > b.key){
+	    return 1;
+	  }
+	  return 0;
+	});
 	selectInput.find("select").empty();
 	selectInput.find("select").append($("<option value=\"\" disabled selected>Select " + type + "</option>"));
 	for (e=0; e < persons.length; e++){

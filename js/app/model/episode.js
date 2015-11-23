@@ -707,11 +707,29 @@ module.exports = (function(){
     },
 
     "season":{
-      get:function(){return this._season;}
+      get:function(){return this._season;},
+      set:function(s){
+	if (typeof(s) !== 'number'){
+	  throw new TypeError();
+	}
+	if (s > 0){
+	  this._season = Math.floor(s);
+	  this.emit("changed");
+	}
+      }
     },
 
     "episode":{
-      get:function(){return this._episode;}
+      get:function(){return this._episode;},
+      set:function(e){
+	if (typeof(e) !== 'number'){
+	  throw new TypeError();
+	}
+	if (e >= 0){
+	  this._episode = Math.floor(e);
+	  this.emit("changed");
+	}
+      }
     },
 
     "tagCount":{

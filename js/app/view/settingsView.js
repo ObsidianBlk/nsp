@@ -16,6 +16,7 @@ window.View.SettingsView = (function(){
 
   settingsView.prototype.openModal = function(){
     if (!this.open){
+      this._ColorAlternator();
       this._ConfigToEntries();
       this._modal.openModal({
 	ready:(function(){
@@ -31,6 +32,21 @@ window.View.SettingsView = (function(){
     }
   };
 
+  settingsView.prototype._ColorAlternator = function(){
+    var row = 0;
+    this._modal.find(".color-alternation").each(function(){
+      var item = $(this);
+      if (item.css("display") !== "none"){
+	if (row === 0 || row%2 === 0){
+	  item.removeClass("nsp-grey darken");
+	} else {
+	  item.addClass("nsp-grey darken");
+	}
+	row++;
+      }
+    });
+  };
+
   settingsView.prototype._ConfigToEntries = function(){
     this._modal.find("#database_path").val(NSP.config.path.database);
     this._modal.find("#playlist_path").val(NSP.config.path.playlists);
@@ -38,6 +54,7 @@ window.View.SettingsView = (function(){
     this._modal.find("#audiocache_path").val(NSP.config.path.audio);
     this._modal.find("#downloadFeedAtStartup")[0].checked = NSP.config.downloadFeedAtStartup;
     this._modal.find("#playIntroAtStartup")[0].checked = NSP.config.playIntroAtStartup;
+    this._modal.find("#showEditor")[0].checked = NSP.config.showEditor;
     this._modal.find("#autoCacheImages")[0].checked = NSP.config.autoCacheImages;
     this._modal.find("#autoSaveDatabaseOnChange")[0].checked = NSP.config.autoSaveDatabaseOnChange;
   };
@@ -51,6 +68,7 @@ window.View.SettingsView = (function(){
     };
     NSP.config.downloadFeedAtStartup = this._modal.find("#downloadFeedAtStartup")[0].checked;
     NSP.config.playIntroAtStartup = this._modal.find("#playIntroAtStartup")[0].checked;
+    NSP.config.showEditor = this._modal.find("#showEditor")[0].checked;
     NSP.config.autoCacheImages = this._modal.find("#autoCacheImages")[0].checked;
     NSP.config.autoSaveDatabaseOnChange = this._modal.find("#autoSaveDatabaseOnChange")[0].checked;
   };
