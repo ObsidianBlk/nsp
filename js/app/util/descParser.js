@@ -27,6 +27,153 @@ module.exports = (function(){
   }
 
 
+
+  function CleanName(name){
+    // Redditor test
+    var r = /(.*?) (\([R|r]edditor(.*?)\))/;
+    var m = name.match(r);
+    if (m !== null && m.length > 2){
+      name = m[1]; // This should just be the name.
+    }
+
+    // This is a Abbreviated Name test coupled with a "Included Sentence" test.
+    r = /[a-zA-Z]\.[a-zA-Z]\.(.*)/;
+    var r2 = /(.*)\. (.*)/;
+    if (r.test(name)){ // We have an abbreviated name.
+      // Let's check for an "Included Sentence"
+      r = /([a-zA-Z]\.[a-zA-Z]\. .*)\.(.*)/;
+      m = name.match(r);
+      if (m !== null){
+        name = m[1];
+      }
+    } else if (r2.test(name)){ // We have a basic name with an "Included Sentence".
+      // Stripping the sentence.
+      m = name.match(r2);
+      if (m !== null){
+        name = m[1];
+      }
+    }
+
+    // Trailing character test!
+    var pos = -1;
+    for (var i=0; i < name.length; i++){
+      if (/[a-zA-Z ]/.test(name[i]) === false){
+        if (pos < 0){
+          pos = i;
+        }
+      } else {
+        pos = -1;
+      }
+    }
+    if (pos >= 0){
+      name = name.substr(0, pos);
+    }
+
+    // Final Trim
+    return name.trim();
+  }
+
+
+  function FindNames(line){
+    var name = "";
+    var link = "";
+    var conjunction = "";
+    var checkForConjunction = true;
+    var r = /<a href="(.*?)"(.*?)>/i;
+
+    var nlist = [];
+    
+    var FindTagClosing = function(s, opos){
+      var cpos = s.indexOf(">", opos+1);
+      if (cpos >= 0){
+        var nopos = s.indexOf("<", opos+1);
+        if (nopos >= 0 && nopos < cpos){ // If there's another opening symbol... let's assume the closing symbol we have is that symbols match. Look again.
+	  cpos = FindTagClosing(s, cpos);
+        }
+      }
+      return cpos;
+    };
+
+    for (var i=0; i < line.length; i++){
+      var c = line[i];
+      if (c === "," || c === "&"){
+        if (conjunction !== ""){
+          name += conjunction;
+        }
+        name = CleanName(name.trim());
+        if (name !== ""){
+	  nlist.push({
+	    name:CleanName(name.trim()),
+	    link: (link !== "") ? link : null
+	  });
+        }
+        name = "";
+        link = "";
+        conjunction = "";
+        checkForConjunction = true;
+      } else if (/\s/.test(c)){
+        checkForConjunction = true;
+        if (conjunction.length === 3){
+          if (conjunction.toLowerCase() === "and" && name !== ""){
+            name = CleanName(name.trim());
+            if (name !== ""){
+              nlist.push({
+                name: CleanName(name.trim()),
+                link: (link !== "") ? link : null
+              });
+            }
+            name = "";
+            link = "";
+          } else {
+            name += conjunction + c;
+          }
+          conjunction = "";
+        } else {
+          name += conjunction + c;
+          conjunction = "";
+        }
+      } else if (c === "<"){
+        var cpos = FindTagClosing(line, i);
+        if (cpos >= 0){
+	  var s = line.substr(i, cpos-(i-1));
+	  var m = s.match(r);
+	  if (m !== null){
+	    link = m[1];
+	  }
+	  i = cpos;
+        } else {
+	  break; // If we don't close the tag, then the we're done parsing as something is messed up.
+        }
+      } else {
+        if (conjunction.length < 3 && checkForConjunction){
+	  conjunction += c;
+        } else {
+	  if (conjunction.length > 0){
+	    name += conjunction;
+	    conjunction = "";
+            checkForConjunction = false;
+	  }
+	  name += c;
+        }
+      }
+    }
+    if (name !== ""){
+      if (conjunction !== ""){
+        name += conjunction;
+      }
+      name = CleanName(name.trim());
+      if (name !== ""){
+        nlist.push({
+          name:CleanName(name.trim()),
+          link: (link !== "") ? link : null
+        });
+      }
+    }
+
+    return nlist;
+  }
+
+
   function getWriters(line){
     var regWriters = new RegExp('(written by)(.*?)(and read)');
     var writersMatch = line.match(regWriters);
@@ -37,8 +184,9 @@ module.exports = (function(){
     }
 
     if (writersMatch !== null && writersMatch.length > 2){
-      var res = writersMatch[2];
-      res = res.split(",");
+      writers = FindNames(writersMatch[2]);
+      //var res = writersMatch[2];
+      /*res = res.split(",");
       if (res.length > 0){
         for (var i=0; i < res.length; i++){
 	  var writer = res[i];
@@ -73,7 +221,7 @@ module.exports = (function(){
 	    });
 	  }
         }
-      }
+      }*/
     }
 
     return writers;
@@ -98,7 +246,8 @@ module.exports = (function(){
     }
 
     if (res !== null){
-      var nar = null;
+      narrators = FindNames(res);
+      /*var nar = null;
       var link = null;
       var rex = /(<a href=\\*\\*\"(.*?)\\*\\*\"(.*?)>(.*?)<\/a>(\s*)(,|&|and){0,1})./;
       if (rex.test(res)){
@@ -159,7 +308,7 @@ module.exports = (function(){
 	    }
 	  }
 	}
-      }
+      }*/
     }
 
     return narrators;
