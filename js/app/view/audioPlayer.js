@@ -366,6 +366,7 @@ window.View.AudioPlayer = (function(){
 	}
 
 	var es = this._GetTrackEpisodeAndStory(this._currentTrack);
+	console.log(es);
 	if (es.story !== this._currentStory){
 	  this._currentStory = es.story;
 	  this.emit("story_changed", this._currentStory);

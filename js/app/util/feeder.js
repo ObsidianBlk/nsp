@@ -1,5 +1,6 @@
 
 
+
 module.exports = (function(){
 
   var Events = require('events');
@@ -93,7 +94,6 @@ module.exports = (function(){
     if (ProcessDownload(url, path, callback) === false){return;}
 
     var request = HTTP.get(url, (function(resp){
-      console.log(resp);
       if (resp.statusCode === 302){ // A redirect! Let's follow it!
 	// NOTE: We don't pass the callback in the recursive call because, if there was one, it was already added to the ActiveDownloads
 	// list in the AddToActiveDownloads() call above.

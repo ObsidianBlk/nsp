@@ -2,6 +2,7 @@
 var Application = (function($){
   var Events = require("events");
   var Path = require("path");
+  var FS = require("fs");
   var Database = require("./js/app/model/database");
   var Config = require("./js/app/model/config");
   var Feeder = require("./js/app/util/feeder");
@@ -12,6 +13,33 @@ var Application = (function($){
       config:null,
       db:null
     };
+  }
+
+
+  function GetDataPath(){
+    var dataPath = require("nw.gui").App.dataPath;
+
+    // No point in arguing if it's an absolute path.
+    if (Path.isAbsolute(dataPath)){
+      return dataPath;
+    }
+
+    var tmp = Path.resolve(dataPath);
+    // If the dataPath's root is the same as the executables root... then we're fine!
+    if (Path.dirname(tmp) === Path.dirname(process.execPath)){
+      return tmp;
+    } else {
+      // Check to see if there's a "package.nw" file in the execPath's root...
+      try {
+	var lstat = FS.lstatSync(Path.join(Path.dirname(process.execPath), "package.nw"));
+	if (lstat.isFile()){
+	  // Assume we're running from the execPath!
+	  return Path.join(Path.dirname(process.execPath), dataPath);
+	}
+      } catch (e) {/* skip */}
+    }
+    // Otherwise, assume it's simply the full path to dataPath.
+    return tmp;
   }
 
 
@@ -31,6 +59,7 @@ var Application = (function($){
 
 
   var App = function(){
+    this._dbopened = false;
     this._heartbeatID = null;
     this._curHeartbeatRythm = 0;
   };
@@ -78,7 +107,8 @@ var Application = (function($){
       this.emit("application_ready");
     }).bind(this);
 
-    NSP.config = new Config(require("nw.gui").App.dataPath);
+    var dataPath = GetDataPath();//Path.resolve(require("nw.gui").App.dataPath);
+    NSP.config = new Config(dataPath);
     NSP.db = new Database();
 
     this.emit("config_created");
@@ -102,6 +132,14 @@ var Application = (function($){
           AnnounceApplicationReady();
         }).bind(this));
 
+	feed.on("error", function(error){
+	  if (typeof(error.message) !== 'undefined'){
+	    console.log(error.message);
+	  } else {
+	    console.log(error);
+	  }
+	});
+
         this.feedUpdate(feed);
 
       } else {
@@ -114,11 +152,18 @@ var Application = (function($){
     }).bind(this));
 
     NSP.config.on("error", function(err){
-      console.log(err);
+      if (typeof(err.message) !== 'undefined'){
+	console.log(err.message);
+      } else {
+	console.log(err);
+      }
 
       // Load DB anyway. Config should have default values.
       // TODO: Change this to a question for the user.
-      NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);
+      if (this._dbopened === false){
+	this._dbopened = true;
+	NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);
+      }
     });
 
     NSP.config.on("opened", (function(config_exists){
@@ -133,14 +178,17 @@ var Application = (function($){
 	NSP.config.absolutePath.playlists,
 	NSP.config.absolutePath.audio,
 	NSP.config.absolutePath.images
-      ], 0, function(err){
+      ], 0, (function(err){
 	if (!err){
-	  // Config loaded and paths should be ready, now load the database file.
-	  NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);
+	  if (this._dbopened === false){
+	    // Config loaded and paths should be ready, now load the database file.
+	    NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);
+	    this._dbopened = true;
+	  }
 	} else {
 	  console.log(err.message);
 	}
-      });
+      }).bind(this));
     }).bind(this));
 
     NSP.config.open();
