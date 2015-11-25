@@ -118,7 +118,11 @@ var Application = (function($){
     this.emit("database_created");
 
     NSP.db.on("error", function(err){
-      console.log(err);
+      if (typeof(err.message) !== 'undefined'){
+	console.log(err.message);
+      } else {
+	console.log(err);
+      }
     });
     
     NSP.db.on("opened", (function(database_exists){
@@ -141,6 +145,8 @@ var Application = (function($){
 	  } else {
 	    console.log(error);
 	  }
+	  Materialize.toast("Failed to read RSS feed. No internet connection?");
+	  AnnounceApplicationReady();
 	});
 
         this.feedUpdate(feed);

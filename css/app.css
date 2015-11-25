@@ -291,15 +291,50 @@ time{
 
 .episode-control-container{
     display:inline-block;
-    width:20rem;
-    height:auto;
     margin-right:1.25em;
 }
 
 .episode-detail-image{
-    width:20rem;
+    width:80px;
     height:auto;
 }
+
+
+
+@media only screen and (min-width: 480px) {
+    .episode-control-container{
+	width: 120px;
+    }
+
+    .episode-detail-image{
+	width: 120px;
+    }
+}
+
+@media only screen and (min-width: 780px) {
+    .episode-control-container{
+	width: 195px;
+    }
+
+    .episode-detail-image{
+	width: 195px;
+    }
+}
+@media only screen and (min-width: 960px) {
+    .episode-control-container{
+	width: 240px;
+    }
+
+    .episode-detail-image{
+	width: 240px;
+    }
+}
+
+
+
+
+
+
 
 .episode-detail-tags .tags-heading{
     display:inline-block;

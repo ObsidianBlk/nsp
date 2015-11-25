@@ -84,10 +84,13 @@ module.exports = (function(){
       }
     }
     // Could it be a "bonus" episode?
-    match = ep._title.match(/No[Ss]leep Podcast(.*?)([B|b][O\o][N|n][U|u][S|s])(.*?)/);
+    if (/S\d+E\d{1,2}/.test(ep._title) === false && (ep._season === 0 || ep._episode === 0)){
+      ep.addTag("Bonus");
+    }
+    /*match = ep._title.match(/No[Ss]leep Podcast(.*?)([B|b][O\o][N|n][U|u][S|s])(.*)/);
     if (match !== null){
       ep.addTag("bonus");
-    }
+    }*/
     // Does the title have a subtitle?
     match = ep._title.match(/(.*?) - (.*?)/);
     ep._subTitle = (match !== null && match.length > 2) ? match[2] : "";

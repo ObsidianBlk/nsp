@@ -29,13 +29,7 @@ module.exports = (function(){
   }
 
   function config(application_path){
-    this._dataPath = "";
-    if (typeof(application_path) === 'string'){
-      //this._dataPath = require("../util/userPath")(application_name);
-      this._dataPath = application_path;
-      console.log(this._dataPath);
-      //this._dataPath = "";
-    }
+    this._dataPath = (typeof(application_path) === 'string') ? application_path : "";
     this._saveFilePath = "config.json"; // If a relative value, this will me merged with _dataPath when no path is given in the save() function.
 
     this._path = {
@@ -103,30 +97,22 @@ module.exports = (function(){
     loadPath = Path.resolve(loadPath);
 
     this._loading = true;
-    FS.access(loadPath, FS.R_OK | FS.W_OK, (function(err){
-      if (!err){
-        // Only bother loading if there was no issue. This should mean the file exists.
-        FS.readFile(loadPath, (function(err, data){
-          if (err){
-            this._loading = false;
-            this.emit("error", err);
-          } else {
-            try {
-              VerifyConfig(this, JSON.parse(data.toString()));
-	      if (path !== this._saveFilePath){
-		this._saveFilePath = path;
-	      }
-              this._loading = false;
-              this.emit("opened", true);
-              this.emit("changed");
-            } catch (e) {
-              this.emit("error", e);
-            }
-          }
-        }).bind(this));
-      } else {
+    FS.readFile(loadPath, (function(err, data){
+      if (err){
         this._loading = false;
-        this.emit("opened", false);
+        this.emit("error", err);
+      } else {
+        try {
+          VerifyConfig(this, JSON.parse(data.toString()));
+	  if (path !== this._saveFilePath){
+	    this._saveFilePath = path;
+	  }
+          this._loading = false;
+          this.emit("opened", true);
+          this.emit("changed");
+        } catch (e) {
+          this.emit("error", e);
+        }
       }
     }).bind(this));
   };
@@ -141,27 +127,36 @@ module.exports = (function(){
     }
     savePath = Path.resolve(savePath);
 
+    var WriteConfig = (function(){
+      FS.writeFile(savePath, this.toString(), (function(err){
+        this._saving = false;
+	if (err){
+	  this.emit("error", err);
+	} else {
+	  if (path !== this._saveFilePath){
+	    this._saveFilePath = path;
+	  }
+          this._dirty = false;
+	  this.emit("saved");
+	}
+      }).bind(this));
+    }).bind(this);
+
     var base = Path.dirname(savePath);
     this._saving = true;
-    FS.access(base, FS.R_OK | FS.W_OK, (function(err){
-      if (!err){
-	FS.writeFile(savePath, this.toString(), (function(err){
+    if (process.platform === "win32"){
+      // Possible issue with the FS.access function in Windows?
+      WriteConfig();
+    } else {
+      FS.access(base, FS.R_OK | FS.W_OK, (function(err){
+	if (!err){
+	  WriteConfig();
+	} else {
           this._saving = false;
-	  if (err){
-	    this.emit("error", err);
-	  } else {
-	    if (path !== this._saveFilePath){
-	      this._saveFilePath = path;
-	    }
-            this._dirty = false;
-	    this.emit("saved");
-	  }
-	}).bind(this));
-      } else {
-        this._saving = false;
-	this.emit("error", err);
-      }
-    }).bind(this));
+	  this.emit("error", err);
+	}
+      }).bind(this));
+    }
   };
 
   Object.defineProperties(config.prototype, {

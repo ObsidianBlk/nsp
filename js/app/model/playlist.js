@@ -188,27 +188,20 @@ module.exports = (function(){
     path = Path.normalize(path);
     var filepath = Path.normalize(Path.join(path, this.filename));
     this._loading = true;
-    FS.access(filepath, FS.R_OK | FS.W_OK, (function(err){
-      if (!err){
-        // Only bother loading if there was no issue. This should mean the file exists.
-        FS.readFile(filepath, (function(err, data){
-          if (err){
-            this._loading = false;
-            this.emit("error", err);
-          } else {
-            try {
-              this.fromString(data.toString());
-              this._loading = false;
-              this.emit("opened", true);
-              this.emit("changed");
-            } catch (e) {
-              this.emit("error", e);
-            }
-          }
-        }).bind(this));
-      } else {
+
+    FS.readFile(filepath, (function(err, data){
+      if (err){
         this._loading = false;
-        this.emit("opened", false);
+        this.emit("error", err);
+      } else {
+        try {
+          this.fromString(data.toString());
+          this._loading = false;
+          this.emit("opened", true);
+          this.emit("changed");
+        } catch (e) {
+          this.emit("error", e);
+        }
       }
     }).bind(this));
   };
@@ -220,22 +213,31 @@ module.exports = (function(){
     path = Path.normalize(path);
     var filepath = Path.normalize(Path.join(path, this.filename));
     this._saving = true;
-    FS.access(path, FS.R_OK | FS.W_OK, (function(err){
-      if (!err){
-	FS.writeFile(filepath, this.toString(), (function(err){
-          this._saving = false;
-	  if (err){
-	    this.emit("error", err);
-	  } else {
-            this._dirty = false;
-	    this.emit("saved");
-	  }
-	}).bind(this));
-      } else {
+
+    var WritePlaylist = (function(){
+      FS.writeFile(filepath, this.toString(), (function(err){
         this._saving = false;
-	this.emit("error", err);
-      }
-    }).bind(this));
+	if (err){
+	  this.emit("error", err);
+	} else {
+          this._dirty = false;
+	  this.emit("saved");
+	}
+      }).bind(this));
+    }).bind(this);
+
+    if (process.platform === "win32"){
+      WritePlaylist();
+    } else {
+      FS.access(path, FS.R_OK | FS.W_OK, (function(err){
+	if (!err){
+	  WritePlaylist();
+	} else {
+          this._saving = false;
+	  this.emit("error", err);
+	}
+      }).bind(this));
+    }
   };
 
   playlist.prototype._ItemIndex = function(guid, title){

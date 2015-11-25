@@ -366,8 +366,7 @@ window.View.AudioPlayer = (function(){
 	}
 
 	var es = this._GetTrackEpisodeAndStory(this._currentTrack);
-	console.log(es);
-	if (es.story !== this._currentStory){
+	if (es !== null && es.story !== this._currentStory){
 	  this._currentStory = es.story;
 	  this.emit("story_changed", this._currentStory);
 	}
@@ -376,40 +375,38 @@ window.View.AudioPlayer = (function(){
 
 	if (this._currentFadeIn > 0 || this._currentFadeOut > 0){
 	  this._fadeWatch = setInterval((function(){
-	    if (this._currentTrack >= 0){
-	      var starttime = TimeToSecond(this._currentStartTime);
-	      var endtime = (this._currentEndTime !== 0) ? TimeToSecond(this._currentEndTime) : this._player[0].duration;
+	    var starttime = TimeToSecond(this._currentStartTime);
+	    var endtime = (this._currentEndTime !== 0) ? TimeToSecond(this._currentEndTime) : this._player[0].duration;
 
-	      // Manage the fade in/out of the audio.
-	      var fadeVol = 0;
-	      if (this._currentFadeIn > 0){
-		if (this._player[0].volume !== this._volume){
-		  fadeVol = (this._player[0].currentTime - starttime) / this._currentFadeIn;
-		  if (fadeVol >= 0){
-		    fadeVol = (fadeVol <= this._volume) ? fadeVol : this._volume;
-		    if (fadeVol !== this._player[0].volume){
-		      this._player[0].volume = this._volume*fadeVol;
-		      if (fadeVol >= 1.0 && this._currentFadeOut <= 0){
-			clearInterval(this._fadeWatch);
-			this._fadeWatch = null;
-		      }
+	    // Manage the fade in/out of the audio.
+	    var fadeVol = 0;
+	    if (this._currentFadeIn > 0){
+	      if (this._player[0].volume !== this._volume){
+		fadeVol = (this._player[0].currentTime - starttime) / this._currentFadeIn;
+		if (fadeVol >= 0){
+		  fadeVol = (fadeVol <= this._volume) ? fadeVol : this._volume;
+		  if (fadeVol !== this._player[0].volume){
+		    this._player[0].volume = this._volume*fadeVol;
+		    if (fadeVol >= 1.0 && this._currentFadeOut <= 0){
+		      clearInterval(this._fadeWatch);
+		      this._fadeWatch = null;
 		    }
 		  }
 		}
 	      }
+	    }
 
-	      if (this._currentFadeOut > 0){
-		if (this._player[0].volume !== 0){
-		  fadeVol = (endtime - this._player[0].currentTime) / this._currentFadeOut;
-		  if (fadeVol <= 1.0){
-		    fadeVol = (fadeVol <= this._volume) ? fadeVol : this._volume;
-		    fadeVol = (fadeVol >= 0) ? fadeVol : 0;
-		    if (fadeVol !== this._player[0].volume){
-		      this._player[0].volume = this._volume * fadeVol;
-		      if (fadeVol <= 0){
-			clearInterval();
-			this._fadeWatch = null;
-		      }
+	    if (this._currentFadeOut > 0){
+	      if (this._player[0].volume !== 0){
+		fadeVol = (endtime - this._player[0].currentTime) / this._currentFadeOut;
+		if (fadeVol <= 1.0){
+		  fadeVol = (fadeVol <= this._volume) ? fadeVol : this._volume;
+		  fadeVol = (fadeVol >= 0) ? fadeVol : 0;
+		  if (fadeVol !== this._player[0].volume){
+		    this._player[0].volume = this._volume * fadeVol;
+		    if (fadeVol <= 0){
+		      clearInterval(this._fadeWatch);
+		      this._fadeWatch = null;
 		    }
 		  }
 		}

@@ -70,27 +70,25 @@ module.exports = (function(){
 
     path = Path.normalize(path);
     this._loading = true;
-    FS.access(path, FS.R_OK | FS.W_OK, (function(err){
-      if (!err){
-        // Only both loading if there was no issue. This should mean the file exists.
-        FS.readFile(path, (function(err, data){
-          if (err){
-            this.emit("error", err);
-          } else {
-            try {
-              VerifyDB(this, JSON.parse(data.toString()), skipInvalidEpisodes);
-              this._loading = false;
-	      this._dirty = false; // Because if we're loading from a source, that data hasn't changed yet.
-              this.emit("opened", true);
-              this.emit("changed");
-            } catch (e) {
-              this.emit("error", e);
-            }
-          }
-        }).bind(this));
+    FS.readFile(path, (function(err, data){
+      if (err){
+	this._loading = false;
+	if (err.code == 'ENOENT'){
+	  this.emit("opened", false); // File doesn't exit. Not an error state, really.
+	} else {
+	  // On the other hand... WE'RE ALL GONNA DIE!
+          this.emit("error", err);
+	}
       } else {
-        this._loading = false;
-        this.emit("opened", false);
+        try {
+          VerifyDB(this, JSON.parse(data.toString()), skipInvalidEpisodes);
+          this._loading = false;
+	  this._dirty = false; // Because if we're loading from a source, that data hasn't changed yet.
+          this.emit("opened", true);
+          this.emit("changed");
+        } catch (e) {
+          this.emit("error", e);
+        }
       }
     }).bind(this));
   };
@@ -101,22 +99,32 @@ module.exports = (function(){
     path = Path.normalize(path);
     var base = Path.dirname(path);
     this._saving = true;
-    FS.access(base, FS.R_OK | FS.W_OK, (function(err){
-      if (!err){
-	FS.writeFile(path, this.toString(), (function(err){
-          this._saving = false;
-	  if (err){
-	    this.emit("error", err);
-	  } else {
-	    this._dirty = false;
-	    this.emit("saved");
-	  }
-	}).bind(this));
-      } else {
+
+    var WriteDatabase = (function(){
+      FS.writeFile(path, this.toString(), (function(err){
         this._saving = false;
-	this.emit("error", err);
-      }
-    }).bind(this));
+	if (err){
+	  this.emit("error", err);
+	} else {
+	  this._dirty = false;
+	  this.emit("saved");
+	}
+      }).bind(this));
+    }).bind(this);
+
+    if (process.platform === "win32"){
+      // NOTE: The FS.access() function does not work as expected in Windows... so we'll just cross our fingers for now!
+      WriteDatabase();
+    } else {
+      FS.access(base, FS.R_OK | FS.W_OK, (function(err){
+	if (!err){
+	  WriteDatabase();
+	} else {
+          this._saving = false;
+	  this.emit("error", err);
+	}
+      }).bind(this));
+    }
   };
 
   database.prototype.addEpisode = function(edata){
