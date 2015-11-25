@@ -16,8 +16,11 @@ var Application = (function($){
   }
 
 
-  function GetDataPath(){
-    var dataPath = require("nw.gui").App.dataPath;
+  function GetDataPath(dataPath){
+    if (typeof(dataPath) !== 'string'){
+      dataPath = "data";
+    }
+    //var dataPath = require("nw.gui").App.dataPath;
 
     // No point in arguing if it's an absolute path.
     if (Path.isAbsolute(dataPath)){
@@ -168,9 +171,6 @@ var Application = (function($){
 
     NSP.config.on("opened", (function(config_exists){
       this.emit("config_loaded");
-      if (config_exists === false){
-	NSP.config.save();
-      }
 
       // Now... create the required paths defined by the config if they don't exist.
       MkConfigPaths([
@@ -180,6 +180,9 @@ var Application = (function($){
 	NSP.config.absolutePath.images
       ], 0, (function(err){
 	if (!err){
+          if (config_exists === false){
+	    NSP.config.save();
+          }
 	  if (this._dbopened === false){
 	    // Config loaded and paths should be ready, now load the database file.
 	    NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);

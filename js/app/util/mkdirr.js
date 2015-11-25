@@ -16,7 +16,7 @@ function mkdirr(path, mode, cb){
     cb = function(){};
   }
 
-  mode &= ~process.umask();
+  //mode &= ~process.umask();
   path = Path.resolve(path);
 
   FS.mkdir(path, mode, function(err){
