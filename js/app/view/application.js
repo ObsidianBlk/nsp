@@ -160,24 +160,8 @@ var Application = (function($){
       }
     }).bind(this));
 
-    NSP.config.on("error", function(err){
-      if (typeof(err.message) !== 'undefined'){
-	console.log(err.message);
-      } else {
-	console.log(err);
-      }
 
-      // Load DB anyway. Config should have default values.
-      // TODO: Change this to a question for the user.
-      if (this._dbopened === false){
-	this._dbopened = true;
-	NSP.db.open(NSP.config.absolutePath.database, NSP.config.skipInvalidEpisodes);
-      }
-    });
-
-    NSP.config.on("opened", (function(config_exists){
-      this.emit("config_loaded");
-
+    var BuildDatabase = (function(config_exists){
       // Now... create the required paths defined by the config if they don't exist.
       MkConfigPaths([
 	Path.dirname(NSP.config.absolutePath.database),
@@ -198,6 +182,24 @@ var Application = (function($){
 	  console.log(err.message);
 	}
       }).bind(this));
+    }).bind(this);
+
+
+    NSP.config.on("error", function(err){
+      if (typeof(err.message) !== 'undefined'){
+	console.log(err.message);
+      } else {
+	console.log(err);
+      }
+
+      // Load DB anyway. Config should have default values.
+      // TODO: Change this to a question for the user.
+      BuildDatabase(false);
+    });
+
+    NSP.config.on("opened", (function(config_exists){
+      this.emit("config_loaded");
+      BuildDatabase(config_exists);
     }).bind(this));
 
     NSP.config.open();
