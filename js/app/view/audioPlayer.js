@@ -1,3 +1,26 @@
+/* ------------------------------------------------------------------------
+
+  Copyright (C) 2015 Bryan Miller
+  
+  -------------------------------------------------------------------------
+
+  This file is part of The Nosleep Pod-App (NSP).
+
+  NSP is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  NSP is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with NSP.  If not, see <http://www.gnu.org/licenses/>.
+
+------------------------------------------------------------------------ */
+
 
 if (typeof(window.View) === 'undefined'){
   window.View = {};
@@ -9,6 +32,7 @@ window.View.AudioPlayer = (function(){
   var FS = require('fs');
   var Path = require('path');
   var Playlist = require('./js/app/model/playlist');
+  var Time = require("./js/app/util/time");
 
   function TimeToTag(starttime, endtime){
     var tag = "#t=";
@@ -37,6 +61,27 @@ window.View.AudioPlayer = (function(){
       return val;
     }
     return time;
+  }
+
+  function RemoteAudioURI(episode){
+    var path = Path.join(NSP.config.absolutePath.audio, episode.audio_filename);
+    if (FileExists(path) === false){
+      path = episode.audio_src;
+    }
+    return path;
+  }
+
+  function UserAudioPath(episode){
+    var path = episode.audio_path;
+    if (path !== ""){
+      if (FileExists(path) === false){
+	path = Path.join(episode.audio_path, episode.audio_filename);
+	if (FileExists(path) === false){
+	  path = "";
+	}
+      }
+    }
+    return path;
   }
 
   function FileExists(path){
@@ -119,14 +164,9 @@ window.View.AudioPlayer = (function(){
     if (eindex >= 0){ // Validate that the episode we're given is in the database.
 
       // Determin the URL (URI) of the audio. Basically, play the local file if we have it, otherwise, stream.
-      var url = episode.audio_src;
-      if (episode.audio_path === ""){
-	var path = Path.join(NSP.config.path.audio, episode.audio_filename);
-	if (FileExists(path)){
-	  url = path;
-	}
-      } else {
-	url = episode.audio_path;
+      var url = UserAudioPath(episode);
+      if (url === ""){
+	url = RemoteAudioURI(episode);
       }
 
       // Calculate the track title. This is optional, really.
@@ -206,14 +246,9 @@ window.View.AudioPlayer = (function(){
       var es = this._GetTrackEpisodeAndStory(index);
       if (es === null){return;}
 
-      var url = es.episode.audio_src;
-      if (es.episode.audio_path === ""){
-	var path = Path.join(NSP.config.path.audio, es.episode.audio_filename);
-	if (FileExists(path)){
-	  url = path;
-	}
-      } else {
-	url = es.episode.audio_path;
+      var url = UserAudioPath(es.episode);
+      if (url === ""){
+	url = RemoteAudioURI(es.episode);
       }
 
 
@@ -366,10 +401,25 @@ window.View.AudioPlayer = (function(){
 	}
 
 	var es = this._GetTrackEpisodeAndStory(this._currentTrack);
-	if (es !== null && es.story !== this._currentStory){
-	  this._currentStory = es.story;
-	  this.emit("story_changed", this._currentStory);
+	if (es !== null){
+	  if (es.story !== this._currentStory){
+	    this._currentStory = es.story;
+	    this.emit("story_changed", this._currentStory);
+	  }
+	  
+	  if (NSP.config.autoUpdateDurationInfo){
+	    if (this._player.find("source").attr("src") === UserAudioPath(es.episode)){
+	      if (es.episode.audio_path_durationSec !== this._player[0].duration){
+		es.episode.audio_path_durationSec = this._player[0].duration;
+	      }
+	    } else {
+	      if (es.episode.audio_durationSec !== this._player[0].duration){
+		es.episode.audio_durationSec = this._player[0].duration;
+	      }
+	    }
+	  }
 	}
+
 	this._player[0].play();
 	this.emit("playing");
 
@@ -459,6 +509,15 @@ window.View.AudioPlayer = (function(){
 
     "currentTrackIndex":{
       get:function(){return this._currentTrack;}
+    },
+
+    "currentTrackEpisodeGUID":{
+      get:function(){
+	if (this._currentTrack >= 0){
+	  return this._playlist.item(this._currentTrack).guid;
+	}
+	return null;
+      }
     },
 
     "currentTrackEpisode":{

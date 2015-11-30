@@ -1,3 +1,26 @@
+/* ------------------------------------------------------------------------
+
+  Copyright (C) 2015 Bryan Miller
+  
+  -------------------------------------------------------------------------
+
+  This file is part of The Nosleep Pod-App (NSP).
+
+  NSP is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  NSP is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with NSP.  If not, see <http://www.gnu.org/licenses/>.
+
+------------------------------------------------------------------------ */
+
 
 module.exports = (function(){
   function getTitle(line){
@@ -27,6 +50,48 @@ module.exports = (function(){
   }
 
 
+  function StripExtraSentence(name){
+    var blank = true;
+    var possibleAbbreviation = false;
+    var trailChars = false;
+    var trailCharPos = -1;
+    for (var i=0; i < name.length; i++){
+      var c = name[i];
+      if (c === "."){
+	if (possibleAbbreviation){
+	  blank = true;
+	  possibleAbbreviation = false;
+	} else {
+	  if (trailChars){
+	    return name.substr(0, trailCharPos).trim();
+	  }
+	  return name.substr(0, i).trim();
+	}
+      } else if (/[A-Z]/.test(c)){
+	possibleAbbreviation = blank;
+	blank = false;
+	trailChars = false;
+      } else if (/\s/.test(c)){
+	blank = true;
+	possibleAbbreviation = false;
+      } else if (/[a-z]/.test(c)){
+	trailChars = false;
+	possibleAbbreviation = false;
+      } else {
+	if (trailChars !== true){
+	  trailCharPos = i;
+	}
+	trailChars = true;
+	possibleAbbreviation = false;
+      }
+    }
+
+    if (trailChars){
+      name = name.substr(0, trailChars).trim();
+    }
+    return name;
+  }
+
 
   function CleanName(name){
     // Redditor test
@@ -35,39 +100,7 @@ module.exports = (function(){
     if (m !== null && m.length > 2){
       name = m[1]; // This should just be the name.
     }
-
-    // This is a Abbreviated Name test coupled with a "Included Sentence" test.
-    r = /[a-zA-Z]\.[a-zA-Z]\.(.*)/;
-    var r2 = /(.*)\. (.*)/;
-    if (r.test(name)){ // We have an abbreviated name.
-      // Let's check for an "Included Sentence"
-      r = /([a-zA-Z]\.[a-zA-Z]\. .*)\.(.*)/;
-      m = name.match(r);
-      if (m !== null){
-        name = m[1];
-      }
-    } else if (r2.test(name)){ // We have a basic name with an "Included Sentence".
-      // Stripping the sentence.
-      m = name.match(r2);
-      if (m !== null){
-        name = m[1];
-      }
-    }
-
-    // Trailing character test!
-    var pos = -1;
-    for (var i=0; i < name.length; i++){
-      if (/[a-zA-Z ]/.test(name[i]) === false){
-        if (pos < 0){
-          pos = i;
-        }
-      } else {
-        pos = -1;
-      }
-    }
-    if (pos >= 0){
-      name = name.substr(0, pos);
-    }
+    name = StripExtraSentence(name);
 
     // Final Trim
     return name.trim();

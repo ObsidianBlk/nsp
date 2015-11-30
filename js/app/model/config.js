@@ -1,3 +1,25 @@
+/* ------------------------------------------------------------------------
+
+  Copyright (C) 2015 Bryan Miller
+  
+  -------------------------------------------------------------------------
+
+  This file is part of The Nosleep Pod-App (NSP).
+
+  NSP is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  NSP is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with NSP.  If not, see <http://www.gnu.org/licenses/>.
+
+------------------------------------------------------------------------ */
 
 
 module.exports = (function(){
@@ -20,6 +42,7 @@ module.exports = (function(){
     conf.autoCacheImages = obj.auto_cache_images;
     conf.autoSaveDatabaseOnChange = obj.auto_save_database_on_change;
     conf.autoSaveConfigOnChange = obj.auto_save_config_on_change;
+    conf.autoUpdateDurationInfo = obj.auto_update_duration_info;
     conf.skipInvalidEpisodes = obj.skip_invalid_episodes;
     conf.downloadFeedAtStartup = obj.download_feed_at_startup;
     conf.playIntroAtStartup = obj.play_intro_at_startup;
@@ -35,12 +58,13 @@ module.exports = (function(){
     this._path = {
       database: Path.normalize("database.json"),
       playlists: Path.normalize("playlists"),
-      audio:    Path.normalize("data/audio/episodes"),
-      images:   Path.normalize("data/images")
+      audio:    Path.normalize("audio/episodes"),
+      images:   Path.normalize("images")
     };
     this._autoCacheImages = true;
     this._autoSaveDatabaseOnChange = true;
     this._autoSaveConfigOnChange = true;
+    this._autoUpdateDurationInfo = true;
     this._skipInvalidEpisodes = false;
     this._downloadFeedAtStartup = true;
     this._playIntroAtStartup = true;
@@ -68,6 +92,7 @@ module.exports = (function(){
       auto_cache_images: this._autoCacheImages,
       auto_save_database_on_change: this._autoSaveDatabaseOnChange,
       auto_save_config_on_change: this._autoSaveConfigOnChange,
+      auto_update_duration_info: this._autoUpdateDurationInfo,
       skip_invalid_episodes: this._skipInvalidEpisodes,
       download_feed_at_startup: this._downloadFeedAtStartup,
       play_intro_at_startup: this._playIntroAtStartup,
@@ -230,6 +255,15 @@ module.exports = (function(){
         this._autoSaveConfigOnChange = (typeof(enable) === 'boolean') ? enable : this._autoSaveConfigOnChange;
         this._dirty = true;
         this.emit("changed");
+      }
+    },
+
+    "autoUpdateDurationInfo":{
+      get:function(){return this._autoUpdateDurationInfo;},
+      set:function(enable){
+	this._autoUpdateDurationInfo = (typeof(enable) === 'boolean') ? enable : this._autoUpdateDurationInfo;
+	this._dirty = true;
+	this.emit("changed");
       }
     },
 

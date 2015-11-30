@@ -1,9 +1,32 @@
+/* ------------------------------------------------------------------------
+
+  Copyright (C) 2015 Bryan Miller
+  
+  -------------------------------------------------------------------------
+
+  This file is part of The Nosleep Pod-App (NSP).
+
+  NSP is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  NSP is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with NSP.  If not, see <http://www.gnu.org/licenses/>.
+
+------------------------------------------------------------------------ */
 
 
 $(document).ready(function(){
   $('ul.nsp-tabs.mainwindow').tabs();
   $('ul.nsp-tabs.playlist').tabs();
 
+  var Package = require('./package.json');
   var Feeder = require('./js/app/util/feeder');
 
   var PATH_INTRO_AUDIO = "resources/audio/David-Cummings-The-Nosleep-Podcast-Theme.mp3";
@@ -20,6 +43,9 @@ $(document).ready(function(){
   var settingsView = new View.SettingsView("#app-settings");
   var episodeEditorView = new View.EpEditorView("#episode-editor");
   //var storyEditorView = new View.StEditorView("#story-editor");
+
+
+  $(".about_version").html("v" + Package.version);
 
   episodeView.on("view_writer", function(writer, link){
     poiView.writer(writer, link);
@@ -83,7 +109,7 @@ $(document).ready(function(){
       if (NSP.config.autoSaveDatabaseOnChange && NSP.db.dirty){
         if (NSP.db.loading === false && NSP.db.saving === false){
 	  Materialize.toast("Saving Database Changes...", 3000, 'rounded');
-          NSP.db.save(NSP.config.path.database);
+          NSP.db.save(NSP.config.absolutePath.database);
         }
       }
     });

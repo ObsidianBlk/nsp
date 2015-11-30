@@ -1,3 +1,26 @@
+/* ------------------------------------------------------------------------
+
+  Copyright (C) 2015 Bryan Miller
+  
+  -------------------------------------------------------------------------
+
+  This file is part of The Nosleep Pod-App (NSP).
+
+  NSP is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  NSP is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with NSP.  If not, see <http://www.gnu.org/licenses/>.
+
+------------------------------------------------------------------------ */
+
 
 
 if (typeof(window.View) === 'undefined'){
@@ -147,6 +170,7 @@ window.View.EpisodeView = (function(){
 	img.attr("src", localPath);
       } else {
 	if (NSP.config.autoCacheImages){
+	  img.attr("src", PATH_DEFAULT_LOGO);
 	  var feed = new Feeder();
 	  feed.downloadFile(episode.img_src, localPath, function(err){
 	    if (err){
@@ -376,13 +400,21 @@ window.View.EpisodeView = (function(){
     }
 
     if (act_playpause.length > 0){
-      if (audioPlayer.isEpisodeQueued(episode)){
-	act_playpause.addClass("disabled");
+      if (audioPlayer.currentTrackEpisodeGUID === episode.guid){
+	SetActionState(act_playpause, ["pause", "play"], 0);
       }
       act_playpause.on("click", function(){
-	audioPlayer.clearTracks();
-	audioPlayer.queueEpisode(episode);
-	audioPlayer.playTrack(0);
+	if (audioPlayer.currentTrackEpisodeGUID !== episode.guid){
+	  audioPlayer.clearTracks();
+	  audioPlayer.queueEpisode(episode);
+	  audioPlayer.playTrack(0);
+	} else {
+	  if (audioPlayer.playing){
+	    audioPlayer.pause();
+	  } else {
+	    audioPlayer.play();
+	  }
+	}
       });
     }
   }
@@ -402,6 +434,10 @@ window.View.EpisodeView = (function(){
 
 
   function StoryDetails(entity, episode, story, audioPlayer){
+    if (episode.storyAvailableAtSource(story) === false){
+      entity.find(".collapsible-header").removeClass("nsp-grey lighten");
+      entity.find(".collapsible-header").addClass("nsp-red");
+    }
     entity.find(STORY.title).append(story.title);
     entity.data("title", story.title);
     if (story.beginning !== ""){

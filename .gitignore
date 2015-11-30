@@ -2,5 +2,6 @@ node_modules/*
 data/*
 playlists/*
 release/*
+_nsp/*
 database*.json
 config.json

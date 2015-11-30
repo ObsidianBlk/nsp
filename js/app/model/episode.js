@@ -1,3 +1,25 @@
+/* ------------------------------------------------------------------------
+
+  Copyright (C) 2015 Bryan Miller
+  
+  -------------------------------------------------------------------------
+
+  This file is part of The Nosleep Pod-App (NSP).
+
+  NSP is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  NSP is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with NSP.  If not, see <http://www.gnu.org/licenses/>.
+
+------------------------------------------------------------------------ */
 
 
 module.exports = (function(){
@@ -97,7 +119,8 @@ module.exports = (function(){
 
     ep._audio_path = (typeof(item.audio_path) === 'string') ? item.audio_path : "";
     ep._audio_type = (typeof(item.audio_type) === 'string') ? item.audio_type : "audio/mpeg";
-    ep._audio_duration = (typeof(item.audio_duration) === 'string') ? item.audio_duration : "00:00:00";
+    ep._audio_src_duration = (typeof(item.audio_src_duration) === 'string') ? item.audio_src_duration : "00:00:00";
+    ep._audio_path_duration = (typeof(item.audio_path_duration) === 'string') ? item.audio_path_duration : "00:00:00";
     ep._description = (typeof(item.description) === 'string') ? item.description : "";
     ep._shortDescription = (typeof(item.short_description) === 'string') ? item.short_description : "";
     ep._link = (typeof(item.link) === 'string') ? item.link : "";
@@ -160,13 +183,16 @@ module.exports = (function(){
     this._episode = 0;
 
     this._audio_src = null;
+    this._audio_src_duration = "00:00:00";
+
+    // These two variable designate an alternate audio path. This should be used to point to the "full" episode audio file.
     this._audio_path = null;
+    this._audio_path_duration = "00:00:00";
 
     this._tag = [];
     this._story = [];
     
     this._audio_type = "audio/mpeg";
-    this._audio_duration = "00:00:00";
     this._description = "";
     this._shortDescription = "";
     this._link = "";
@@ -199,9 +225,12 @@ module.exports = (function(){
       guid: this._guid,
       title: this._title,
       audio_src: this._audio_src,
-      audio_type: this._audio_type,
-      audio_length: this._audio_length
+      audio_type: this._audio_type
     };
+
+    if (this._audio_src_duration !== null){
+      data.audio_src_duration = this._audio_src_duration;
+    }
 
     if (this._tag.length > 0){
       data.tag = this._tag;
@@ -211,6 +240,11 @@ module.exports = (function(){
       for (var i=0; i < this._story.length; i++){
 	data.story.push(JSON.parse(this._story[i].toString()));
       }
+    }
+
+    if (this._audio_path !== null){
+      data.audio_path = this._audio_path;
+      data.audio_path_duration = this._audio_path_duration;
     }
 
     if (this._subTitle !== ""){
@@ -587,6 +621,25 @@ module.exports = (function(){
     return null;
   };
 
+  episode.prototype.storyAvailableAtSource = function(story_or_index){
+    var index = story_or_index;
+    if (story_or_index instanceof story){
+      index = this.getStoryIndexByTitle(story_or_index.title);
+    }
+    if (index >= 0 && index < this._story.length){
+      if (this.audio_durationSec > 0){
+	if (this._story[index].beginningSec > this.audio_durationSec){
+	  return false;
+	}
+	if (this.audio_durationSec - this._story[index].beginningSec < 300) { // Story must be at least 5 minutes long
+	  return false;
+	}
+      }
+      return true; // If there is no audio duration available, then this is always the case.
+    }
+    return false;
+  };
+
   episode.prototype.estimateStoryEndTime = function(story_or_index){
     var index = story_or_index;
     if (story_or_index instanceof story){
@@ -617,7 +670,7 @@ module.exports = (function(){
 	// NOTE: For "free" audio, duration may not extend to this episode.
 	var edur = this.audio_durationSec;
 	var sbeg = this._story[index].beginningSec;
-	if (edur - sbeg > 5){ // Only count if there's more than 5 minutes left to the episode's audio from the beginning of this story.
+	if (edur - sbeg > 300){ // Only count if there's more than 5 minutes left to the episode's audio from the beginning of this story.
 	  return edur;
 	}
       }
@@ -769,7 +822,7 @@ module.exports = (function(){
     },
 
     "audio_path":{
-      get:function(){return this._audio_path;},
+      get:function(){return (this._audio_path !== null) ? this._audio_path : "";},
       set:function(path){
 	if (typeof(path) !== 'string'){throw new TypeError();}
 	this._audio_path = path;
@@ -796,30 +849,94 @@ module.exports = (function(){
 
     "audio_duration":{
       get:function(){
-	return this._audio_duration;
+	if (this._audio_src_duration !== null){
+	  return this._audio_src_duration;
+	}
+	return "00:00:00";
       },
       set:function(dur){
 	if (typeof(dur) === 'number'){
-	  Time.SecondsToHMS(Math.floor(dur));
+	  this._audio_src_duration = Time.SecondsToHMS(Math.floor(dur));
 	} else if (typeof(dur) === 'string'){
 	  var seconds = Time.HMSToSeconds(dur);
 	  if (seconds < 0){
 	    throw new SyntaxError();
 	  }
-	  this._audio_duration = Time.SecondsToHMS(seconds);
+	  this._audio_src_duration = Time.SecondsToHMS(seconds);
+	} else {
+	  throw new TypeError();
 	}
+	this._dirty = true;
+	this.emit("changed");
+      }
+    },
+
+    "audio_path_duration":{
+      get:function(){
+	if (this._audio_path_duration !== null){
+	  return this._audio_path_duration;
+	}
+	return "00:00:00";
+      },
+      set:function(dur){
+	if (typeof(dur) === 'number'){
+	  this._audio_path_duration = Time.SecondsToHMS(Math.floor(dur));
+	} else if (typeof(dur) === 'string'){
+	  var seconds = Time.HMSToSeconds(dur);
+	  if (seconds < 0){
+	    throw new SyntaxError();
+	  }
+	  this._audio_path_duration = Time.SecondsToHMS(seconds);
+	} else {
+	  throw new TypeError();
+	}
+	this._dirty = true;
 	this.emit("changed");
       }
     },
 
     "audio_durationSec":{
       get:function(){
-	var seconds = Time.HMSToSeconds(this._audio_duration);
-	return (seconds >= 0) ? seconds : 0;
+	if (this._audio_src_duration !== null){
+	  var seconds = Time.HMSToSeconds(this._audio_src_duration);
+	  return (seconds >= 0) ? seconds : 0;
+	}
+	return 0;
       },
       set:function(dur){
+	if (typeof(dur) !== 'number'){
+	  throw new TypeError();
+	}
+	if (dur < 0){
+	  throw new RangeError();
+	}
 	try {
-	  this.audio_duration = dur;
+	  this._audio_src_duration = Time.SecondsToHMS(Math.floor(dur));
+	  this._dirty = true;
+	  this.emit("changed");
+	} catch (e) {throw e;}
+      }
+    },
+
+    "audio_path_durationSec":{
+      get:function(){
+	if (this._audio_path_duration !== null){
+	  var seconds = Time.HMSToSeconds(this._audio_path_duration);
+	  return (seconds >= 0) ? seconds : 0;
+	}
+	return 0;
+      },
+      set:function(dur){
+	if (typeof(dur) !== 'number'){
+	  throw new TypeError();
+	}
+	if (dur < 0){
+	  throw new RangeError();
+	}
+	try {
+	  this._audio_path_duration = Time.SecondsToHMS(Math.floor(dur));
+	  this._dirty = true;
+	  this.emit("changed");
 	} catch (e) {throw e;}
       }
     },
