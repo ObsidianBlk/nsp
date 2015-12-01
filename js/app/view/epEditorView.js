@@ -110,6 +110,9 @@ window.View.EpEditorView = (function(){
       this._newEpisode = (typeof(episode) === 'undefined' || episode === null);
       this._episode = (this._newEpisode) ? null : episode;
       this._ShowInput("#episode_date", this._newEpisode);
+      if (this._newEpisode){
+	this._modal.find("#episode_date").val((new Date()).toLocaleString("en-GB"));
+      }
       this._ColorAlternator();
 
       this._modal.find(".episode-story-list").empty();
@@ -174,25 +177,39 @@ window.View.EpEditorView = (function(){
 
     act_save.on("click", (function(){
       var title = this._modal.find("#episode_title").val();
+      var date_str = this._modal.find("#episode_date").val();
       var audio = this._modal.find("#episode_audio").val();
+      var audio_path = this._modal.find("#episode_audio_path").val();
       var link = this._modal.find("#episode_link").val();
       var desc = this._modal.find("#episode_description").val();
       var season = parseInt(this._modal.find("#episode_season").val());
       var epnumber = parseInt(this._modal.find("#episode_epnumber").val());
 
+      var ErrIcon = "<i class=\"medium material-icons\">report_problem</i>";
+      var ErrMsg = "";
+
       if (this._episode === null){
 	var guid = GenerateUUID();
-	var date = this._modal.find("#episode_date").val();
+	var date = new Date(date_str);
+	date = (Number.isNaN(date.getTime()) === false) ? date : null;
 
-	if (title === "" || audio === ""){
-	  Materialize.toast("Failed to create new episode. Missing Title or Audio Source.");
+	if (title === ""){
+	  ErrMsg = ErrIcon + "<p class=\"nsp-red\">Failed to create new episode. Missing Title.</p>";
+	} else if (audio === ""){
+	  ErrMsg = ErrIcon + "<p class=\"nsp-red\">Failed to create new episode. Missing Audio URL.</p>";
+	} else if (date === null){
+	  ErrMsg = ErrIcon + "<p class=\"nsp-red\">Failed to create new episode. Missing or Invalid Date.</p>";
+	}
+	if (ErrMsg !== ""){
+	  Materialize.toast(ErrMsg, 4000);
 	  return;
 	}
 
 	var data = {
-	  guid:guid,
-	  title:title,
-	  audio_src:audio
+	  guid: guid,
+	  title: title,
+	  audio_src: audio,
+	  date: date.toLocaleString("en-GB") // Yup... british version :p
 	};
 	if (desc !== ""){
 	  data.short_description = desc;
@@ -213,17 +230,20 @@ window.View.EpEditorView = (function(){
 	NSP.db.addEpisode(data);
 	this._episode = NSP.db.episode(guid);
 	if (this._episode === null){
-	  Materialize.toast("Failed to create new episode.");
+	  Materialize.toast(ErrIcon + "<p class=\"nsp-red\">Failed to create new episode.</p>");
 	} else {
 	  this._newEpisode = false;
 	  this._ShowInput("#episode_date", false);
 	  this._ColorAlternator();
-	  Materialize.toast("New Episode Created!");
+	  Materialize.toast("New Episode Created!", 4000);
 	} 
       } else {
-	this._episode.title = title;
+	if (title !== ""){
+	  this._episode.title = title;
+	}
 	this._episode.link = link;
-	this._episode.audio_path = audio;
+	this._episode.audio_src = audio;
+	this._episode.audio_path = audio_path;
 	this._episode.shortDescription = desc;
 	if (Number.isNaN(season) === false){
 	  this._episode.season = season;
@@ -242,7 +262,8 @@ window.View.EpEditorView = (function(){
       this._modal.find("#episode_date").val(""); // This is always blanked out.
       if (this._episode !== null){
 	this._modal.find("#episode_title").val(this._episode.title);
-	this._modal.find("#episode_audio").val(this._episode.audio_path);
+	this._modal.find("#episode_audio").val(this._episode.audio_src);
+	this._modal.find("#episode_audio_path").val(this._episode.audio_path);
 	this._modal.find("#episode_link").val(this._episode.link);
 	this._modal.find("#episode_description").val(this._episode.shortDescription);
 	this._modal.find("#episode_season").val(this._episode.season);
@@ -250,6 +271,7 @@ window.View.EpEditorView = (function(){
       } else {
 	this._modal.find("#episode_title").val("");
 	this._modal.find("#episode_audio").val("");
+	this._modal.find("#episode_audio_path").val("");
 	this._modal.find("#episode_link").val("");
 	this._modal.find("#episode_description").val("");
 	this._modal.find("#episode_season").val("1");

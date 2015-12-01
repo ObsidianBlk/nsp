@@ -28,6 +28,17 @@ module.exports = (function(){
   var story = require("./story");
   var DescParser = require("../util/descParser");
   var Time = require("../util/time");
+
+  function ValidURL(url){
+    // This RegEx was copied from ... http://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-an-url
+    var pattern = new RegExp('^(https?:\/\/)?'+ // protocol
+    '((([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}|'+ // domain name
+    '((\d{1,3}\.){3}\d{1,3}))'+ // OR ip (v4) address
+    '(\:\d+)?(\/[-a-z\d%_.~+]*)*'+ // port and path
+    '(\?[;&a-z\d%_.~+=-]*)?'+ // query string
+    '(\#[-a-z\d_]*)?$','i'); // fragment locater
+    return pattern.test(url);
+  }
   
 
   function VerifyEpisode(ep, item){
@@ -804,8 +815,10 @@ module.exports = (function(){
       get:function(){return this._link;},
       set:function(link){
 	if (typeof(link) !== 'string'){throw new TypeError();}
-        this._link = link;
-        this.emit("changed");
+	if (ValidURL(link)){
+          this._link = link;
+          this.emit("changed");
+	}
       }
     },
 
@@ -831,7 +844,14 @@ module.exports = (function(){
     },
 
     "audio_src":{
-      get:function(){return this._audio_src;}
+      get:function(){return this._audio_src;},
+      set:function(url){
+	if (typeof(url) !== 'string'){throw new TypeError();}
+	if (ValidURL(url)){
+	  this._audio_src = url;
+	  this.emit("changed");
+	}
+      }
     },
 
     "audio_filename":{
@@ -949,8 +969,10 @@ module.exports = (function(){
       get:function(){return this._img_src;},
       set:function(src){
 	if (typeof(src) !== 'string'){throw new TypeError();}
-        this._img_src = src;
-        this.emit("changed");
+	if (ValidURL(src)){
+          this._img_src = src;
+          this.emit("changed");
+	}
       }
     },
 

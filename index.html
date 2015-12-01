@@ -249,44 +249,56 @@
     <div id="episode-editor" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content nsp-grey nsp-text">
 	<div class="row valign-wrapper color-alternation">
-	  <p class="flow-text valign col s6">Title:</p>
+	  <strong class="flow-text valign col s6">Title:</strong>
 	  <div class="input-field valign col">
 	    <input placeholder="Title" id="episode_title" type="text" class="validate">
           </div>
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
-	  <p class="flow-text valign col s6">Release Date:</p>
+	  <strong class="flow-text valign col s6">Release Date:</strong>
 	  <div class="input-field valign col">
-	    <input placeholder="Title" id="episode_date" type="text" class="validate">
+	    <input placeholder="DD/MM/YYYY HH:MM:SS" id="episode_date" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper color-alternation">
+	  <strong class="flow-text valign col s6">Audio File URL:</strong>
+	  <div class="input-field valign col">
+	    <input placeholder="Audio URL" id="episode_audio" type="text" class="validate">
           </div>
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
 	  <p class="flow-text valign col s6">Season:</p>
 	  <div class="input-field valign col">
-	    <input placeholder="Title" id="episode_season" type="text" class="validate">
+	    <input placeholder="(optional) Season" id="episode_season" type="text" class="validate">
           </div>
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
-	  <p class="flow-text valign col s6">Episode # (&lt;1 means &qt;Bonus&qt; episode):</p>
+	  <div class="valign col s6">
+	    <p>
+	      <span class="flow-text">Episode #:</span><br>
+	      <em style="padding-bottom:-1em;">(&lt;1 means &quot;Bonus&quot; episode)</em>
+	    </p>
+	  </div>
 	  <div class="input-field valign col">
-	    <input placeholder="Title" id="episode_epnumber" type="text" class="validate">
+	    <input placeholder="(optional) Episode #" id="episode_epnumber" type="text" class="validate">
           </div>
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
-	  <p class="flow-text valign col s6">Link/Filename:</p>
+	  <p class="flow-text valign col s6">Audio File Path:</p>
 	  <div class="input-field valign col">
-	    <input placeholder="Title" id="episode_audio" type="text" class="validate">
+	    <input placeholder="(optional) Audio File Path" id="episode_audio_path" type="text" class="validate">
           </div>
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
-	  <p class="flow-text valign col s6">Link [optional]:</p>
+	  <p class="flow-text valign col s6">Episode URL:</p>
 	  <div class="input-field valign col">
-	    <input placeholder="Episode Link" id="episode_link" type="text" class="validate">
+	    <input placeholder="(optional) Episode URL" id="episode_link" type="text" class="validate">
           </div>
 	</div>
 
@@ -315,42 +327,53 @@
     <!-- Story Editor Modal -->
     <div id="story-editor" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content nsp-grey nsp-text">
-	<div class="row valign-wrapper">
+	<div class="row valign-wrapper color-alternation">
 	  <p class="flow-text valign col s6">Story Title:</p>
 	  <div class="input-field valign col">
 	    <input placeholder="Title" id="story_title" type="text" class="validate">
           </div>
 	</div>
 
-	<div class="row valign-wrapper nsp-grey darken">
-	  <p class="flow-text valign col s6">Start Time [HH:MM:SS]:</p>
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Start Time:</p>
 	  <div class="input-field valign col">
-	    <input placeholder="Time [hh:mm:ss]" id="story_start_time" type="text" class="validate">
+	    <input placeholder="HH:MM:SS" id="story_start_time" type="text" class="validate">
           </div>
 	</div>
 
-	<div class="row valign-wrapper">
-	  <p class="flow-text valign col s6">End Time [Optional: HH:MM:SS]:</p>
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">End Time:</p>
 	  <div class="input-field valign col">
-	    <input placeholder="Time [hh:mm:ss]" id="story_end_time" type="text" class="validate">
+	    <input placeholder="(optional) HH:MM:SS" id="story_end_time" type="text" class="validate">
           </div>
 	</div>
 
-	<div class="row valign-wrapper nsp-grey darken">
-	  <p class="flow-text valign col s6">Writers (comma separated):</p>
+	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Tags:</p>
 	  <div class="input-field valign col">
-	    <input placeholder="Writer(s)" id="story_writers" type="text" class="validate">
+	    <input placeholder="(optional) Comma separated" id="story_tags" type="text" class="validate">
           </div>
 	</div>
 
-	<div class="row valign-wrapper">
-	  <p class="flow-text valign col s6">Narrators (comma separated):</p>
-	  <div class="input-field valign col">
-	    <input placeholder="Narrator(s)" id="story_writers" type="text" class="validate">
-          </div>
+	<div class="row valign-wrapper color-alternation">
+	  <ul class="collection with-header">
+            <li class="collection-header flow-text">Writers:</li>
+            <li class="collection-item collection-writer-tail">
+	      <a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-add-writer-action">Add</a>
+	    </li>
+	  </ul>
 	</div>
+
+	<div class="row valign-wrapper color-alternation">
+	  <ul class="collection with-header">
+            <li class="collection-header flow-text">Narrators:</li>
+            <li class="collection-item collection-narrator-tail">
+	      <a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-add-narrator-action">Add</a>
+	    </li>
+	  </ul>
+	</div>
+
       </div>
-
       <div class="modal-footer nsp-grey lighten z-depth-5">
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-close-action" style="margin-left:6px;">Close</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-save-action" style="margin-left:6px;">Save</a>
