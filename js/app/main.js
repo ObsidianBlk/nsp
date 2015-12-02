@@ -42,7 +42,7 @@ $(document).ready(function(){
   var playlistView = new View.PlaylistView("#playlist-select");
   var settingsView = new View.SettingsView("#app-settings");
   var episodeEditorView = new View.EpEditorView("#episode-editor");
-  //var storyEditorView = new View.StEditorView("#story-editor");
+  var storyEditorView = new View.StEditorView("#story-editor");
 
 
   $(".about_version").html("v" + Package.version);
@@ -60,7 +60,8 @@ $(document).ready(function(){
   });
 
   episodeEditorView.on("edit_story", function(episode, story, options){
-    Materialize.toast("Story Editor not yet implemented.");
+    storyEditorView.openModal(episode, story, options);
+    //Materialize.toast("Story Editor not yet implemented.");
   });
 
   poiView.on("view_episode", function(info){

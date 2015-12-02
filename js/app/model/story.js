@@ -349,7 +349,12 @@ module.exports = (function(){
     },
 
     "link":{
-      get:function(){return this._link;}
+      get:function(){return this._link;},
+      set:function(link){
+	if (typeof(link) !== 'string'){throw new TypeError();}
+	this._link = link;
+	this.emit("changed");
+      }
     },
 
     "beginning":{

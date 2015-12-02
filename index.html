@@ -28,6 +28,7 @@
     <script type="text/javascript" src="js/app/view/playlistView.js"></script>
     <script type="text/javascript" src="js/app/view/settingsView.js"></script>
     <script type="text/javascript" src="js/app/view/epEditorView.js"></script>
+    <script type="text/javascript" src="js/app/view/stEditorView.js"></script>
     <!-- This kicks the pig! -->
     <script type="text/javascript" src="js/app/main.js"></script>
 
@@ -318,7 +319,7 @@
 	</div>
       </div>
       <div class="modal-footer nsp-grey lighten z-depth-5">
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp epeditor-close-action" style="margin-left:6px;">Close</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp epeditor-close-action close-modal" style="margin-left:6px;">Close</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp epeditor-save-action" style="margin-left:6px;">Save</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp epeditor-reset-action" style="margin-left:6px;">Reset</a>
       </div>
@@ -328,16 +329,23 @@
     <div id="story-editor" class="modal modal-fixed-footer" style="display:none;">
       <div class="modal-content nsp-grey nsp-text">
 	<div class="row valign-wrapper color-alternation">
-	  <p class="flow-text valign col s6">Story Title:</p>
+	  <p class="flow-text valign col s6">Title:</p>
 	  <div class="input-field valign col">
 	    <input placeholder="Title" id="story_title" type="text" class="validate">
           </div>
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
+	  <p class="flow-text valign col s6">Link:</p>
+	  <div class="input-field valign col">
+	    <input placeholder="(optional) Link to story" id="story_link" type="text" class="validate">
+          </div>
+	</div>
+
+	<div class="row valign-wrapper color-alternation">
 	  <p class="flow-text valign col s6">Start Time:</p>
 	  <div class="input-field valign col">
-	    <input placeholder="HH:MM:SS" id="story_start_time" type="text" class="validate">
+	    <input placeholder="(optional) HH:MM:SS" id="story_start_time" type="text" class="validate">
           </div>
 	</div>
 
@@ -356,26 +364,30 @@
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
-	  <ul class="collection with-header">
-            <li class="collection-header flow-text">Writers:</li>
-            <li class="collection-item collection-writer-tail">
-	      <a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-add-writer-action">Add</a>
-	    </li>
-	  </ul>
+	  <div class="col s12">
+	    <p class="flow-text">Writers:</p>
+	    <ul class="collection writer-collection">
+              <li class="collection-item collection-writer-tail">
+		<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-add-writer-action">Add</a>
+	      </li>
+	    </ul>
+	  </div>
 	</div>
 
 	<div class="row valign-wrapper color-alternation">
-	  <ul class="collection with-header">
-            <li class="collection-header flow-text">Narrators:</li>
-            <li class="collection-item collection-narrator-tail">
-	      <a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-add-narrator-action">Add</a>
-	    </li>
-	  </ul>
+	  <div class="col s12">
+	    <p class="flow-text">Narrators:</p>
+	    <ul class="collection narrator-collection">
+              <li class="collection-item collection-narrator-tail">
+		<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-add-narrator-action">Add</a>
+	      </li>
+	    </ul>
+	  </div>
 	</div>
 
       </div>
       <div class="modal-footer nsp-grey lighten z-depth-5">
-	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-close-action" style="margin-left:6px;">Close</a>
+	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-close-action close-modal" style="margin-left:6px;">Close</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-save-action" style="margin-left:6px;">Save</a>
 	<a href="#!" class="waves-effect waves-nsp-red btn nsp steditor-reset-action" style="margin-left:6px;">Reset</a>
       </div>
