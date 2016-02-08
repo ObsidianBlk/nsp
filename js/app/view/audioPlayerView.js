@@ -273,6 +273,11 @@ window.View.AudioPlayerView = (function(){
 
   audioPlayerView.prototype._ConfigureControlButtons = function(){
     var playpauseBTN = $(".player_action_playpause");
+    var nextStoryBTN = $(".player_action_prevstory");
+    var prevStoryBTN = $(".player_action_prevstory");
+    var nextTrackBTN = $(".player_action_nexttrack");
+    var prevTrackBTN = $(".player_action_prevtrack");
+
     playpauseBTN.on("click", (function(){
       if (this._audioPlayer.currentTrackIndex >= 0){
 	if (playpauseBTN.find(".option-play").css("display") === "none"){
@@ -283,6 +288,22 @@ window.View.AudioPlayerView = (function(){
 	  this._SetPlayPauseBTN("pause");
 	}
       }
+    }).bind(this));
+
+    nextTrackBTN.on("click", (function(){
+      this._audioPlayer.nextTrack();
+    }).bind(this));
+
+    prevTrackBTN.on("click", (function(){
+      this._audioPlayer.prevTrack();
+    }).bind(this));
+
+    nextStoryBTN.on("click", (function(){
+      this._audioPlayer.nextStory();
+    }).bind(this));
+
+    prevStoryBTN.on("click", (function(){
+      this._audioPlayer.prevStory();
     }).bind(this));
   };
 

@@ -241,6 +241,14 @@ window.View.AudioPlayer = (function(){
     }
   };
 
+  audioPlayer.prototype.nextStory = function(){
+    // TODO: Calculate WHERE the next story can be found.
+  };
+
+  audioPlayer.prototype.prevStory = function(){
+
+  };
+
   audioPlayer.prototype.playTrack = function(index){
     if (index >= 0 && index < this._playlist.length){
       var es = this._GetTrackEpisodeAndStory(index);
@@ -408,13 +416,14 @@ window.View.AudioPlayer = (function(){
 	  }
 	  
 	  if (NSP.config.autoUpdateDurationInfo){
+	    var playerDur = Math.floor(this._player[0].duration);
 	    if (this._player.find("source").attr("src") === UserAudioPath(es.episode)){
-	      if (es.episode.audio_path_durationSec !== this._player[0].duration){
-		es.episode.audio_path_durationSec = this._player[0].duration;
+	      if (es.episode.audio_path_durationSec !== playerDur){
+		es.episode.audio_path_durationSec = playerDur;
 	      }
 	    } else {
-	      if (es.episode.audio_durationSec !== this._player[0].duration){
-		es.episode.audio_durationSec = this._player[0].duration;
+	      if (es.episode.audio_durationSec !== playerDur){
+		es.episode.audio_durationSec = playerDur;
 	      }
 	    }
 	  }
