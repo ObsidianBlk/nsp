@@ -615,18 +615,60 @@ module.exports = (function(){
       });
 
       if (storyBT.length > 0){
-	/*var story = null;
-	var timeIn = 0;
-	for (var i=0; i < storyBT.length; i++){
-	  var tin = storyBT[i].beginningSec - time;
-	  if (story === null || timeIn > tin){
-	    story = storyBT[i];
-	    timeIn = tin;
-	  }
-	}
-
-	return story;*/
 	return storyBT[storyBT.length-1];
+      }
+    }
+    return null;
+  };
+
+  episode.prototype.firstStory = function(){
+    if (this._story.length <= 0){return null;}
+
+    var index = 0;
+    var beginningSec = this._story[0].beginningSec;
+
+    for (var i=1; i < this._story.length; i++){
+      if (this._story[i].beginningSec < beginningSec){
+	index = i;
+	beginningSec = this._story[i].beginningSec;
+      }
+    }
+
+    return this._story[index];
+  };
+
+  episode.prototype.lastStory = function(){
+    if (this._story.length <= 0){return null;}
+
+    var index = 0;
+    var beginningSec = this._story[0].beginningSec;
+
+    for (var i=1; i < this._story.length; i++){
+      if (this._story[i].beginningSec > beginningSec){
+	index = i;
+	beginningSec = this._story[i].beginningSec;
+      }
+    }
+
+    return this._story[index];
+  };
+
+  episode.prototype.nextStory = function(currentStory){
+    if (this.storyAvailableAtSource(currentStory) === true){
+      var endingSec = currentStory.endingSec;
+      if (endingSec > 0){
+	return this.storyByTime(endingSec+5);
+      }
+    }
+    return null;
+  };
+
+  episode.prototype.prevStory = function(currentStory){
+    if (this.storyAvailableAtSource(currentStory) === true){
+      var beginningSec = currentStory.beginningSec;
+      if (beginningSec > 0){
+	// Subtracting time by 5 secods just to be sure.
+	return this.storyByTime(beginningSec-5);
       }
     }
     return null;

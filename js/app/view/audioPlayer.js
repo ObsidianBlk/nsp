@@ -110,6 +110,7 @@ window.View.AudioPlayer = (function(){
     this._currentFadeIn = 0;
     this._currentFadeOut = 0;
 
+    this._stopped = true;
     this._player = $(system_id);
     if (this._player.length <= 0){
       throw new Error("No audio system found.");
@@ -242,11 +243,67 @@ window.View.AudioPlayer = (function(){
   };
 
   audioPlayer.prototype.nextStory = function(){
-    // TODO: Calculate WHERE the next story can be found.
+    var es = this._GetTrackEpisodeAndStory(this.currentTrackIndex);
+    if (es === null){return;}
+    if (es.story !== null){
+      // If the current track is a story and not entire episode, then simply skip to the next track.
+      this.nextTrack();
+    } else {
+      // Otherwise skip to the end of this story, which, moments later, should give us the next story.
+      var cstory = es.episode.storyByTime(this.currentTrackTime);
+      if (cstory !== null){
+	var nstory = es.episode.nextStory(cstory);
+	if (nstory !== null && nstory.endingSec < this.currentTrackDuration){ // If the new story exists and is within the duration of the audio
+	  this.currentTrackTime = nstory.beginningSec;
+	} else { // Otherwise, time for the next track.
+	  this.nextTrack();
+	}
+      } else {
+	cstory = es.episode.firstStory();
+	if (cstory.beginningSec > this.currentTrackTime){
+	  this.currentTrackTime = cstory.beginningSec;
+	} else if (cstory.beginningSec < this.currentTrackTime){
+	  this.nextTrack(); // We've pretty much reached the end of the episode if this is the case.
+	}
+      }
+    }
   };
 
-  audioPlayer.prototype.prevStory = function(){
-
+  audioPlayer.prototype.previousStory = function(){
+    var es = this._GetTrackEpisodeAndStory(this.currentTrackIndex);
+    if (es === null){return;}
+    if (es.story !== null){
+      this.previousTrack();
+      es = this._GetTrackEpisodeAndStory(this.currentTrackIndex); // Getting the next track information.
+      if (es !== null){
+	var nstory = es.episode.lastEpisode();
+	if (nstory !== null){
+	  this.currentTrackTime = nstory.beginningSec;
+	}
+      }
+    } else {
+      // Otherwise skip to the end of this story, which, moments later, should give us the next story.
+      var cstory = es.episode.storyByTime(this.currentTrackTime);
+      if (cstory !== null){
+	var nstory = es.episode.prevStory(cstory);
+	if (nstory !== null){
+	  this.currentTrackTime = nstory.beginningSec;
+	}
+      } else {
+	cstory = es.episode.firstStory();
+	if (cstory.beginningSec > this.currentTrackTime){
+	  this.previousTrack(); // We're at the head of the episode. The "previous" story would be in the previous track.
+	} else { // We must be at the tail of the episode.
+	  cstory = es.episode.lastStory();
+	  while (cstory !== null && cstory.beginningSec > this.currentTrackDuration){
+	    cstory = es.episode.prevStory(cstory);
+	  }
+	  if (cstory !== null){
+	    this.currentTrackTime = cstory.beginningSec;
+	  }
+	}
+      }
+    }
   };
 
   audioPlayer.prototype.playTrack = function(index){
@@ -357,11 +414,19 @@ window.View.AudioPlayer = (function(){
       // -----------------------------
       // EVENT ended
       this._player.on("ended", (function(){
-        if (this._currentTrack >= 0 && this._currentTrack < this._playlist.length){
+	console.log("Ended with currentTime: " + this._player[0].currentTime);
+        if (this._currentTrack >= 0 && this._currentTrack+1 < this._playlist.length){
 	  this.playTrack(this._currentTrack + 1);
 	  this.emit("next_track");
         } else {
-	  this.emit("ended");
+	  if (this._playlist.length > 0 && this._loop === true){
+	    this.playTrack(0);
+	    this.emit("next_track");
+	  } else {
+	    this.pause();
+	    //this._player[0].currentTime = 1;
+	    this.emit("ended");
+	  }
         }
       }).bind(this));
 
@@ -374,7 +439,7 @@ window.View.AudioPlayer = (function(){
 	  var duration = endtime - starttime;
 
 	  // Now check to see if we've reached the endtime (incase we're playing a story and not an episode)...
-	  if (this._player[0].currentTime > endtime){
+	  if (this._player[0].currentTime >= endtime){
 	    if (this._currentTrack < this._playlist.length-1){
 	      this.playTrack(this._currentTrack + 1);
 	      this.emit("next_track");
@@ -402,6 +467,9 @@ window.View.AudioPlayer = (function(){
       // -----------------------------
       // EVENT canplay
       this._player.on("canplay", (function(){
+	if (this._player[0].currentTime > 0){return;} // We should already know we "can play"
+
+	console.log("Canplay with currentTime: " + this._player[0].currentTime);
 	if (this._currentFadeIn > 0){
 	  this._player[0].volume = 0;
 	} else {
@@ -429,8 +497,10 @@ window.View.AudioPlayer = (function(){
 	  }
 	}
 
-	this._player[0].play();
-	this.emit("playing");
+	if (this.playing === false){
+	  this._player[0].play();
+	  this.emit("playing");
+	}
 
 	if (this._currentFadeIn > 0 || this._currentFadeOut > 0){
 	  this._fadeWatch = setInterval((function(){
@@ -497,7 +567,8 @@ window.View.AudioPlayer = (function(){
     },
 
     "playing":{
-      get:function(){return this._player[0].duration > 0 && this._player[0].paused === false && this._player[0].ended === false;}
+      //get:function(){return this._player[0].duration > 0 && this._player[0].paused === false && this._player[0].ended === false;}
+      get:function(){return (this._player[0].paused === false && this._player[0].currentTime >= 0);}
     },
 
     "paused":{

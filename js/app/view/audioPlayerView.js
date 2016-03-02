@@ -273,7 +273,7 @@ window.View.AudioPlayerView = (function(){
 
   audioPlayerView.prototype._ConfigureControlButtons = function(){
     var playpauseBTN = $(".player_action_playpause");
-    var nextStoryBTN = $(".player_action_prevstory");
+    var nextStoryBTN = $(".player_action_nextstory");
     var prevStoryBTN = $(".player_action_prevstory");
     var nextTrackBTN = $(".player_action_nexttrack");
     var prevTrackBTN = $(".player_action_prevtrack");
@@ -295,7 +295,7 @@ window.View.AudioPlayerView = (function(){
     }).bind(this));
 
     prevTrackBTN.on("click", (function(){
-      this._audioPlayer.prevTrack();
+      this._audioPlayer.previousTrack();
     }).bind(this));
 
     nextStoryBTN.on("click", (function(){
@@ -303,7 +303,7 @@ window.View.AudioPlayerView = (function(){
     }).bind(this));
 
     prevStoryBTN.on("click", (function(){
-      this._audioPlayer.prevStory();
+      this._audioPlayer.previousStory();
     }).bind(this));
   };
 
